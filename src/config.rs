@@ -1,6 +1,6 @@
+#![allow(dead_code)]
 use anyhow::{Context, Result};
 use serde::Deserialize;
-use std::path::Path;
 
 const DEFAULT_CONFIG_PATH: &str = "airports.json";
 

@@ -12,6 +12,7 @@ const IEM_BASE: &str = "https://mesonet.agron.iastate.edu/cgi-bin/request/asos.p
 
 /// Raw METAR observation parsed from IEM CSV.
 #[derive(Debug)]
+#[allow(dead_code)]
 struct MetarObs {
     date: NaiveDate,
     temp_f: Option<f64>,

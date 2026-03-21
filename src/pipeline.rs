@@ -18,7 +18,9 @@ const COUNTRIES_WITH_PAX_FETCHER: &[&str] = &[
 /// Sources that produce passenger data (write to pax_yearly).
 const PAX_SOURCES: &[&str] = &["aena", "eurostat", "wikipedia"];
 
-/// All known data sources.
+/// Data sources run by the Rust CLI.
+/// skytrax and sentiment are handled by the Python ML pipeline
+/// and must be requested explicitly via --source skytrax/sentiment.
 pub const ALL_SOURCES: &[&str] = &[
     "ourairports",
     "eurocontrol",
@@ -30,8 +32,6 @@ pub const ALL_SOURCES: &[&str] = &[
     "aena",
     "openflights",
     "wikipedia",
-    "skytrax",
-    "sentiment",
 ];
 
 /// Dispatch to the correct fetcher for a given source name.
@@ -54,8 +54,8 @@ async fn dispatch_fetcher(
         "openflights" => fetchers::openflights::fetch(pool, airport, full_refresh).await,
         "wikipedia" => fetchers::wikipedia::fetch(pool, airport, full_refresh).await,
         "skytrax" | "sentiment" => {
-            // Skytrax and sentiment are handled by the Python ML pipeline.
-            bail!("Source '{}' is not yet implemented — use Python pipeline", source)
+            warn!(source = source, "This source requires the Python ML pipeline — run python/skytrax_scraper.py or python/sentiment_pipeline.py directly");
+            Ok(FetchResult { records_processed: 0, last_record_date: None })
         }
         other => bail!("Unknown source: {}", other),
     }

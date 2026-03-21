@@ -9,6 +9,7 @@ use crate::models::{Airport, FetchResult};
 
 /// OPDI flight record as output by the Python helper.
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct OpdiRecord {
     origin_icao: Option<String>,
     destination_icao: Option<String>,

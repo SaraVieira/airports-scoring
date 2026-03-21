@@ -5,8 +5,8 @@ import { airports, airportScores } from "../db/schema";
 import { eq } from "drizzle-orm";
 
 const getAirport = createServerFn({ method: "GET" })
-  .handler(async ({ data: iata }: { data: string }) => {
-    iata = iata.toUpperCase();
+  .inputValidator((iata: string) => iata.toUpperCase())
+  .handler(async ({ data: iata }) => {
     const airport = await db.query.airports.findFirst({
       where: eq(airports.iataCode, iata),
       with: {
@@ -48,7 +48,7 @@ const getAirport = createServerFn({ method: "GET" })
   });
 
 export const Route = createFileRoute("/airport/$iata")({
-  loader: ({ params }) => getAirport({ data: params.iata }),
+  loader: ({ params }) => getAirport({ data: params.iata! }),
   component: AirportDetail,
 });
 

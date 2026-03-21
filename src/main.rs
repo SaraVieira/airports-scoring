@@ -1,6 +1,7 @@
 mod config;
 mod db;
 mod fetchers;
+#[allow(dead_code)]
 mod models;
 mod pipeline;
 mod scoring;

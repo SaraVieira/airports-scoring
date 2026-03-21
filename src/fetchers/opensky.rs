@@ -143,7 +143,8 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         Some((Some(d),)) => d.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp(),
         _ => now.timestamp() - 30 * 24 * 3600,
     };
-    let end_ts = now.timestamp();
+    // OpenSky data has ~2hr delay; don't query into the future or very recent past
+    let end_ts = now.timestamp() - 7200;
 
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(60))
