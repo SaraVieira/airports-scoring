@@ -21,6 +21,8 @@ const RUNWAYS_CSV_URL: &str =
     "https://davidmegginson.github.io/ourairports-data/runways.csv";
 const FREQUENCIES_CSV_URL: &str =
     "https://davidmegginson.github.io/ourairports-data/airport-frequencies.csv";
+const NAVAIDS_CSV_URL: &str =
+    "https://davidmegginson.github.io/ourairports-data/navaids.csv";
 
 // ── CSV row structs ─────────────────────────────────────────────
 
@@ -87,6 +89,34 @@ struct CsvFrequency {
     frequency_mhz: Option<f64>,
 }
 
+/// Row from navaids.csv
+#[derive(Debug, Deserialize)]
+struct CsvNavaid {
+    id: i64,
+    #[serde(rename = "filename")]
+    _filename: Option<String>,
+    ident: Option<String>,
+    name: Option<String>,
+    #[serde(rename = "type")]
+    navaid_type: Option<String>,
+    frequency_khz: Option<String>,
+    latitude_deg: Option<f64>,
+    longitude_deg: Option<f64>,
+    elevation_ft: Option<String>,
+    iso_country: Option<String>,
+    dme_frequency_khz: Option<String>,
+    dme_channel: Option<String>,
+    dme_latitude_deg: Option<f64>,
+    dme_longitude_deg: Option<f64>,
+    dme_elevation_ft: Option<String>,
+    slaved_variation_deg: Option<String>,
+    magnetic_variation_deg: Option<String>,
+    #[serde(rename = "usageType")]
+    usage_type: Option<String>,
+    power: Option<String>,
+    associated_airport: Option<String>,
+}
+
 // ── Helper: parse optional numeric strings ──────────────────────
 
 fn parse_opt_i32(s: &Option<String>) -> Option<i32> {
@@ -123,11 +153,12 @@ pub async fn fetch(pool: &PgPool, _airport: &Airport, full_refresh: bool) -> Res
 pub async fn fetch_all(pool: &PgPool, _full_refresh: bool) -> Result<FetchResult> {
     let client = reqwest::Client::new();
 
-    // 1. Download all three CSVs in parallel.
-    let (airports_text, runways_text, frequencies_text) = tokio::try_join!(
+    // 1. Download all four CSVs in parallel.
+    let (airports_text, runways_text, frequencies_text, navaids_text) = tokio::try_join!(
         download_csv(&client, AIRPORTS_CSV_URL),
         download_csv(&client, RUNWAYS_CSV_URL),
         download_csv(&client, FREQUENCIES_CSV_URL),
+        download_csv(&client, NAVAIDS_CSV_URL),
     )?;
 
     // 2. Parse airports CSV and filter to seed set.
@@ -373,7 +404,78 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool) -> Result<FetchResult
 
     info!(count = freq_count, "Inserted frequencies");
 
-    let total = records + runway_count + freq_count;
+    // 6. Parse and insert navaids.
+    let csv_navaids = parse_csv_navaids(&navaids_text)?;
+    let mut navaid_count: i32 = 0;
+
+    // Build a reverse map from ICAO ident -> db airport id.
+    let mut icao_to_db_id: HashMap<String, i32> = HashMap::new();
+    for airport in &seed_airports {
+        let icao = airport
+            .gps_code
+            .as_deref()
+            .unwrap_or(&airport.ident);
+        if let Some(&db_id) = oa_id_to_db_id.get(&airport.id) {
+            icao_to_db_id.insert(icao.to_string(), db_id);
+        }
+    }
+
+    // Group navaids by associated_airport.
+    let mut navaids_by_airport: HashMap<String, Vec<&CsvNavaid>> = HashMap::new();
+    for nav in &csv_navaids {
+        if let Some(ref assoc) = nav.associated_airport {
+            if icao_to_db_id.contains_key(assoc) {
+                navaids_by_airport
+                    .entry(assoc.clone())
+                    .or_default()
+                    .push(nav);
+            }
+        }
+    }
+
+    for (icao, navs) in &navaids_by_airport {
+        let db_id = match icao_to_db_id.get(icao) {
+            Some(id) => *id,
+            None => continue,
+        };
+
+        // Delete existing navaids for this airport.
+        sqlx::query("DELETE FROM navaids WHERE airport_id = $1")
+            .bind(db_id)
+            .execute(pool)
+            .await
+            .context("Failed to delete existing navaids")?;
+
+        for nav in navs {
+            sqlx::query(
+                r#"
+                INSERT INTO navaids (
+                    airport_id, ident, name, navaid_type,
+                    frequency_khz, latitude_deg, longitude_deg,
+                    elevation_ft, associated_airport_icao
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                "#,
+            )
+            .bind(db_id)
+            .bind(nav.ident.as_deref())
+            .bind(nav.name.as_deref())
+            .bind(nav.navaid_type.as_deref())
+            .bind(parse_opt_i32(&nav.frequency_khz))
+            .bind(nav.latitude_deg)
+            .bind(nav.longitude_deg)
+            .bind(parse_opt_i32(&nav.elevation_ft))
+            .bind(nav.associated_airport.as_deref())
+            .execute(pool)
+            .await
+            .context("Failed to insert navaid")?;
+
+            navaid_count += 1;
+        }
+    }
+
+    info!(count = navaid_count, "Inserted navaids");
+
+    let total = records + runway_count + freq_count + navaid_count;
     info!(total = total, "OurAirports fetch complete");
 
     Ok(FetchResult {
@@ -432,6 +534,19 @@ fn parse_csv_frequencies(text: &str) -> Result<Vec<CsvFrequency>> {
     let mut rows = Vec::new();
     for result in rdr.deserialize() {
         let record: CsvFrequency = result.context("Failed to parse frequency CSV row")?;
+        rows.push(record);
+    }
+    Ok(rows)
+}
+
+fn parse_csv_navaids(text: &str) -> Result<Vec<CsvNavaid>> {
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .flexible(true)
+        .from_reader(text.as_bytes());
+    let mut rows = Vec::new();
+    for result in rdr.deserialize() {
+        let record: CsvNavaid = result.context("Failed to parse navaid CSV row")?;
         rows.push(record);
     }
     Ok(rows)

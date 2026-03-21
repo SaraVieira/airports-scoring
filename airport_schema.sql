@@ -540,7 +540,8 @@ CREATE TABLE reviews_raw (
     review_text         TEXT,
     source_url          TEXT,
     processed           BOOLEAN DEFAULT FALSE, -- flag for ML pipeline
-    created_at          TIMESTAMPTZ DEFAULT NOW()
+    created_at          TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (source_url)
 );
 
 CREATE INDEX reviews_airport_idx ON reviews_raw (airport_id);
@@ -559,6 +560,31 @@ CREATE TABLE airport_slugs (
 );
 
 CREATE INDEX slugs_source_idx ON airport_slugs (source);
+
+-- ============================================================
+-- WIKIPEDIA SNAPSHOTS
+-- ============================================================
+
+CREATE TABLE wikipedia_snapshots (
+    id                  SERIAL PRIMARY KEY,
+    airport_id          INTEGER NOT NULL REFERENCES airports(id) ON DELETE CASCADE,
+    fetched_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    opened_year         SMALLINT,
+    operator_raw        TEXT,
+    owner_raw           TEXT,
+    terminal_count      SMALLINT,
+    terminal_names      TEXT[],
+    renovation_notes    TEXT,
+    ownership_notes     TEXT,
+    milestone_notes     TEXT,
+    skytrax_history     JSONB,          -- e.g. {"2019":3,"2023":4}
+    aci_awards          JSONB,
+    wikipedia_url       TEXT,
+    article_revision_id BIGINT,
+    created_at          TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX wikipedia_snapshots_airport_idx ON wikipedia_snapshots (airport_id);
 
 -- ============================================================
 -- PIPELINE RUNS (tracking/audit)
@@ -581,3 +607,66 @@ CREATE TABLE pipeline_runs (
 CREATE INDEX pipeline_airport_idx ON pipeline_runs (airport_id);
 CREATE INDEX pipeline_source_idx ON pipeline_runs (source);
 CREATE INDEX pipeline_status_idx ON pipeline_runs (status);
+
+-- ============================================================
+-- NAVAIDS (from OurAirports)
+-- ============================================================
+
+CREATE TABLE navaids (
+    id                  SERIAL PRIMARY KEY,
+    airport_id          INTEGER REFERENCES airports(id) ON DELETE CASCADE,
+    ident               TEXT,
+    name                TEXT,
+    navaid_type         TEXT,              -- VOR, NDB, DME, VORTAC, etc.
+    frequency_khz       INTEGER,
+    latitude_deg        DOUBLE PRECISION,
+    longitude_deg       DOUBLE PRECISION,
+    elevation_ft        INTEGER,
+    associated_airport_icao TEXT,
+    created_at          TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX navaids_airport_idx ON navaids (airport_id);
+
+-- ============================================================
+-- SEED DATA — AIRPORT SLUGS
+-- ============================================================
+-- Populated after airports table is seeded by OurAirports fetcher.
+-- These INSERTs use subqueries to look up airport_id by IATA code.
+
+INSERT INTO airport_slugs (airport_id, source, slug)
+SELECT a.id, s.source, s.slug
+FROM (VALUES
+    ('LHR', 'skytrax',         'london-heathrow-airport'),
+    ('LHR', 'skytrax_ratings', 'london-heathrow-airport'),
+    ('LGW', 'skytrax',         'london-gatwick-airport'),
+    ('LGW', 'skytrax_ratings', 'london-gatwick-airport'),
+    ('LTN', 'skytrax',         'london-luton-airport'),
+    ('LTN', 'skytrax_ratings', 'london-luton-airport'),
+    ('OPO', 'skytrax',         'porto-airport'),
+    ('OPO', 'skytrax_ratings', 'porto-airport'),
+    ('MAD', 'skytrax',         'madrid-barajas-airport'),
+    ('MAD', 'skytrax_ratings', 'madrid-barajas-airport'),
+    ('BCN', 'skytrax',         'barcelona-el-prat-airport'),
+    ('BCN', 'skytrax_ratings', 'barcelona-el-prat-airport'),
+    ('BER', 'skytrax',         'berlin-brandenburg-airport'),
+    ('BER', 'skytrax_ratings', 'berlin-brandenburg-airport'),
+    ('MUC', 'skytrax',         'munich-airport'),
+    ('MUC', 'skytrax_ratings', 'munich-airport'),
+    ('CDG', 'skytrax',         'paris-charles-de-gaulle-airport'),
+    ('CDG', 'skytrax_ratings', 'paris-charles-de-gaulle-airport'),
+    ('NCE', 'skytrax',         'nice-cote-dazur-airport'),
+    ('NCE', 'skytrax_ratings', 'nice-cote-dazur-airport'),
+    ('AMS', 'skytrax',         'amsterdam-schiphol-airport'),
+    ('AMS', 'skytrax_ratings', 'amsterdam-schiphol-airport'),
+    ('CPH', 'skytrax',         'copenhagen-airport'),
+    ('CPH', 'skytrax_ratings', 'copenhagen-airport'),
+    ('FCO', 'skytrax',         'rome-fiumicino-airport'),
+    ('FCO', 'skytrax_ratings', 'rome-fiumicino-airport'),
+    ('WAW', 'skytrax',         'warsaw-chopin-airport'),
+    ('WAW', 'skytrax_ratings', 'warsaw-chopin-airport'),
+    ('BUD', 'skytrax',         'budapest-airport'),
+    ('BUD', 'skytrax_ratings', 'budapest-airport')
+) AS s(iata, source, slug)
+JOIN airports a ON a.iata_code = s.iata
+ON CONFLICT (airport_id, source) DO UPDATE SET slug = EXCLUDED.slug;

@@ -1,7 +1,10 @@
+pub mod aena;
 pub mod caa;
 pub mod eurocontrol;
 pub mod eurostat;
 pub mod metar;
+pub mod openflights;
 pub mod opensky;
 pub mod opdi;
 pub mod ourairports;
+pub mod wikipedia;

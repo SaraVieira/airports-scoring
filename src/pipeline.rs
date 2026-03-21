@@ -17,6 +17,9 @@ pub const ALL_SOURCES: &[&str] = &[
     "opdi",
     "eurostat",
     "caa",
+    "aena",
+    "openflights",
+    "wikipedia",
     "skytrax",
     "sentiment",
 ];
@@ -36,10 +39,12 @@ async fn dispatch_fetcher(
         "opdi" => fetchers::opdi::fetch(pool, airport, full_refresh).await,
         "eurostat" => fetchers::eurostat::fetch(pool, airport, full_refresh).await,
         "caa" => fetchers::caa::fetch(pool, airport, full_refresh).await,
+        "aena" => fetchers::aena::fetch(pool, airport, full_refresh).await,
+        "openflights" => fetchers::openflights::fetch(pool, airport, full_refresh).await,
+        "wikipedia" => fetchers::wikipedia::fetch(pool, airport, full_refresh).await,
         "skytrax" | "sentiment" => {
-            // Skytrax and sentiment share stub behavior for now.
-            // The ML pipeline handles sentiment scoring separately.
-            bail!("Source '{}' is not yet implemented", source)
+            // Skytrax and sentiment are handled by the Python ML pipeline.
+            bail!("Source '{}' is not yet implemented — use Python pipeline", source)
         }
         other => bail!("Unknown source: {}", other),
     }

@@ -275,6 +275,45 @@ pub struct Organisation {
     pub created_at: Option<DateTime<Utc>>,
 }
 
+// ── Wikipedia snapshots ───────────────────────────────────────
+
+#[derive(Debug, Clone, FromRow, Serialize, Deserialize)]
+pub struct WikipediaSnapshot {
+    pub id: i32,
+    pub airport_id: i32,
+    pub fetched_at: DateTime<Utc>,
+    pub opened_year: Option<i16>,
+    pub operator_raw: Option<String>,
+    pub owner_raw: Option<String>,
+    pub terminal_count: Option<i16>,
+    pub terminal_names: Option<Vec<String>>,
+    pub renovation_notes: Option<String>,
+    pub ownership_notes: Option<String>,
+    pub milestone_notes: Option<String>,
+    pub skytrax_history: Option<serde_json::Value>,
+    pub aci_awards: Option<serde_json::Value>,
+    pub wikipedia_url: Option<String>,
+    pub article_revision_id: Option<i64>,
+    pub created_at: Option<DateTime<Utc>>,
+}
+
+// ── Navaids ──────────────────────────────────────────────────
+
+#[derive(Debug, Clone, FromRow, Serialize, Deserialize)]
+pub struct Navaid {
+    pub id: i32,
+    pub airport_id: Option<i32>,
+    pub ident: Option<String>,
+    pub name: Option<String>,
+    pub navaid_type: Option<String>,
+    pub frequency_khz: Option<i32>,
+    pub latitude_deg: Option<f64>,
+    pub longitude_deg: Option<f64>,
+    pub elevation_ft: Option<i32>,
+    pub associated_airport_icao: Option<String>,
+    pub created_at: Option<DateTime<Utc>>,
+}
+
 // ── Fetch result (returned by every fetcher) ──────────────────
 
 #[derive(Debug, Clone)]
