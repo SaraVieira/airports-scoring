@@ -7,8 +7,11 @@ use tracing::{info, warn};
 use crate::fetchers::wikipedia::USER_AGENT;
 use crate::models::{Airport, FetchResult};
 
-const MADRID_ICAO: &str = "LEMD";
-const BARCELONA_ICAO: &str = "LEBL";
+/// AENA is the Spanish airport operator — this fetcher only runs for
+/// airports with country_code "ES". It also handles AENA-operated airports
+/// abroad (e.g. London Luton, some Brazilian airports) but only if
+/// the airport appears in the AENA spreadsheets.
+const AENA_COUNTRY: &str = "ES";
 
 /// Known AENA annual report blob IDs on their Satellite CMS.
 /// These are not predictable — each must be discovered from
@@ -28,33 +31,64 @@ const LOCAL_DATA_DIR: &str = "data/aena";
 /// Mapping from filename patterns to years for local files.
 fn year_from_filename(filename: &str) -> Option<i16> {
     let lower = filename.to_lowercase();
-    // Try to extract a 4-digit year from the filename.
     let re = regex::Regex::new(r"(20\d{2})").ok()?;
     re.captures(&lower)
         .and_then(|c| c.get(1))
         .and_then(|m| m.as_str().parse::<i16>().ok())
 }
 
-/// Fetch AENA traffic data for MAD or BCN only.
+/// Build search terms for matching an airport in AENA spreadsheet rows.
+///
+/// AENA names vary across years (e.g. "MADRID-BARAJAS" vs
+/// "ADOLFO SUÁREZ MADRID-BARAJAS", "BARCELONA" vs "BARCELONA-EL PRAT J.T.").
+/// We derive search terms from the airport's city and name so that any
+/// Spanish airport added to airports.json is automatically matched.
+fn build_search_terms(airport: &Airport) -> Vec<String> {
+    let mut terms = Vec::new();
+
+    // Full airport name (lowercased).
+    let name_lower = airport.name.to_lowercase();
+    terms.push(name_lower.clone());
+
+    // City name is often how AENA labels the airport (e.g. "VALENCIA", "SEVILLA").
+    let city_lower = airport.city.to_lowercase();
+    if city_lower != name_lower {
+        terms.push(city_lower);
+    }
+
+    // For names like "Madrid Barajas", also try "madrid-barajas" (AENA uses hyphens).
+    if airport.name.contains(' ') {
+        terms.push(airport.name.to_lowercase().replace(' ', "-"));
+    }
+
+    terms
+}
+
+/// Check if a cell string matches any of the search terms.
+/// Uses "contains" matching so "ADOLFO SUÁREZ MADRID-BARAJAS" matches
+/// the search term "madrid-barajas".
+fn matches_search_terms(cell_text: &str, search_terms: &[String]) -> bool {
+    let lower = cell_text.trim().to_lowercase();
+    search_terms.iter().any(|term| lower.contains(term.as_str()))
+}
+
+/// Fetch AENA traffic data. Only runs for Spanish airports (country_code "ES").
 /// First tries local files in data/aena/, then falls back to remote download.
 pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Result<FetchResult> {
-    let icao = airport
-        .icao_code
-        .as_deref()
-        .context("Airport has no ICAO code")?;
     let iata = airport
         .iata_code
         .as_deref()
         .unwrap_or("???");
 
-    if icao != MADRID_ICAO && icao != BARCELONA_ICAO {
-        info!(airport = iata, "AENA fetcher only supports MAD and BCN, skipping");
+    if airport.country_code != AENA_COUNTRY {
+        info!(airport = iata, "Not a Spanish airport, skipping AENA");
         return Ok(FetchResult {
             records_processed: 0,
             last_record_date: None,
         });
     }
 
+    let search_terms = build_search_terms(airport);
     let mut total_records: i32 = 0;
     let mut last_date = None;
 
@@ -77,7 +111,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
                 }
             };
 
-            match parse_aena_file(&path, airport.id, icao, year, pool).await {
+            match parse_aena_file(&path, airport.id, &search_terms, year, pool).await {
                 Ok(count) if count > 0 => {
                     total_records += count;
                     let date = chrono::NaiveDate::from_ymd_opt(year as i32, 12, 31).unwrap();
@@ -101,7 +135,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
 
         for &(year, blob_id) in AENA_BLOB_IDS {
             let url = format!("{}{}", AENA_BLOB_BASE, blob_id);
-            match fetch_remote_aena(&client, &url, airport.id, icao, year, pool).await {
+            match fetch_remote_aena(&client, &url, airport.id, &search_terms, year, pool).await {
                 Ok(count) if count > 0 => {
                     total_records += count;
                     let date = chrono::NaiveDate::from_ymd_opt(year as i32, 12, 31).unwrap();
@@ -129,7 +163,7 @@ async fn fetch_remote_aena(
     client: &reqwest::Client,
     url: &str,
     airport_id: i32,
-    icao: &str,
+    search_terms: &[String],
     year: i16,
     pool: &PgPool,
 ) -> Result<i32> {
@@ -143,26 +177,26 @@ async fn fetch_remote_aena(
     let workbook = open_workbook_auto_from_rs(cursor)
         .context("Failed to open AENA workbook from remote")?;
 
-    parse_workbook(workbook, airport_id, icao, year, pool).await
+    parse_workbook(workbook, airport_id, search_terms, year, pool).await
 }
 
 async fn parse_aena_file(
     path: &Path,
     airport_id: i32,
-    icao: &str,
+    search_terms: &[String],
     year: i16,
     pool: &PgPool,
 ) -> Result<i32> {
     let workbook = open_workbook_auto(path)
         .with_context(|| format!("Failed to open AENA file: {:?}", path))?;
 
-    parse_workbook(workbook, airport_id, icao, year, pool).await
+    parse_workbook(workbook, airport_id, search_terms, year, pool).await
 }
 
 async fn parse_workbook<RS: std::io::Read + std::io::Seek, R: Reader<RS>>(
     mut workbook: R,
     airport_id: i32,
-    icao: &str,
+    search_terms: &[String],
     year: i16,
     pool: &PgPool,
 ) -> Result<i32> {
@@ -179,7 +213,7 @@ async fn parse_workbook<RS: std::io::Read + std::io::Seek, R: Reader<RS>>(
         .worksheet_range(&data_sheet)
         .map_err(|_| anyhow::anyhow!("Failed to read AENA data sheet"))?;
 
-    let pax = extract_airport_pax(&range, icao);
+    let pax = extract_airport_pax(&range, search_terms);
 
     match pax {
         Some(total_pax) => {
@@ -202,19 +236,6 @@ async fn parse_workbook<RS: std::io::Read + std::io::Seek, R: Reader<RS>>(
     }
 }
 
-/// Airport name patterns used across AENA reports over the years.
-const MADRID_NAMES: &[&str] = &[
-    "adolfo suárez madrid-barajas",
-    "adolfo suarez madrid-barajas",
-    "madrid-barajas",
-];
-
-const BARCELONA_NAMES: &[&str] = &[
-    "barcelona-el prat j.t.",
-    "barcelona-el prat",
-    "barcelona",
-];
-
 /// Extract passenger count for a specific airport from an AENA worksheet.
 ///
 /// AENA annual reports have a consistent structure:
@@ -223,13 +244,7 @@ const BARCELONA_NAMES: &[&str] = &[
 ///   (repeated for passengers, operations, cargo in adjacent column groups)
 /// - The airport name may be in column 0 or column 1 (varies by year)
 /// - The total passengers is always the first large integer after the name
-pub fn extract_airport_pax(range: &calamine::Range<Data>, icao: &str) -> Option<i64> {
-    let target_names: &[&str] = if icao == MADRID_ICAO {
-        MADRID_NAMES
-    } else {
-        BARCELONA_NAMES
-    };
-
+pub fn extract_airport_pax(range: &calamine::Range<Data>, search_terms: &[String]) -> Option<i64> {
     for row in range.rows() {
         // Collect all string cells to check for airport name match.
         let row_strings: Vec<String> = row
@@ -241,24 +256,22 @@ pub fn extract_airport_pax(range: &calamine::Range<Data>, icao: &str) -> Option<
             .collect();
 
         let matches_airport = row_strings.iter().any(|s| {
-            target_names.iter().any(|name| s == name)
+            matches_search_terms(s, search_terms)
         });
 
         if !matches_airport {
             continue;
         }
 
-        // For Barcelona, make sure we don't match a row where "barcelona" appears
-        // only in a cargo/operations column (not the passengers column group).
-        // The passenger airport name is always one of the first few string cells.
+        // Make sure the match is in the passenger column group (first string cell),
+        // not only in operations/cargo columns further right.
         let first_string = row_strings.first()?;
-        let is_pax_row = target_names.iter().any(|name| first_string == name);
+        let is_pax_row = matches_search_terms(first_string, search_terms);
         if !is_pax_row {
             // The first string doesn't match — this might be an ops/cargo row
             // where the same airport name appears in a later column group.
-            // Only skip if the row has multiple airport name occurrences.
             let match_count = row_strings.iter()
-                .filter(|s| target_names.iter().any(|name| *s == name))
+                .filter(|s| matches_search_terms(s, search_terms))
                 .count();
             if match_count > 1 {
                 // Multi-section row (pax + ops + cargo) — the first match IS the pax section.
@@ -313,6 +326,23 @@ mod tests {
         wb.worksheet_range(&sheet).expect("Failed to read sheet")
     }
 
+    /// Build search terms the same way the real code does, from an Airport-like struct.
+    fn madrid_terms() -> Vec<String> {
+        vec!["madrid barajas".into(), "madrid".into(), "madrid-barajas".into()]
+    }
+
+    fn barcelona_terms() -> Vec<String> {
+        vec!["barcelona el prat".into(), "barcelona".into(), "barcelona-el-prat".into()]
+    }
+
+    fn malaga_terms() -> Vec<String> {
+        vec!["málaga-costa del sol".into(), "málaga".into(), "malaga".into()]
+    }
+
+    fn valencia_terms() -> Vec<String> {
+        vec!["valencia".into()]
+    }
+
     #[test]
     fn year_from_filename_works() {
         assert_eq!(year_from_filename("DEFINITIVOS+2024.xlsx"), Some(2024));
@@ -326,7 +356,7 @@ mod tests {
     fn parse_2024_madrid() {
         let mut wb = open_test_file("DEFINITIVOS+2024.xlsx");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, MADRID_ICAO);
+        let pax = extract_airport_pax(&range, &madrid_terms());
         assert_eq!(pax, Some(66197066), "MAD 2024 expected 66,197,066");
     }
 
@@ -334,15 +364,33 @@ mod tests {
     fn parse_2024_barcelona() {
         let mut wb = open_test_file("DEFINITIVOS+2024.xlsx");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, BARCELONA_ICAO);
+        let pax = extract_airport_pax(&range, &barcelona_terms());
         assert_eq!(pax, Some(55037892), "BCN 2024 expected 55,037,892");
+    }
+
+    #[test]
+    fn parse_2024_malaga() {
+        let mut wb = open_test_file("DEFINITIVOS+2024.xlsx");
+        let range = get_data_range(&mut wb);
+        let pax = extract_airport_pax(&range, &malaga_terms());
+        assert!(pax.is_some(), "AGP 2024 should have data");
+        assert!(pax.unwrap() > 20_000_000, "AGP 2024 should be >20M, got {:?}", pax);
+    }
+
+    #[test]
+    fn parse_2024_valencia() {
+        let mut wb = open_test_file("DEFINITIVOS+2024.xlsx");
+        let range = get_data_range(&mut wb);
+        let pax = extract_airport_pax(&range, &valencia_terms());
+        assert!(pax.is_some(), "VLC 2024 should have data");
+        assert!(pax.unwrap() > 5_000_000, "VLC 2024 should be >5M, got {:?}", pax);
     }
 
     #[test]
     fn parse_2023_madrid() {
         let mut wb = open_test_file("DEFINITIVOS_2023.xlsx");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, MADRID_ICAO);
+        let pax = extract_airport_pax(&range, &madrid_terms());
         assert_eq!(pax, Some(60221163), "MAD 2023 expected 60,221,163");
     }
 
@@ -350,7 +398,7 @@ mod tests {
     fn parse_2023_barcelona() {
         let mut wb = open_test_file("DEFINITIVOS_2023.xlsx");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, BARCELONA_ICAO);
+        let pax = extract_airport_pax(&range, &barcelona_terms());
         assert_eq!(pax, Some(49910900), "BCN 2023 expected 49,910,900");
     }
 
@@ -358,7 +406,7 @@ mod tests {
     fn parse_2019_madrid() {
         let mut wb = open_test_file("00.Definitivo_2019.xls");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, MADRID_ICAO);
+        let pax = extract_airport_pax(&range, &madrid_terms());
         assert_eq!(pax, Some(61734944), "MAD 2019 expected 61,734,944");
     }
 
@@ -366,7 +414,7 @@ mod tests {
     fn parse_2019_barcelona() {
         let mut wb = open_test_file("00.Definitivo_2019.xls");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, BARCELONA_ICAO);
+        let pax = extract_airport_pax(&range, &barcelona_terms());
         assert_eq!(pax, Some(52688455), "BCN 2019 expected 52,688,455");
     }
 
@@ -374,7 +422,7 @@ mod tests {
     fn parse_2018_madrid() {
         let mut wb = open_test_file("0.Anual_Definitivo_2018.xls");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, MADRID_ICAO);
+        let pax = extract_airport_pax(&range, &madrid_terms());
         assert_eq!(pax, Some(57890057), "MAD 2018 expected 57,890,057");
     }
 
@@ -382,7 +430,7 @@ mod tests {
     fn parse_2014_madrid() {
         let mut wb = open_test_file("Definitivo+2014.xls");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, MADRID_ICAO);
+        let pax = extract_airport_pax(&range, &madrid_terms());
         assert_eq!(pax, Some(41833686), "MAD 2014 expected 41,833,686");
     }
 
@@ -390,7 +438,7 @@ mod tests {
     fn parse_2014_barcelona() {
         let mut wb = open_test_file("Definitivo+2014.xls");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, BARCELONA_ICAO);
+        let pax = extract_airport_pax(&range, &barcelona_terms());
         assert_eq!(pax, Some(37558981), "BCN 2014 expected 37,558,981");
     }
 
@@ -398,7 +446,7 @@ mod tests {
     fn parse_2008_madrid() {
         let mut wb = open_test_file("12.Estadistica_Diciembre_2008.xls");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, MADRID_ICAO);
+        let pax = extract_airport_pax(&range, &madrid_terms());
         assert_eq!(pax, Some(50846494), "MAD 2008 expected 50,846,494");
     }
 
@@ -406,7 +454,7 @@ mod tests {
     fn parse_2008_barcelona() {
         let mut wb = open_test_file("12.Estadistica_Diciembre_2008.xls");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, BARCELONA_ICAO);
+        let pax = extract_airport_pax(&range, &barcelona_terms());
         assert_eq!(pax, Some(30272084), "BCN 2008 expected 30,272,084");
     }
 
@@ -414,7 +462,7 @@ mod tests {
     fn parse_2004_madrid() {
         let mut wb = open_test_file("TOTAL_2004.xls");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, MADRID_ICAO);
+        let pax = extract_airport_pax(&range, &madrid_terms());
         assert!(pax.is_some(), "MAD 2004 should have data");
         assert!(pax.unwrap() > 30_000_000, "MAD 2004 should be >30M, got {:?}", pax);
     }
@@ -423,7 +471,7 @@ mod tests {
     fn parse_2025_provisional_madrid() {
         let mut wb = open_test_file("PROVISIONALES+2025.xlsx");
         let range = get_data_range(&mut wb);
-        let pax = extract_airport_pax(&range, MADRID_ICAO);
+        let pax = extract_airport_pax(&range, &madrid_terms());
         assert!(pax.is_some(), "MAD 2025 provisional should have data");
         assert!(pax.unwrap() > 10_000_000, "MAD 2025 should be >10M, got {:?}", pax);
     }

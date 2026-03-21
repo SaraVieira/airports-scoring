@@ -6,8 +6,8 @@ use tracing::{info, warn};
 
 use crate::models::{Airport, FetchResult};
 
-/// UK airports that have CAA punctuality data.
-const SUPPORTED_AIRPORTS: &[&str] = &["LHR", "LGW", "LTN"];
+/// CAA is the UK Civil Aviation Authority — only runs for GB airports.
+const CAA_COUNTRY: &str = "GB";
 
 /// CAA data download URL pattern.
 /// The CAA publishes CSV punctuality data on their website.
@@ -21,12 +21,9 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         .as_deref()
         .context("Airport has no IATA code")?;
 
-    // Only process supported UK airports
-    if !SUPPORTED_AIRPORTS.contains(&iata) {
-        info!(
-            airport = iata,
-            "Airport not in CAA supported list, skipping"
-        );
+    // Only process UK airports.
+    if airport.country_code != CAA_COUNTRY {
+        info!(airport = iata, "Not a UK airport, skipping CAA");
         return Ok(FetchResult {
             records_processed: 0,
             last_record_date: None,
