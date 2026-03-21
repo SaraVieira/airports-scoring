@@ -1,0 +1,120 @@
+use anyhow::{bail, Result};
+use sqlx::PgPool;
+use tracing::{error, info};
+
+use crate::db;
+use crate::fetchers;
+use crate::models::{Airport, FetchResult};
+
+/// All known data sources.
+pub const ALL_SOURCES: &[&str] = &[
+    "ourairports",
+    "eurocontrol",
+    "metar",
+    "opensky",
+    "opdi",
+    "eurostat",
+    "caa",
+    "skytrax",
+    "sentiment",
+];
+
+/// Dispatch to the correct fetcher for a given source name.
+async fn dispatch_fetcher(
+    pool: &PgPool,
+    airport: &Airport,
+    source: &str,
+    full_refresh: bool,
+) -> Result<FetchResult> {
+    match source {
+        "ourairports" => fetchers::ourairports::fetch(pool, airport, full_refresh).await,
+        "eurocontrol" => fetchers::eurocontrol::fetch(pool, airport, full_refresh).await,
+        "metar" => fetchers::metar::fetch(pool, airport, full_refresh).await,
+        "opensky" => fetchers::opensky::fetch(pool, airport, full_refresh).await,
+        "opdi" => fetchers::opdi::fetch(pool, airport, full_refresh).await,
+        "eurostat" => fetchers::eurostat::fetch(pool, airport, full_refresh).await,
+        "caa" => fetchers::caa::fetch(pool, airport, full_refresh).await,
+        "skytrax" | "sentiment" => {
+            // Skytrax and sentiment share stub behavior for now.
+            // The ML pipeline handles sentiment scoring separately.
+            bail!("Source '{}' is not yet implemented", source)
+        }
+        other => bail!("Unknown source: {}", other),
+    }
+}
+
+/// Run the pipeline for a set of airports and (optionally) a single source.
+///
+/// If `source` is `None`, all sources are run for each airport.
+pub async fn run_pipeline(
+    pool: &PgPool,
+    airports: &[Airport],
+    source: Option<&str>,
+    full_refresh: bool,
+) -> Result<()> {
+    let sources: Vec<&str> = match source {
+        Some(s) => {
+            if !ALL_SOURCES.contains(&s) {
+                bail!(
+                    "Unknown source '{}'. Valid sources: {}",
+                    s,
+                    ALL_SOURCES.join(", ")
+                );
+            }
+            vec![s]
+        }
+        None => ALL_SOURCES.to_vec(),
+    };
+
+    for airport in airports {
+        let iata = airport
+            .iata_code
+            .as_deref()
+            .unwrap_or("???");
+
+        for &src in &sources {
+            info!(airport = iata, source = src, "Starting fetch");
+
+            let run_id = db::start_pipeline_run(pool, airport.id, src).await?;
+
+            match dispatch_fetcher(pool, airport, src, full_refresh).await {
+                Ok(result) => {
+                    info!(
+                        airport = iata,
+                        source = src,
+                        records = result.records_processed,
+                        "Fetch completed"
+                    );
+                    db::complete_pipeline_run(
+                        pool,
+                        run_id,
+                        "success",
+                        result.records_processed,
+                        result.last_record_date,
+                        None,
+                    )
+                    .await?;
+                }
+                Err(e) => {
+                    error!(
+                        airport = iata,
+                        source = src,
+                        error = %e,
+                        "Fetch failed"
+                    );
+                    db::complete_pipeline_run(
+                        pool,
+                        run_id,
+                        "failed",
+                        0,
+                        None,
+                        Some(&e.to_string()),
+                    )
+                    .await?;
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
