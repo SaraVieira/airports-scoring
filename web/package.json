@@ -10,15 +10,19 @@
   "dependencies": {
     "@tanstack/react-router": "^1",
     "@tanstack/start": "^1",
+    "drizzle-orm": "^0.45.1",
+    "pg": "^8.20.0",
     "react": "^19",
     "react-dom": "^19",
     "vinxi": "^0.5"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5",
+    "drizzle-kit": "^0.31.10",
     "tailwindcss": "^4",
-    "@tailwindcss/vite": "^4"
+    "typescript": "^5"
   }
 }
