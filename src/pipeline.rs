@@ -1,12 +1,22 @@
 use anyhow::{bail, Result};
 use chrono::Datelike;
 use sqlx::PgPool;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 use crate::db;
 use crate::fetchers;
 use crate::models::{Airport, FetchResult};
 use crate::scoring;
+
+/// Countries that have a dedicated passenger data fetcher.
+/// If an airport's country is NOT in this list, we emit a warning
+/// because we're relying solely on Wikipedia/Eurostat for pax data.
+const COUNTRIES_WITH_PAX_FETCHER: &[&str] = &[
+    "ES", // AENA
+];
+
+/// Sources that produce passenger data (write to pax_yearly).
+const PAX_SOURCES: &[&str] = &["aena", "eurostat", "wikipedia"];
 
 /// All known data sources.
 pub const ALL_SOURCES: &[&str] = &[
@@ -126,6 +136,9 @@ pub async fn run_pipeline(
             .as_deref()
             .unwrap_or("???");
 
+        // Track which pax-producing sources returned data for this airport.
+        let mut pax_records_by_source: Vec<(&str, i32)> = Vec::new();
+
         for &src in &sources {
             // Skip ourairports — already handled above.
             if src == "ourairports" {
@@ -153,6 +166,10 @@ pub async fn run_pipeline(
                         None,
                     )
                     .await?;
+
+                    if PAX_SOURCES.contains(&src) {
+                        pax_records_by_source.push((src, result.records_processed));
+                    }
                 }
                 Err(e) => {
                     error!(
@@ -170,8 +187,17 @@ pub async fn run_pipeline(
                         Some(&e.to_string()),
                     )
                     .await?;
+
+                    if PAX_SOURCES.contains(&src) {
+                        pax_records_by_source.push((src, 0));
+                    }
                 }
             }
+        }
+
+        // Check passenger data coverage for this airport.
+        if source.is_none() {
+            check_pax_coverage(airport, iata, &pax_records_by_source);
         }
     }
 
@@ -185,4 +211,40 @@ pub async fn run_pipeline(
     }
 
     Ok(())
+}
+
+/// Check whether an airport has passenger data from at least one source.
+/// Warns if no country-specific pax fetcher exists, errors if Wikipedia
+/// also failed to provide pax data.
+fn check_pax_coverage(airport: &Airport, iata: &str, pax_results: &[(&str, i32)]) {
+    let has_country_fetcher = COUNTRIES_WITH_PAX_FETCHER.contains(&airport.country_code.as_str());
+
+    let country_pax = pax_results
+        .iter()
+        .filter(|(src, _)| *src != "wikipedia")
+        .any(|(_, count)| *count > 0);
+
+    let wiki_pax = pax_results
+        .iter()
+        .find(|(src, _)| *src == "wikipedia")
+        .map_or(false, |(_, count)| *count > 0);
+
+    let total_pax = country_pax || wiki_pax;
+
+    if !has_country_fetcher {
+        warn!(
+            airport = iata,
+            country = %airport.country_code,
+            "No country-specific passenger data fetcher for this country — \
+             relying on Wikipedia/Eurostat only"
+        );
+    }
+
+    if !total_pax {
+        error!(
+            airport = iata,
+            country = %airport.country_code,
+            "No passenger data found from any source (country fetcher, Eurostat, or Wikipedia)"
+        );
+    }
 }
