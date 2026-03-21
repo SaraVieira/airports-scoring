@@ -1,15 +1,12 @@
 use anyhow::{Context, Result, bail};
 use calamine::{open_workbook_auto_from_rs, Reader, Data};
+use chrono::Datelike;
 use sqlx::PgPool;
 use tracing::{info, warn};
 
+use crate::fetchers::wikipedia::USER_AGENT;
 use crate::models::{Airport, FetchResult};
 
-/// AENA traffic statistics page (for reference — actual XLS URLs are constructed below).
-const AENA_STATS_BASE: &str =
-    "https://www.aena.es/es/estadisticas/estadisticas-de-trafico-aereo.html";
-
-/// AENA ICAO codes for airports we care about.
 const MADRID_ICAO: &str = "LEMD";
 const BARCELONA_ICAO: &str = "LEBL";
 
@@ -38,7 +35,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
     }
 
     let client = reqwest::Client::builder()
-        .user_agent("AirportIntelligencePlatform/1.0")
+        .user_agent(USER_AGENT)
         .build()?;
 
     // AENA publishes annual summary XLS files. Try recent years.
@@ -84,8 +81,6 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         last_record_date: last_date,
     })
 }
-
-use chrono::Datelike;
 
 /// Attempt to download and parse AENA XLS data for a specific year.
 async fn fetch_aena_year(

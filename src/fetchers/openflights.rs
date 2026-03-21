@@ -16,6 +16,11 @@ const VALID_TO: &str = "2014-06-01";
 ///
 /// CSV columns (no header): airline, airline_id, source_airport, source_airport_id,
 /// dest_airport, dest_airport_id, codeshare, stops, equipment
+///
+/// OpenFlights uses IATA codes. The unique index on routes uses (destination_icao,
+/// airline_icao), so we populate both _iata and _icao columns with the same value
+/// since OpenFlights doesn't distinguish. The IATA code goes into destination_icao
+/// for dedup purposes — downstream consumers should prefer OPDI data which has true ICAO.
 pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Result<FetchResult> {
     let icao = airport
         .icao_code
@@ -26,15 +31,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         .as_deref()
         .context("Airport has no IATA code")?;
 
-    let client = reqwest::Client::new();
-    let text = client
-        .get(ROUTES_URL)
-        .send()
-        .await
-        .context("Failed to download OpenFlights routes.dat")?
-        .text()
-        .await
-        .context("Failed to read OpenFlights response body")?;
+    let text = download_routes_cached().await?;
 
     let valid_to = NaiveDate::parse_from_str(VALID_TO, "%Y-%m-%d").unwrap();
     let mut records: i32 = 0;
@@ -45,11 +42,10 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
             continue;
         }
 
-        let airline_iata = fields[0].trim().replace('\\', "");
+        let airline_raw = fields[0].trim().replace('\\', "");
         let source_airport = fields[2].trim();
         let dest_airport = fields[4].trim();
 
-        // Filter: only routes originating or arriving at this airport (by IATA or ICAO).
         let is_origin = source_airport == iata || source_airport == icao;
         let is_dest = dest_airport == iata || dest_airport == icao;
 
@@ -57,34 +53,27 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
             continue;
         }
 
-        // Determine the "other" airport for this route.
-        let (dest_iata_val, origin_is_us) = if is_origin {
-            (dest_airport, true)
-        } else {
-            (source_airport, false)
-        };
+        // "Other" end of the route — stored as destination regardless of direction.
+        let dest_code = if is_origin { dest_airport } else { source_airport };
 
-        // We always store routes with this airport as origin_id.
-        // For arrivals, the "destination" in the route table is the other end.
-        let _ = origin_is_us; // both directions stored with our airport as origin
+        if dest_code == "\\N" || dest_code.is_empty() {
+            continue;
+        }
 
-        let airline = if airline_iata == "\\N" || airline_iata.is_empty() {
+        let airline = if airline_raw == "\\N" || airline_raw.is_empty() {
             None
         } else {
-            Some(airline_iata.as_str())
+            Some(airline_raw.as_str())
         };
 
-        let dest_code = if dest_iata_val == "\\N" || dest_iata_val.is_empty() {
-            continue;
-        } else {
-            dest_iata_val
-        };
-
+        // Populate both _iata and _icao columns so the unique index works.
+        // OpenFlights only has IATA codes; true ICAO comes from OPDI data.
         sqlx::query(
             r#"
-            INSERT INTO routes (origin_id, destination_iata, airline_iata, data_source,
+            INSERT INTO routes (origin_id, destination_iata, destination_icao,
+                                airline_iata, airline_icao, data_source,
                                 first_observed, last_observed)
-            VALUES ($1, $2, $3, 'openflights', $4, $4)
+            VALUES ($1, $2, $2, $3, $3, 'openflights', $4, $4)
             ON CONFLICT (origin_id, destination_icao, airline_icao, data_source) DO NOTHING
             "#,
         )
@@ -95,10 +84,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         .execute(pool)
         .await
         .with_context(|| {
-            format!(
-                "Failed to insert OpenFlights route {} -> {}",
-                iata, dest_code
-            )
+            format!("Failed to insert OpenFlights route {} -> {}", iata, dest_code)
         })?;
 
         records += 1;
@@ -110,4 +96,32 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         records_processed: records,
         last_record_date: Some(valid_to),
     })
+}
+
+use std::sync::OnceLock;
+use tokio::sync::Mutex;
+
+/// Global cache for routes.dat to avoid re-downloading per airport.
+static ROUTES_CACHE: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+
+async fn download_routes_cached() -> Result<String> {
+    let mutex = ROUTES_CACHE.get_or_init(|| Mutex::new(None));
+    let mut guard = mutex.lock().await;
+
+    if let Some(ref cached) = *guard {
+        return Ok(cached.clone());
+    }
+
+    let client = reqwest::Client::new();
+    let text = client
+        .get(ROUTES_URL)
+        .send()
+        .await
+        .context("Failed to download OpenFlights routes.dat")?
+        .text()
+        .await
+        .context("Failed to read OpenFlights response body")?;
+
+    *guard = Some(text.clone());
+    Ok(text)
 }

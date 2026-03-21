@@ -162,7 +162,7 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool) -> Result<FetchResult
     )?;
 
     // 2. Parse airports CSV and filter to seed set.
-    let csv_airports = parse_csv_airports(&airports_text)?;
+    let csv_airports = parse_csv::<CsvAirport>(&airports_text)?;
     let seed_airports: Vec<&CsvAirport> = csv_airports
         .iter()
         .filter(|a| {
@@ -270,7 +270,7 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool) -> Result<FetchResult
     info!(count = records, "Upserted airports");
 
     // 4. Parse and insert runways.
-    let csv_runways = parse_csv_runways(&runways_text)?;
+    let csv_runways = parse_csv::<CsvRunway>(&runways_text)?;
     let mut runway_count: i32 = 0;
 
     // Group runways by airport_ref for batch delete+insert.
@@ -352,7 +352,7 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool) -> Result<FetchResult
     info!(count = runway_count, "Inserted runways");
 
     // 5. Parse and insert frequencies.
-    let csv_frequencies = parse_csv_frequencies(&frequencies_text)?;
+    let csv_frequencies = parse_csv::<CsvFrequency>(&frequencies_text)?;
     let mut freq_count: i32 = 0;
 
     let mut freqs_by_airport: HashMap<i64, Vec<&CsvFrequency>> = HashMap::new();
@@ -405,7 +405,7 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool) -> Result<FetchResult
     info!(count = freq_count, "Inserted frequencies");
 
     // 6. Parse and insert navaids.
-    let csv_navaids = parse_csv_navaids(&navaids_text)?;
+    let csv_navaids = parse_csv::<CsvNavaid>(&navaids_text)?;
     let mut navaid_count: i32 = 0;
 
     // Build a reverse map from ICAO ident -> db airport id.
@@ -500,54 +500,12 @@ async fn download_csv(client: &reqwest::Client, url: &str) -> Result<String> {
     Ok(text)
 }
 
-fn parse_csv_airports(text: &str) -> Result<Vec<CsvAirport>> {
+fn parse_csv<T: serde::de::DeserializeOwned>(text: &str) -> Result<Vec<T>> {
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(true)
         .flexible(true)
         .from_reader(text.as_bytes());
-    let mut rows = Vec::new();
-    for result in rdr.deserialize() {
-        let record: CsvAirport = result.context("Failed to parse airport CSV row")?;
-        rows.push(record);
-    }
-    Ok(rows)
-}
-
-fn parse_csv_runways(text: &str) -> Result<Vec<CsvRunway>> {
-    let mut rdr = csv::ReaderBuilder::new()
-        .has_headers(true)
-        .flexible(true)
-        .from_reader(text.as_bytes());
-    let mut rows = Vec::new();
-    for result in rdr.deserialize() {
-        let record: CsvRunway = result.context("Failed to parse runway CSV row")?;
-        rows.push(record);
-    }
-    Ok(rows)
-}
-
-fn parse_csv_frequencies(text: &str) -> Result<Vec<CsvFrequency>> {
-    let mut rdr = csv::ReaderBuilder::new()
-        .has_headers(true)
-        .flexible(true)
-        .from_reader(text.as_bytes());
-    let mut rows = Vec::new();
-    for result in rdr.deserialize() {
-        let record: CsvFrequency = result.context("Failed to parse frequency CSV row")?;
-        rows.push(record);
-    }
-    Ok(rows)
-}
-
-fn parse_csv_navaids(text: &str) -> Result<Vec<CsvNavaid>> {
-    let mut rdr = csv::ReaderBuilder::new()
-        .has_headers(true)
-        .flexible(true)
-        .from_reader(text.as_bytes());
-    let mut rows = Vec::new();
-    for result in rdr.deserialize() {
-        let record: CsvNavaid = result.context("Failed to parse navaid CSV row")?;
-        rows.push(record);
-    }
-    Ok(rows)
+    rdr.deserialize()
+        .collect::<std::result::Result<Vec<T>, _>>()
+        .context("Failed to parse CSV")
 }
