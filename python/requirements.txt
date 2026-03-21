@@ -1,0 +1,6 @@
+playwright
+beautifulsoup4
+transformers
+torch
+requests
+psycopg2-binary
