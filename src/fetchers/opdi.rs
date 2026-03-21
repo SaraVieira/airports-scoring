@@ -38,7 +38,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
     let start_date = if full_refresh {
         NaiveDate::from_ymd_opt(2022, 1, 1).unwrap()
     } else {
-        let last: Option<(NaiveDate,)> = sqlx::query_as(
+        let last: Option<(Option<NaiveDate>,)> = sqlx::query_as(
             r#"
             SELECT last_record_date
             FROM pipeline_runs
@@ -52,8 +52,8 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
         .await?;
 
         match last {
-            Some((d,)) => d,
-            None => NaiveDate::from_ymd_opt(2022, 1, 1).unwrap(),
+            Some((Some(d),)) => d,
+            _ => NaiveDate::from_ymd_opt(2022, 1, 1).unwrap(),
         }
     };
 

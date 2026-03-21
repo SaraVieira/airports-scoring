@@ -3,7 +3,28 @@
     "allow": [
       "Bash(npm install:*)",
       "WebFetch(domain:openskynetwork.github.io)",
-      "Bash(cargo check:*)"
+      "Bash(cargo check:*)",
+      "Bash(source /Users/saravieira/Projects/airports-scoring/.env)",
+      "Bash(psql \"$DATABASE_URL\" -c \"\\\\d runways\")",
+      "Bash(source .env)",
+      "Bash(./target/release/airport-fetch --all)",
+      "Bash(ls node_modules/.pnpm/@tanstack+router-generator@*/node_modules/@tanstack/router-generator/package.json)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm view:*)",
+      "Bash(timeout 15 pnpm dev)",
+      "Bash(psql \"$DATABASE_URL\" -c \"\\\\d metar_daily\")",
+      "Bash(psql \"$DATABASE_URL\" -c \"\\\\di metar_daily*\")",
+      "Bash(psql \"$DATABASE_URL\" -c \"SELECT conname FROM pg_constraint WHERE conrelid = ''metar_daily''::regclass;\")",
+      "Bash(psql \"$DATABASE_URL\" -c \":*)",
+      "Bash(node:*)",
+      "Bash(python3 -c \"import json,sys; v=json.load\\(sys.stdin\\); print\\(''''\\\\n''''.join\\(v[-10:]\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; v=json.load\\(sys.stdin\\); print\\(''''\\\\n''''.join\\([x for x in v if x.startswith\\(''''1.120''''\\)]\\)\\)\")",
+      "Bash(cargo build:*)",
+      "Bash(python3:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm remove:*)"
     ]
   }
 }

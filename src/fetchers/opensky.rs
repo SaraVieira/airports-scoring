@@ -126,7 +126,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
 
     // Determine start time
     let now = Utc::now();
-    let last_date: Option<(NaiveDate,)> = sqlx::query_as(
+    let last_date: Option<(Option<NaiveDate>,)> = sqlx::query_as(
         r#"
         SELECT last_record_date
         FROM pipeline_runs
@@ -140,8 +140,8 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
     .await?;
 
     let start_ts = match last_date {
-        Some((d,)) => d.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp(),
-        None => now.timestamp() - 30 * 24 * 3600,
+        Some((Some(d),)) => d.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp(),
+        _ => now.timestamp() - 30 * 24 * 3600,
     };
     let end_ts = now.timestamp();
 

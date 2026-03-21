@@ -327,7 +327,41 @@ async function seed() {
     CREATE INDEX IF NOT EXISTS airports_city_trgm ON airports USING GIN (city gin_trgm_ops)
   `);
 
-  console.log("  3 special indexes created");
+  console.log("  spatial + trigram indexes created");
+
+  // ── Unique constraints Drizzle doesn't create ──────────────
+  console.log("Creating unique constraints for ON CONFLICT upserts...");
+
+  await db.execute(sql`
+    DO $$ BEGIN
+      ALTER TABLE pax_yearly ADD CONSTRAINT pax_yearly_airport_year_unique UNIQUE (airport_id, year);
+    EXCEPTION WHEN duplicate_object THEN NULL; END $$
+  `);
+  await db.execute(sql`
+    DO $$ BEGIN
+      ALTER TABLE metar_daily ADD CONSTRAINT metar_daily_airport_date_unique UNIQUE (airport_id, observation_date);
+    EXCEPTION WHEN duplicate_object THEN NULL; END $$
+  `);
+  await db.execute(sql`
+    DO $$ BEGIN
+      ALTER TABLE operational_stats ADD CONSTRAINT ops_stats_unique UNIQUE (airport_id, period_year, period_month, source);
+    EXCEPTION WHEN duplicate_object THEN NULL; END $$
+  `);
+  await db.execute(sql`
+    DO $$ BEGIN
+      ALTER TABLE sentiment_snapshots ADD CONSTRAINT sentiment_unique UNIQUE (airport_id, source, snapshot_year, snapshot_quarter);
+    EXCEPTION WHEN duplicate_object THEN NULL; END $$
+  `);
+  await db.execute(sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS routes_icao_unique_idx ON routes (origin_id, destination_icao, airline_icao, data_source)
+      WHERE data_source IN ('opdi', 'opensky')
+  `);
+  await db.execute(sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS routes_iata_unique_idx ON routes (origin_id, destination_iata, airline_iata, data_source)
+      WHERE data_source = 'openflights'
+  `);
+
+  console.log("  unique constraints created");
 
   console.log("\nSeed complete!");
 }

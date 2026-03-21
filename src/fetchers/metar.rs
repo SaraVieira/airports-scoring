@@ -52,7 +52,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
         end_date - chrono::Duration::days(730)
     } else {
         // Check last pipeline run for this source
-        let last: Option<(NaiveDate,)> = sqlx::query_as(
+        let last: Option<(Option<NaiveDate>,)> = sqlx::query_as(
             r#"
             SELECT last_record_date
             FROM pipeline_runs
@@ -66,8 +66,8 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
         .await?;
 
         match last {
-            Some((d,)) => d,
-            None => end_date - chrono::Duration::days(30),
+            Some((Some(d),)) => d,
+            _ => end_date - chrono::Duration::days(30),
         }
     };
 

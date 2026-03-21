@@ -211,17 +211,17 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&s
             r#"
             INSERT INTO airports (
                 iata_code, icao_code, ourairports_id,
-                name, city, country_code, region_code,
+                name, city, country_code,
                 location, elevation_ft,
                 airport_type, scheduled_service,
                 wikipedia_url, website_url,
                 in_seed_set
             ) VALUES (
                 $1, $2, $3,
-                $4, $5, $6, $7,
-                ST_MakePoint($8, $9)::geography, $10,
-                $11, $12,
-                $13, $14,
+                $4, $5, $6,
+                ST_MakePoint($7, $8)::geography, $9,
+                $10, $11,
+                $12, $13,
                 TRUE
             )
             ON CONFLICT (iata_code) DO UPDATE SET
@@ -230,7 +230,6 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&s
                 name             = EXCLUDED.name,
                 city             = EXCLUDED.city,
                 country_code     = EXCLUDED.country_code,
-                region_code      = EXCLUDED.region_code,
                 location         = EXCLUDED.location,
                 elevation_ft     = EXCLUDED.elevation_ft,
                 airport_type     = EXCLUDED.airport_type,
@@ -248,7 +247,6 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&s
         .bind(&airport.name)
         .bind(municipality)
         .bind(country)
-        .bind(airport.iso_region.as_deref())
         .bind(lon) // ST_MakePoint takes (lon, lat)
         .bind(lat)
         .bind(parse_opt_i32(&airport.elevation_ft))
@@ -308,9 +306,9 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&s
                     airport_id, ident, le_ident, he_ident,
                     length_ft, width_ft, surface, lighted, closed,
                     le_latitude_deg, le_longitude_deg, le_elevation_ft,
-                    le_heading_degT, le_displaced_threshold_ft,
+                    "le_heading_degT", le_displaced_threshold_ft,
                     he_latitude_deg, he_longitude_deg, he_elevation_ft,
-                    he_heading_degT, he_displaced_threshold_ft
+                    "he_heading_degT", he_displaced_threshold_ft
                 ) VALUES (
                     $1, $2, $3, $4,
                     $5, $6, $7, $8, $9,

@@ -37,6 +37,7 @@ dependencies = [
  "chrono",
  "clap",
  "csv",
+ "dotenvy",
  "regex",
  "reqwest",
  "rust_decimal",

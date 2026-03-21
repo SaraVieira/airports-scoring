@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/start";
+import { createServerFn } from "@tanstack/react-start";
 import { db } from "../db";
 import { airports, airportScores } from "../db/schema";
 import { eq } from "drizzle-orm";
 
 const getAirport = createServerFn({ method: "GET" })
-  .validator((iata: string) => iata.toUpperCase())
-  .handler(async ({ input: iata }) => {
+  .handler(async ({ data: iata }: { data: string }) => {
+    iata = iata.toUpperCase();
     const airport = await db.query.airports.findFirst({
       where: eq(airports.iataCode, iata),
       with: {

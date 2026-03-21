@@ -48,6 +48,9 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Load .env file (silently ignore if missing).
+    dotenvy::dotenv().ok();
+
     // Initialise tracing (respects RUST_LOG env var, defaults to info).
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -70,6 +73,20 @@ async fn main() -> Result<()> {
     // Connect to Postgres.
     let pool = db::get_pool().await?;
     info!("Connected to database");
+
+    // Bootstrap: if source is ourairports, run it first before resolving airports.
+    // OurAirports is what populates the airports table — can't query it before seeding.
+    if cli.source.as_deref() == Some("ourairports") || cli.source.is_none() {
+        info!("Running OurAirports bootstrap fetch");
+        let result = fetchers::ourairports::fetch_all(&pool, cli.full_refresh, &seed_iata_codes).await?;
+        info!(records = result.records_processed, "OurAirports bootstrap complete");
+
+        // If only ourairports was requested, we're done.
+        if cli.source.as_deref() == Some("ourairports") {
+            info!("Pipeline complete");
+            return Ok(());
+        }
+    }
 
     // Resolve the list of airports.
     let airports = if cli.all {

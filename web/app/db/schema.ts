@@ -16,6 +16,11 @@ import {
   jsonb,
 } from "drizzle-orm/pg-core";
 
+// PostGIS geography column (location) is NOT in the Drizzle schema.
+// It's created by the seed script and managed by the Rust CLI.
+// When running `drizzle-kit push`, select "No, abort" if it tries
+// to drop the location column, or use --force to skip the prompt.
+
 // ============================================================
 // REFERENCE / LOOKUP TABLES
 // ============================================================
@@ -70,6 +75,7 @@ export const airports = pgTable("airports", {
     .notNull()
     .references(() => countries.isoCode),
   regionCode: text("region_code").references(() => regions.isoCode),
+  // location: geography(POINT, 4326) — managed by seed.ts and Rust CLI, not Drizzle
   elevationFt: integer("elevation_ft"),
   timezone: text("timezone"),
   airportType: text("airport_type").notNull(),
@@ -405,4 +411,50 @@ export const airportSlugs = pgTable("airport_slugs", {
     .references(() => airports.id, { onDelete: "cascade" }),
   source: text("source").notNull(),
   slug: text("slug").notNull(),
+});
+
+// ============================================================
+// PIPELINE RUNS
+// ============================================================
+
+export const pipelineRuns = pgTable("pipeline_runs", {
+  id: serial("id").primaryKey(),
+  airportId: integer("airport_id").references(() => airports.id, {
+    onDelete: "cascade",
+  }),
+  source: text("source").notNull(),
+  startedAt: timestamp("started_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  status: text("status").notNull().default("running"),
+  recordsProcessed: integer("records_processed").default(0),
+  lastRecordDate: date("last_record_date"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// ============================================================
+// OPERATOR SCORES
+// ============================================================
+
+export const operatorScores = pgTable("operator_scores", {
+  id: serial("id").primaryKey(),
+  organisationId: integer("organisation_id")
+    .notNull()
+    .references(() => organisations.id),
+  scoreVersion: text("score_version").notNull().default("v1"),
+  scoredAt: timestamp("scored_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  referenceYear: smallint("reference_year").notNull(),
+  airportCount: smallint("airport_count"),
+  avgScoreTotal: numeric("avg_score_total", { precision: 5, scale: 2 }),
+  avgScoreSentiment: numeric("avg_score_sentiment", { precision: 5, scale: 2 }),
+  avgScoreOperational: numeric("avg_score_operational", {
+    precision: 5,
+    scale: 2,
+  }),
+  isLatest: boolean("is_latest").default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
