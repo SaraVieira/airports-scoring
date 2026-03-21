@@ -128,7 +128,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
     let sknt_col = col("sknt");
     let gust_col = col("gust");
     let p01i_col = col("p01i");
-    let skyc1_col = col("skyc1");
+    let _skyc1_col = col("skyc1");
     let skyl1_col = col("skyl1");
     let wxcodes_col = col("wxcodes").or_else(|| col("metar"));
 
