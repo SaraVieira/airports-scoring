@@ -7,4 +7,6 @@ pub mod openflights;
 pub mod opensky;
 pub mod opdi;
 pub mod ourairports;
+pub mod sentiment;
+pub mod skytrax;
 pub mod wikipedia;

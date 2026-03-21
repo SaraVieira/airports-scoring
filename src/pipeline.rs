@@ -20,7 +20,7 @@ const PAX_SOURCES: &[&str] = &["aena", "eurostat", "wikipedia"];
 
 /// Data sources run by the Rust CLI per-airport.
 /// ourairports is handled separately in main.rs (bulk bootstrap).
-/// skytrax and sentiment need the Python ML pipeline.
+/// skytrax + sentiment call Python subprocesses.
 pub const ALL_SOURCES: &[&str] = &[
     "eurocontrol",
     "metar",
@@ -31,6 +31,8 @@ pub const ALL_SOURCES: &[&str] = &[
     "aena",
     "openflights",
     "wikipedia",
+    "skytrax",
+    "sentiment",
 ];
 
 /// Dispatch to the correct fetcher for a given source name.
@@ -52,10 +54,8 @@ async fn dispatch_fetcher(
         "aena" => fetchers::aena::fetch(pool, airport, full_refresh).await,
         "openflights" => fetchers::openflights::fetch(pool, airport, full_refresh).await,
         "wikipedia" => fetchers::wikipedia::fetch(pool, airport, full_refresh).await,
-        "skytrax" | "sentiment" => {
-            warn!(source = source, "This source requires the Python ML pipeline — run python/skytrax_scraper.py or python/sentiment_pipeline.py directly");
-            Ok(FetchResult { records_processed: 0, last_record_date: None })
-        }
+        "skytrax" => fetchers::skytrax::fetch(pool, airport, full_refresh).await,
+        "sentiment" => fetchers::sentiment::fetch(pool, airport, full_refresh).await,
         other => bail!("Unknown source: {}", other),
     }
 }
