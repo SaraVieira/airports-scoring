@@ -213,7 +213,7 @@ CREATE TABLE operational_stats (
     total_flights           INTEGER,
     delayed_flights         INTEGER,
     delay_pct               NUMERIC(5,2),      -- % of flights delayed >15min
-    avg_delay_minutes       NUMERIC(6,2),
+    avg_delay_minutes       NUMERIC(10,2),
     cancelled_flights       INTEGER,
     cancellation_pct        NUMERIC(5,2),
 

@@ -36,6 +36,8 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
 
     // Determine which months to fetch
     let now = chrono::Utc::now().naive_utc().date();
+    // OPDI parquet files are ~35MB each. Default to last 3 months
+    // to avoid downloading 50+ files. Use --full-refresh for all history.
     let start_date = if full_refresh {
         NaiveDate::from_ymd_opt(2022, 1, 1).unwrap()
     } else {
@@ -54,7 +56,8 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
 
         match last {
             Some((Some(d),)) => d,
-            _ => NaiveDate::from_ymd_opt(2022, 1, 1).unwrap(),
+            // Default to 3 months ago (not 2022) to avoid huge downloads
+            _ => now - chrono::Months::new(3),
         }
     };
 
@@ -71,18 +74,20 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
         }
 
         let url = format!(
-            "https://www.opdi.aero/download/flight-list/{:04}-{:02}.parquet",
+            "https://www.eurocontrol.int/performance/data/download/OPDI/v002/flight_list/flight_list_{:04}{:02}.parquet",
             year, month
         );
 
         info!(url = %url, airport = icao, "Fetching OPDI parquet via Python helper");
 
         // Shell out to Python to download and filter the parquet file
+        // Pure pyarrow — no pandas dependency needed
         let python_script = format!(
             r#"
 import sys, json, urllib.request, tempfile, os
 try:
     import pyarrow.parquet as pq
+    import pyarrow.compute as pc
 except ImportError:
     print("[]")
     sys.exit(0)
@@ -93,30 +98,31 @@ try:
     tmp = tempfile.NamedTemporaryFile(suffix=".parquet", delete=False)
     urllib.request.urlretrieve(url, tmp.name)
     table = pq.read_table(tmp.name)
-    df = table.to_pandas()
     os.unlink(tmp.name)
 
-    # Find columns (case-insensitive)
-    cols = {{c.lower(): c for c in df.columns}}
-    origin_col = cols.get("adep", cols.get("origin_icao", cols.get("departure_icao", None)))
-    dest_col = cols.get("ades", cols.get("destination_icao", cols.get("arrival_icao", None)))
-    airline_col = cols.get("airline", cols.get("airline_icao", cols.get("operator", None)))
-    date_col = cols.get("filing_date", cols.get("flight_date", cols.get("date", None)))
+    cols = {{c.lower(): c for c in table.column_names}}
+    origin_col = cols.get("adep", cols.get("origin_icao", cols.get("departure_icao")))
+    dest_col = cols.get("ades", cols.get("destination_icao", cols.get("arrival_icao")))
+    airline_col = cols.get("airline", cols.get("airline_icao", cols.get("operator")))
+    date_col = cols.get("filing_date", cols.get("flight_date", cols.get("date")))
 
     if origin_col is None or dest_col is None:
         print("[]")
         sys.exit(0)
 
-    mask = (df[origin_col] == icao) | (df[dest_col] == icao)
-    subset = df[mask]
+    mask = pc.or_(
+        pc.equal(table.column(origin_col), icao),
+        pc.equal(table.column(dest_col), icao)
+    )
+    filtered = table.filter(mask)
 
     results = []
-    for _, row in subset.iterrows():
+    for i in range(filtered.num_rows):
         rec = {{
-            "origin_icao": str(row.get(origin_col, "")) if origin_col else None,
-            "destination_icao": str(row.get(dest_col, "")) if dest_col else None,
-            "airline": str(row.get(airline_col, "")) if airline_col else None,
-            "flight_date": str(row.get(date_col, "")) if date_col else None,
+            "origin_icao": str(filtered.column(origin_col)[i].as_py()) if origin_col else None,
+            "destination_icao": str(filtered.column(dest_col)[i].as_py()) if dest_col else None,
+            "airline": str(filtered.column(airline_col)[i].as_py()) if airline_col else None,
+            "flight_date": str(filtered.column(date_col)[i].as_py()) if date_col else None,
         }}
         results.append(rec)
 
@@ -127,7 +133,14 @@ except Exception as e:
 "#,
         );
 
-        let output = tokio::process::Command::new("python3")
+        // Use venv python if available, otherwise system python3
+        let python = if std::path::Path::new(".venv/bin/python3").exists() {
+            ".venv/bin/python3"
+        } else {
+            "python3"
+        };
+
+        let output = tokio::process::Command::new(python)
             .arg("-c")
             .arg(&python_script)
             .output()
@@ -219,6 +232,7 @@ except Exception as e:
                  flights_per_month, first_observed, last_observed, data_source)
             VALUES ($1, $2, $3, $4, $5, $6, 'opdi')
             ON CONFLICT (origin_id, destination_icao, airline_icao, data_source)
+                WHERE data_source IN ('opdi', 'opensky')
             DO UPDATE SET
                 flights_per_month = EXCLUDED.flights_per_month,
                 first_observed    = LEAST(routes.first_observed, EXCLUDED.first_observed),

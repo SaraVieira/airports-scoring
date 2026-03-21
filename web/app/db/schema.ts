@@ -178,7 +178,7 @@ export const operationalStats = pgTable("operational_stats", {
   totalFlights: integer("total_flights"),
   delayedFlights: integer("delayed_flights"),
   delayPct: numeric("delay_pct", { precision: 5, scale: 2 }),
-  avgDelayMinutes: numeric("avg_delay_minutes", { precision: 6, scale: 2 }),
+  avgDelayMinutes: numeric("avg_delay_minutes", { precision: 10, scale: 2 }),
   cancelledFlights: integer("cancelled_flights"),
   cancellationPct: numeric("cancellation_pct", { precision: 5, scale: 2 }),
   delayWeatherPct: numeric("delay_weather_pct", { precision: 5, scale: 2 }),
