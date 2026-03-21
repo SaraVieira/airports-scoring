@@ -175,7 +175,6 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
                  cancelled_flights, cancellation_pct, source)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'caa')
             ON CONFLICT (airport_id, period_year, period_month, source)
-                WHERE period_month IS NOT NULL
             DO UPDATE SET
                 total_flights     = EXCLUDED.total_flights,
                 delayed_flights   = EXCLUDED.delayed_flights,

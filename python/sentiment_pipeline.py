@@ -50,7 +50,6 @@ POSITIVE_EMOTIONS = {
 NEGATIVE_EMOTIONS = {
     "anger", "annoyance", "disappointment", "disapproval", "disgust",
     "embarrassment", "fear", "grief", "nervousness", "remorse", "sadness",
-    "frustration",
 }
 NEUTRAL_EMOTIONS = {
     "neutral", "confusion", "curiosity", "realization", "surprise",
@@ -66,8 +65,6 @@ TOPIC_LABELS = [
     "food & beverage",
     "wayfinding & signage",
     "transport links",
-    "facilities & seating",
-    "parking",
 ]
 
 # Map topic labels to output field names
@@ -78,8 +75,6 @@ TOPIC_FIELD_MAP = {
     "food & beverage":      "score_food_bev",
     "wayfinding & signage": "score_wayfinding",
     "transport links":      "score_transport",
-    "facilities & seating": "score_facilities",
-    "parking":              "score_parking",
 }
 
 # ---------------------------------------------------------------------------
@@ -180,7 +175,7 @@ def load_nli_model():
     """Load the cross-encoder NLI model for zero-shot topic classification."""
     logger.info("Loading NLI cross-encoder model…")
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
-    model_name = "cross-encoder/nli-MiniLM2-L6-H768"
+    model_name = "cross-encoder/nli-distilroberta-base"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -235,13 +230,14 @@ def fetch_unprocessed_reviews(conn, airport: str) -> list[dict]:
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
         cur.execute(
             """
-            SELECT id, review_date, overall_rating, review_text,
-                   score_queuing, score_cleanliness, score_staff,
-                   score_food_bev, score_wayfinding, score_transport
-            FROM reviews_raw
-            WHERE airport_iata = %s
-              AND (processed IS NULL OR processed = false)
-            ORDER BY review_date ASC
+            SELECT r.id, r.review_date, r.overall_rating, r.review_text,
+                   r.score_queuing, r.score_cleanliness, r.score_staff,
+                   r.score_food_bev, r.score_wayfinding, r.score_transport
+            FROM reviews_raw r
+            JOIN airports a ON r.airport_id = a.id
+            WHERE a.iata_code = %s
+              AND (r.processed IS NULL OR r.processed = false)
+            ORDER BY r.review_date ASC
             """,
             (airport.upper(),),
         )
@@ -351,6 +347,10 @@ def aggregate_snapshots(reviews_with_analysis: list[dict], airport: str) -> list
             "score_queuing": topic_avgs.get("score_queuing"),
             "score_cleanliness": topic_avgs.get("score_cleanliness"),
             "score_staff": topic_avgs.get("score_staff"),
+            "score_food_bev": topic_avgs.get("score_food_bev"),
+            "score_wifi": topic_avgs.get("score_wifi"),
+            "score_wayfinding": topic_avgs.get("score_wayfinding"),
+            "score_transport": topic_avgs.get("score_transport"),
             "commentary": commentary,
         }
         snapshots.append(snapshot)

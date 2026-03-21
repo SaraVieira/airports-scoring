@@ -218,7 +218,6 @@ except Exception as e:
                  flights_per_month, first_observed, last_observed, data_source)
             VALUES ($1, $2, $3, $4, $5, $6, 'opdi')
             ON CONFLICT (origin_id, destination_icao, airline_icao, data_source)
-                WHERE destination_icao IS NOT NULL AND airline_icao IS NOT NULL
             DO UPDATE SET
                 flights_per_month = EXCLUDED.flights_per_month,
                 first_observed    = LEAST(routes.first_observed, EXCLUDED.first_observed),
