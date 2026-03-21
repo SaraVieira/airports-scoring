@@ -229,7 +229,7 @@ CREATE TABLE operational_stats (
 
     source                  TEXT,
     created_at              TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE (airport_id, period_year, period_month)
+    UNIQUE (airport_id, period_year, period_month, source)
 );
 
 CREATE INDEX ops_stats_airport_idx ON operational_stats (airport_id);
@@ -511,6 +511,7 @@ CREATE TABLE routes (
 CREATE INDEX routes_origin_idx ON routes (origin_id);
 CREATE INDEX routes_dest_idx ON routes (destination_id);
 CREATE INDEX routes_airline_idx ON routes (airline_icao);
+CREATE UNIQUE INDEX routes_unique_idx ON routes (origin_id, destination_icao, airline_icao, data_source);
 
 -- ============================================================
 -- REVIEWS RAW (staging for ML pipeline)
