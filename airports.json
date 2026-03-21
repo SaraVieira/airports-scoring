@@ -1,0 +1,17 @@
+[
+  { "iata": "LHR", "country": "GB", "name": "London Heathrow" },
+  { "iata": "LGW", "country": "GB", "name": "London Gatwick" },
+  { "iata": "LTN", "country": "GB", "name": "London Luton" },
+  { "iata": "OPO", "country": "PT", "name": "Porto" },
+  { "iata": "MAD", "country": "ES", "name": "Madrid Barajas" },
+  { "iata": "BCN", "country": "ES", "name": "Barcelona El Prat" },
+  { "iata": "BER", "country": "DE", "name": "Berlin Brandenburg" },
+  { "iata": "MUC", "country": "DE", "name": "Munich" },
+  { "iata": "CDG", "country": "FR", "name": "Paris Charles de Gaulle" },
+  { "iata": "NCE", "country": "FR", "name": "Nice Côte d'Azur" },
+  { "iata": "AMS", "country": "NL", "name": "Amsterdam Schiphol" },
+  { "iata": "CPH", "country": "DK", "name": "Copenhagen" },
+  { "iata": "FCO", "country": "IT", "name": "Rome Fiumicino" },
+  { "iata": "WAW", "country": "PL", "name": "Warsaw Chopin" },
+  { "iata": "BUD", "country": "HU", "name": "Budapest" }
+]

@@ -1,3 +1,4 @@
+mod config;
 mod db;
 mod fetchers;
 mod models;
@@ -56,6 +57,11 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
 
+    // Load airport config from airports.json.
+    let seed_config = config::load_seed_airports(None)?;
+    let seed_iata_codes = config::seed_iata_codes(&seed_config);
+    info!(count = seed_iata_codes.len(), "Loaded seed airports from airports.json");
+
     // Validate: need either airport codes or --all.
     if cli.airports.is_empty() && !cli.all {
         bail!("Provide at least one IATA code, or use --all for all seed airports.");
@@ -92,6 +98,7 @@ async fn main() -> Result<()> {
         cli.full_refresh,
         cli.score,
         cli.reference_year,
+        &seed_iata_codes,
     )
     .await?;
 

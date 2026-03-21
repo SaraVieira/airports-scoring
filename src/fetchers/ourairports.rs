@@ -8,12 +8,9 @@ use tracing::info;
 
 use crate::models::{Airport, FetchResult};
 
-// ── Seed IATA codes ─────────────────────────────────────────────
-
-const SEED_IATA_CODES: &[&str] = &[
-    "LHR", "LGW", "LTN", "OPO", "MAD", "BCN", "BER", "MUC", "CDG", "NCE", "AMS", "CPH", "FCO",
-    "WAW", "BUD",
-];
+// Seed IATA codes are loaded from airports.json at startup —
+// see config::load_seed_airports(). The fetch_all() function
+// receives them as a parameter.
 
 const AIRPORTS_CSV_URL: &str =
     "https://davidmegginson.github.io/ourairports-data/airports.csv";
@@ -144,13 +141,13 @@ fn parse_bool_field(s: &Option<String>) -> Option<bool> {
 ///
 /// Because OurAirports is a bulk download, the per-airport `fetch` delegates
 /// to `fetch_all` which processes every seed airport in one pass.
-pub async fn fetch(pool: &PgPool, _airport: &Airport, full_refresh: bool) -> Result<FetchResult> {
-    fetch_all(pool, full_refresh).await
+pub async fn fetch(pool: &PgPool, _airport: &Airport, full_refresh: bool, seed_iata_codes: &[&str]) -> Result<FetchResult> {
+    fetch_all(pool, full_refresh, seed_iata_codes).await
 }
 
 /// Download all three OurAirports CSVs and upsert seed airports, their
 /// runways, and frequencies into Postgres.
-pub async fn fetch_all(pool: &PgPool, _full_refresh: bool) -> Result<FetchResult> {
+pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&str]) -> Result<FetchResult> {
     let client = reqwest::Client::new();
 
     // 1. Download all four CSVs in parallel.
@@ -168,7 +165,7 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool) -> Result<FetchResult
         .filter(|a| {
             a.iata_code
                 .as_deref()
-                .map(|code| SEED_IATA_CODES.contains(&code))
+                .map(|code| seed_iata_codes.contains(&code))
                 .unwrap_or(false)
         })
         .collect();

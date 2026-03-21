@@ -30,9 +30,10 @@ async fn dispatch_fetcher(
     airport: &Airport,
     source: &str,
     full_refresh: bool,
+    seed_iata_codes: &[&str],
 ) -> Result<FetchResult> {
     match source {
-        "ourairports" => fetchers::ourairports::fetch(pool, airport, full_refresh).await,
+        "ourairports" => fetchers::ourairports::fetch(pool, airport, full_refresh, seed_iata_codes).await,
         "eurocontrol" => fetchers::eurocontrol::fetch(pool, airport, full_refresh).await,
         "metar" => fetchers::metar::fetch(pool, airport, full_refresh).await,
         "opensky" => fetchers::opensky::fetch(pool, airport, full_refresh).await,
@@ -61,6 +62,7 @@ pub async fn run_pipeline(
     full_refresh: bool,
     score: bool,
     reference_year: Option<i16>,
+    seed_iata_codes: &[&str],
 ) -> Result<()> {
     let sources: Vec<&str> = match source {
         Some(s) => {
@@ -81,7 +83,7 @@ pub async fn run_pipeline(
     if sources.contains(&"ourairports") {
         info!(source = "ourairports", "Starting bulk fetch (once for all airports)");
         let run_id = db::start_pipeline_run(pool, airports[0].id, "ourairports").await?;
-        match fetchers::ourairports::fetch_all(pool, full_refresh).await {
+        match fetchers::ourairports::fetch_all(pool, full_refresh, seed_iata_codes).await {
             Ok(result) => {
                 info!(
                     source = "ourairports",
@@ -134,7 +136,7 @@ pub async fn run_pipeline(
 
             let run_id = db::start_pipeline_run(pool, airport.id, src).await?;
 
-            match dispatch_fetcher(pool, airport, src, full_refresh).await {
+            match dispatch_fetcher(pool, airport, src, full_refresh, seed_iata_codes).await {
                 Ok(result) => {
                     info!(
                         airport = iata,
