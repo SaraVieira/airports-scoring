@@ -37,7 +37,6 @@ struct ScoringData {
     terminal_count: Option<i16>,
     total_gates: Option<i16>,
     annual_capacity_m: Option<f64>,
-    opened_year: Option<i16>,
     // Operational
     avg_delay_pct: Option<f64>,
     avg_cancellation_pct: Option<f64>,
@@ -62,7 +61,7 @@ pub async fn compute_score(
 ) -> Result<ScoreOutput> {
     let data = gather_scoring_data(pool, airport, reference_year).await?;
 
-    let infra = score_infrastructure(&data, airport);
+    let infra = score_infrastructure(&data, airport, reference_year);
     let operational = score_operational(&data);
     let sentiment = score_sentiment(&data);
     let velocity = score_sentiment_velocity(&data);
@@ -114,7 +113,7 @@ async fn gather_scoring_data(
     .await?;
 
     // Latest sentiment snapshot
-    let latest_sentiment: Option<(Decimal, Decimal)> = sqlx::query_as(
+    let latest_sentiment: Option<(Option<Decimal>, Option<Decimal>)> = sqlx::query_as(
         "SELECT avg_rating, positive_pct FROM sentiment_snapshots \
          WHERE airport_id = $1 ORDER BY snapshot_year DESC, snapshot_quarter DESC NULLS LAST LIMIT 1",
     )
@@ -123,7 +122,7 @@ async fn gather_scoring_data(
     .await?;
 
     // Previous year sentiment for velocity
-    let prev_sentiment: Option<(Decimal,)> = sqlx::query_as(
+    let prev_sentiment: Option<(Option<Decimal>,)> = sqlx::query_as(
         "SELECT avg_rating FROM sentiment_snapshots \
          WHERE airport_id = $1 AND snapshot_year = $2 - 1 \
          ORDER BY snapshot_quarter DESC NULLS LAST LIMIT 1",
@@ -159,14 +158,13 @@ async fn gather_scoring_data(
         terminal_count: airport.terminal_count,
         total_gates: airport.total_gates,
         annual_capacity_m: airport.annual_capacity_m.as_ref().and_then(|d| d.to_f64()),
-        opened_year: airport.opened_year,
         avg_delay_pct: ops.0.and_then(|d| d.to_f64()),
         avg_cancellation_pct: ops.1.and_then(|d| d.to_f64()),
         avg_delay_minutes: ops.2.and_then(|d| d.to_f64()),
         delay_airport_pct: ops.3.and_then(|d| d.to_f64()),
-        latest_avg_rating: latest_sentiment.as_ref().map(|s| s.0.to_f64().unwrap_or(0.0)),
-        prev_avg_rating: prev_sentiment.as_ref().and_then(|s| s.0.to_f64()),
-        latest_positive_pct: latest_sentiment.as_ref().and_then(|s| s.1.to_f64()),
+        latest_avg_rating: latest_sentiment.as_ref().and_then(|s| s.0.as_ref()).and_then(|d| d.to_f64()),
+        prev_avg_rating: prev_sentiment.as_ref().and_then(|s| s.0.as_ref()).and_then(|d| d.to_f64()),
+        latest_positive_pct: latest_sentiment.as_ref().and_then(|s| s.1.as_ref()).and_then(|d| d.to_f64()),
         route_count: connectivity.0,
         airline_count: connectivity.1,
         operator_avg_score: operator_avg.as_ref().and_then(|o| o.0.to_f64()),
@@ -175,7 +173,7 @@ async fn gather_scoring_data(
 
 /// Infrastructure: runways, capacity, terminals, gates, age.
 /// Benchmarked against large European hub standards.
-fn score_infrastructure(data: &ScoringData, airport: &Airport) -> f64 {
+fn score_infrastructure(data: &ScoringData, airport: &Airport, reference_year: i16) -> f64 {
     let mut score = 50.0; // baseline
 
     // Runways (1=0, 2=+15, 3=+25, 4+=+30)
@@ -205,8 +203,8 @@ fn score_infrastructure(data: &ScoringData, airport: &Airport) -> f64 {
     }
 
     // Age penalty for very old airports without renovation
-    if let Some(year) = data.opened_year.or(airport.opened_year) {
-        let age = 2025 - year as i32;
+    if let Some(year) = airport.opened_year {
+        let age = reference_year as i32 - year as i32;
         if age > 50 {
             score -= 5.0;
         }
@@ -285,11 +283,14 @@ fn score_operator(data: &ScoringData) -> f64 {
 }
 
 /// Persist a computed score into the airport_scores table.
+/// Wrapped in a transaction so the UPDATE + INSERT are atomic.
 pub async fn upsert_score(pool: &PgPool, score: &ScoreOutput) -> Result<()> {
+    let mut tx = pool.begin().await?;
+
     // Un-mark previous latest
     sqlx::query("UPDATE airport_scores SET is_latest = FALSE WHERE airport_id = $1 AND is_latest = TRUE")
         .bind(score.airport_id)
-        .execute(pool)
+        .execute(&mut *tx)
         .await?;
 
     sqlx::query(
@@ -300,7 +301,7 @@ pub async fn upsert_score(pool: &PgPool, score: &ScoreOutput) -> Result<()> {
           score_total, \
           weight_infrastructure, weight_operational, weight_sentiment, \
           weight_sentiment_velocity, weight_connectivity, weight_operator, \
-          is_latest, notes) \
+          is_latest, commentary) \
          VALUES ($1, 'v1', $2, $3, $4, $5, $6, $7, $8, $9, \
                  $10, $11, $12, $13, $14, $15, TRUE, $16)",
     )
@@ -320,8 +321,10 @@ pub async fn upsert_score(pool: &PgPool, score: &ScoreOutput) -> Result<()> {
     .bind(Decimal::from_f64(W_CONNECTIVITY))
     .bind(Decimal::from_f64(W_OPERATOR))
     .bind(&score.commentary)
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
+
+    tx.commit().await?;
 
     Ok(())
 }

@@ -5,6 +5,7 @@ use tracing::{error, info};
 use crate::db;
 use crate::fetchers;
 use crate::models::{Airport, FetchResult};
+use crate::scoring;
 
 /// All known data sources.
 pub const ALL_SOURCES: &[&str] = &[
@@ -66,6 +67,48 @@ pub async fn run_pipeline(
         None => ALL_SOURCES.to_vec(),
     };
 
+    // Handle ourairports specially: it's a bulk download, so call it once
+    // rather than per-airport.
+    if sources.contains(&"ourairports") {
+        info!(source = "ourairports", "Starting bulk fetch (once for all airports)");
+        let run_id = db::start_pipeline_run(pool, airports[0].id, "ourairports").await?;
+        match fetchers::ourairports::fetch_all(pool, full_refresh).await {
+            Ok(result) => {
+                info!(
+                    source = "ourairports",
+                    records = result.records_processed,
+                    "Fetch completed"
+                );
+                db::complete_pipeline_run(
+                    pool,
+                    run_id,
+                    "success",
+                    result.records_processed,
+                    result.last_record_date,
+                    None,
+                )
+                .await?;
+            }
+            Err(e) => {
+                error!(
+                    source = "ourairports",
+                    error = %e,
+                    "Fetch failed"
+                );
+                db::complete_pipeline_run(
+                    pool,
+                    run_id,
+                    "failed",
+                    0,
+                    None,
+                    Some(&e.to_string()),
+                )
+                .await?;
+            }
+        }
+    }
+
+    // Run remaining sources per airport.
     for airport in airports {
         let iata = airport
             .iata_code
@@ -73,6 +116,11 @@ pub async fn run_pipeline(
             .unwrap_or("???");
 
         for &src in &sources {
+            // Skip ourairports — already handled above.
+            if src == "ourairports" {
+                continue;
+            }
+
             info!(airport = iata, source = src, "Starting fetch");
 
             let run_id = db::start_pipeline_run(pool, airport.id, src).await?;

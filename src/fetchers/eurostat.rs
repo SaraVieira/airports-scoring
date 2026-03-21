@@ -111,7 +111,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
                 r#"
                 INSERT INTO pax_yearly (airport_id, year, total_pax, source)
                 VALUES ($1, $2, $3, 'eurostat')
-                ON CONFLICT (airport_id, year, source) DO UPDATE SET
+                ON CONFLICT (airport_id, year) DO UPDATE SET
                     total_pax = EXCLUDED.total_pax
                 "#,
             )

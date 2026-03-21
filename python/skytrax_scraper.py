@@ -68,10 +68,10 @@ SUB_SCORE_MAP = {
 def _parse_date(text: str) -> datetime | None:
     """Try common Skytrax date formats."""
     text = text.strip()
-    for fmt in ("%dth %B %Y", "%dst %B %Y", "%dnd %B %Y", "%drd %B %Y",
-                "%d %B %Y", "%B %d, %Y", "%Y-%m-%d"):
+    cleaned = re.sub(r"(\d+)(st|nd|rd|th)", r"\1", text)
+    for fmt in ("%d %B %Y", "%B %d, %Y", "%Y-%m-%d"):
         try:
-            return datetime.strptime(re.sub(r"(\d+)(st|nd|rd|th)", r"\1", text), "%d %B %Y")
+            return datetime.strptime(cleaned, fmt)
         except ValueError:
             pass
     # Fallback: try dateutil if available

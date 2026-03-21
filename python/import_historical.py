@@ -193,8 +193,7 @@ def map_row_to_review(row: dict, iata: str) -> dict:
                                       or norm.get("food_rating")),
         "score_wifi":       _safe_int(norm.get("wifi_connectivity_rating") or norm.get("wifi")
                                       or norm.get("wifi_rating")),
-        "score_wayfinding": _safe_int(norm.get("airport_shopping_rating") or norm.get("wayfinding")
-                                      or norm.get("wayfinding_rating")),
+        "score_wayfinding": _safe_int(norm.get("wayfinding") or norm.get("wayfinding_rating")),
         "score_transport":  None,  # typically not in the historical dataset
         "recommended":      _safe_bool(norm.get("recommended")),
         "verified":         False,
@@ -210,13 +209,29 @@ def map_row_to_review(row: dict, iata: str) -> dict:
     }
 
 
+def _lookup_airport_ids(conn, iata_codes: set[str]) -> dict[str, int]:
+    """Look up airport IDs from the airports table by IATA code."""
+    if not iata_codes:
+        return {}
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT iata_code, id FROM airports WHERE iata_code = ANY(%s)",
+            (list(iata_codes),),
+        )
+        return {row[0]: row[1] for row in cur.fetchall()}
+
+
 def insert_reviews(conn, reviews: list[dict]):
     """Bulk insert reviews into reviews_raw."""
     if not reviews:
         return 0
 
+    # Look up airport_id for each IATA code
+    iata_codes = {r["airport_iata"] for r in reviews if r.get("airport_iata")}
+    iata_to_id = _lookup_airport_ids(conn, iata_codes)
+
     columns = [
-        "airport_iata", "review_date", "author", "author_country",
+        "airport_id", "review_date", "author", "author_country",
         "overall_rating", "score_queuing", "score_cleanliness", "score_staff",
         "score_food_bev", "score_wifi", "score_wayfinding", "score_transport",
         "recommended", "verified", "trip_type", "review_title", "review_text",
@@ -224,24 +239,31 @@ def insert_reviews(conn, reviews: list[dict]):
     ]
 
     template = "(" + ", ".join(["%s"] * len(columns)) + ")"
-    query = (
-        f"INSERT INTO reviews_raw ({', '.join(columns)}) VALUES "
-        + template
-        + " ON CONFLICT DO NOTHING"
-    )
+    query = f"INSERT INTO reviews_raw ({', '.join(columns)}) VALUES {template}"
 
     inserted = 0
+    errors = []
     with conn.cursor() as cur:
         for review in reviews:
-            values = [review.get(col) for col in columns]
+            airport_id = iata_to_id.get(review.get("airport_iata"))
+            if airport_id is None:
+                logger.warning("No airport_id found for IATA code %s, skipping.",
+                               review.get("airport_iata"))
+                continue
+            values = [airport_id] + [review.get(col) for col in columns[1:]]
             try:
+                cur.execute("SAVEPOINT insert_row")
                 cur.execute(query, values)
+                cur.execute("RELEASE SAVEPOINT insert_row")
                 inserted += cur.rowcount
             except Exception as exc:
                 logger.warning("Failed to insert review: %s", exc)
-                conn.rollback()
+                cur.execute("ROLLBACK TO SAVEPOINT insert_row")
+                errors.append(str(exc))
                 continue
     conn.commit()
+    if errors:
+        logger.warning("Encountered %d insert errors.", len(errors))
     return inserted
 
 
