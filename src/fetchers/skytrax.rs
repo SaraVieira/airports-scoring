@@ -70,12 +70,17 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
 
     info!(airport = iata, since = %since, "Running Skytrax scraper");
 
+    // Default to 10 pages (~1000 reviews). Use --full-refresh for unlimited.
+    let max_pages = if full_refresh { "100" } else { "10" };
+
     let output = tokio::process::Command::new(python)
         .arg("python/skytrax_scraper.py")
         .arg("--airport")
         .arg(iata)
         .arg("--since")
         .arg(&since)
+        .arg("--max-pages")
+        .arg(max_pages)
         .output()
         .await
         .context("Failed to run skytrax_scraper.py")?;

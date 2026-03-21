@@ -236,7 +236,7 @@ async def scrape_star_rating(page, slug: str) -> int | None:
     return None
 
 
-async def scrape_reviews(airport: str, since: datetime) -> dict:
+async def scrape_reviews(airport: str, since: datetime, max_pages: int = 10) -> dict:
     """Main scraping routine. Returns the full result dict."""
     iata = airport.upper()
     slug = AIRPORT_SLUGS.get(iata)
@@ -268,7 +268,7 @@ async def scrape_reviews(airport: str, since: datetime) -> dict:
         # --- Reviews pagination ---
         page_num = 1
         stop = False
-        while not stop:
+        while not stop and page_num <= max_pages:
             url = (
                 f"https://www.airlinequality.com/airport-reviews/{slug}"
                 f"/page/{page_num}/?sortby=post_date:Desc&pagesize=100"
@@ -327,6 +327,10 @@ def main():
         "--since", required=True,
         help="Only include reviews on or after this date (YYYY-MM-DD)"
     )
+    parser.add_argument(
+        "--max-pages", type=int, default=10,
+        help="Maximum number of review pages to scrape (default: 10, ~1000 reviews)"
+    )
     args = parser.parse_args()
 
     try:
@@ -335,7 +339,7 @@ def main():
         logger.error("Invalid --since date format. Use YYYY-MM-DD.")
         sys.exit(1)
 
-    result = asyncio.run(scrape_reviews(args.airport, since_date))
+    result = asyncio.run(scrape_reviews(args.airport, since_date, args.max_pages))
     json.dump(result, sys.stdout, indent=2, ensure_ascii=False)
     sys.stdout.write("\n")
 
