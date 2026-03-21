@@ -1,0 +1,24 @@
+{
+  "name": "airport-intelligence-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vinxi dev",
+    "build": "vinxi build",
+    "start": "vinxi start"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "^1",
+    "@tanstack/start": "^1",
+    "react": "^19",
+    "react-dom": "^19",
+    "vinxi": "^0.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5",
+    "tailwindcss": "^4",
+    "@tailwindcss/vite": "^4"
+  }
+}
