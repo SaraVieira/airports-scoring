@@ -17,10 +17,9 @@ const VALID_TO: &str = "2014-06-01";
 /// CSV columns (no header): airline, airline_id, source_airport, source_airport_id,
 /// dest_airport, dest_airport_id, codeshare, stops, equipment
 ///
-/// OpenFlights uses IATA codes. The unique index on routes uses (destination_icao,
-/// airline_icao), so we populate both _iata and _icao columns with the same value
-/// since OpenFlights doesn't distinguish. The IATA code goes into destination_icao
-/// for dedup purposes — downstream consumers should prefer OPDI data which has true ICAO.
+/// OpenFlights uses IATA codes only. A partial unique index on
+/// (origin_id, destination_iata, airline_iata, data_source) WHERE data_source = 'openflights'
+/// handles dedup. OPDI/OpenSky routes use a separate ICAO-based index.
 pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Result<FetchResult> {
     let icao = airport
         .icao_code
@@ -66,15 +65,14 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
             Some(airline_raw.as_str())
         };
 
-        // Populate both _iata and _icao columns so the unique index works.
-        // OpenFlights only has IATA codes; true ICAO comes from OPDI data.
         sqlx::query(
             r#"
-            INSERT INTO routes (origin_id, destination_iata, destination_icao,
-                                airline_iata, airline_icao, data_source,
-                                first_observed, last_observed)
-            VALUES ($1, $2, $2, $3, $3, 'openflights', $4, $4)
-            ON CONFLICT (origin_id, destination_icao, airline_icao, data_source) DO NOTHING
+            INSERT INTO routes (origin_id, destination_iata, airline_iata,
+                                data_source, first_observed, last_observed)
+            VALUES ($1, $2, $3, 'openflights', $4, $4)
+            ON CONFLICT (origin_id, destination_iata, airline_iata, data_source)
+                WHERE data_source = 'openflights'
+            DO NOTHING
             "#,
         )
         .bind(airport.id)

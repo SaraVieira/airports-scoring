@@ -356,3 +356,141 @@ fn extract_skytrax_history(wikitext: &str) -> Option<serde_json::Map<String, Val
         Some(history)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn strip_wiki_markup_links() {
+        assert_eq!(strip_wiki_markup("[[London Heathrow Airport]]"), "London Heathrow Airport");
+        assert_eq!(strip_wiki_markup("[[Heathrow Airport|Heathrow]]"), "Heathrow");
+    }
+
+    #[test]
+    fn strip_wiki_markup_templates_and_refs() {
+        let input = "Opened in 1946{{cite web|url=http://example.com}}<ref>source</ref>.";
+        let result = strip_wiki_markup(input);
+        assert_eq!(result, "Opened in 1946.");
+    }
+
+    #[test]
+    fn strip_wiki_markup_html_tags() {
+        assert_eq!(strip_wiki_markup("<br/>hello<span>world</span>"), "helloworld");
+    }
+
+    #[test]
+    fn extract_year_basic() {
+        assert_eq!(extract_year("opened in 1946"), Some(1946));
+        assert_eq!(extract_year("renovated 2019-2022"), Some(2019));
+        assert_eq!(extract_year("no year here"), None);
+    }
+
+    #[test]
+    fn parse_infobox_field_basic() {
+        let wikitext = "| name = London Heathrow\n| opened = 1946\n| operator = [[Heathrow Airport Holdings]]";
+        assert_eq!(parse_infobox_field(wikitext, "opened"), Some("1946".to_string()));
+        assert_eq!(parse_infobox_field(wikitext, "operator"), Some("Heathrow Airport Holdings".to_string()));
+        assert_eq!(parse_infobox_field(wikitext, "missing"), None);
+    }
+
+    #[test]
+    fn parse_passenger_table_basic() {
+        let wikitext = r#"
+{| class="wikitable" style="text-align:right"
+|+ Annual passenger traffic
+! Year !! Total passengers
+|-
+| 2019 || 80,886,589
+|-
+| 2020 || 22,109,550
+|-
+| 2021 || 19,392,178
+|}
+"#;
+        let result = parse_passenger_table(wikitext);
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], (2019, 80_886_589));
+        assert_eq!(result[1], (2020, 22_109_550));
+        assert_eq!(result[2], (2021, 19_392_178));
+    }
+
+    #[test]
+    fn parse_passenger_table_ignores_non_pax_tables() {
+        let wikitext = r#"
+{| class="wikitable"
+|+ Runway specifications
+! Runway !! Length
+|-
+| 09L/27R || 3,902
+|}
+"#;
+        let result = parse_passenger_table(wikitext);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn parse_passenger_table_keeps_larger_value() {
+        let wikitext = r#"
+{| class="wikitable"
+|+ Passenger traffic
+! Year !! Domestic !! International !! Total
+|-
+| 2019 || 5,000,000 || 20,000,000 || 25,000,000
+|}
+"#;
+        let result = parse_passenger_table(wikitext);
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0], (2019, 25_000_000));
+    }
+
+    #[test]
+    fn extract_section_text_basic() {
+        let wikitext = "== History ==\nThe airport was opened in 1946.\nIt has grown significantly.\n== Terminals ==\nTerminal 5 opened in 2008.";
+        let result = extract_section_text(wikitext, &["history"]);
+        assert!(result.is_some());
+        let text = result.unwrap();
+        assert!(text.contains("opened in 1946"));
+        assert!(!text.contains("Terminal 5"));
+    }
+
+    #[test]
+    fn extract_section_text_no_match() {
+        let wikitext = "== Terminals ==\nTerminal 1.";
+        let result = extract_section_text(wikitext, &["history", "renovation"]);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn extract_skytrax_year_then_star() {
+        let text = "In 2019 it was rated a 4-star airport by Skytrax.";
+        let result = extract_skytrax_history(text);
+        assert!(result.is_some());
+        let map = result.unwrap();
+        assert_eq!(map.get("2019").and_then(|v| v.as_i64()), Some(4));
+    }
+
+    #[test]
+    fn extract_skytrax_star_then_year() {
+        let text = "Rated 3-Star in 2017 by Skytrax.";
+        let result = extract_skytrax_history(text);
+        assert!(result.is_some());
+        let map = result.unwrap();
+        assert_eq!(map.get("2017").and_then(|v| v.as_i64()), Some(3));
+    }
+
+    #[test]
+    fn extract_skytrax_no_match() {
+        let result = extract_skytrax_history("No ratings mentioned here.");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn article_title_extraction() {
+        assert_eq!(
+            article_title_from_url("https://en.wikipedia.org/wiki/Berlin_Brandenburg_Airport"),
+            Some("Berlin_Brandenburg_Airport")
+        );
+        assert_eq!(article_title_from_url("https://example.com/no-wiki"), None);
+    }
+}

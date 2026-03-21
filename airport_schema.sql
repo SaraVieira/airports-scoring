@@ -511,7 +511,12 @@ CREATE TABLE routes (
 CREATE INDEX routes_origin_idx ON routes (origin_id);
 CREATE INDEX routes_dest_idx ON routes (destination_id);
 CREATE INDEX routes_airline_idx ON routes (airline_icao);
-CREATE UNIQUE INDEX routes_unique_idx ON routes (origin_id, destination_icao, airline_icao, data_source);
+-- OPDI/OpenSky use ICAO codes for dedup.
+CREATE UNIQUE INDEX routes_icao_unique_idx ON routes (origin_id, destination_icao, airline_icao, data_source)
+    WHERE data_source IN ('opdi', 'opensky');
+-- OpenFlights uses IATA codes (no ICAO available).
+CREATE UNIQUE INDEX routes_iata_unique_idx ON routes (origin_id, destination_iata, airline_iata, data_source)
+    WHERE data_source = 'openflights';
 
 -- ============================================================
 -- REVIEWS RAW (staging for ML pipeline)
