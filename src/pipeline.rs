@@ -1,4 +1,5 @@
 use anyhow::{bail, Result};
+use chrono::Datelike;
 use sqlx::PgPool;
 use tracing::{error, info};
 
@@ -47,11 +48,14 @@ async fn dispatch_fetcher(
 /// Run the pipeline for a set of airports and (optionally) a single source.
 ///
 /// If `source` is `None`, all sources are run for each airport.
+/// If `score` is true and no specific source filter is set, compute scores after fetching.
 pub async fn run_pipeline(
     pool: &PgPool,
     airports: &[Airport],
     source: Option<&str>,
     full_refresh: bool,
+    score: bool,
+    reference_year: Option<i16>,
 ) -> Result<()> {
     let sources: Vec<&str> = match source {
         Some(s) => {
@@ -162,6 +166,15 @@ pub async fn run_pipeline(
                 }
             }
         }
+    }
+
+    // Compute scores after all fetchers have run.
+    if score {
+        let year = reference_year.unwrap_or_else(|| {
+            chrono::Utc::now().naive_utc().date().year() as i16
+        });
+        info!(reference_year = year, "Computing scores for all airports");
+        scoring::score_airports(pool, airports, year).await?;
     }
 
     Ok(())
