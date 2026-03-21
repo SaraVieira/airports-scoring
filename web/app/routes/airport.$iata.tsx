@@ -5,5 +5,6 @@ export const Route = createFileRoute('/airport/$iata')({
 })
 
 function AirportDetail() {
-  return <div><h1>Airport Detail</h1></div>
+  const { iata } = Route.useParams()
+  return <div><h1>Airport: {iata}</h1></div>
 }
