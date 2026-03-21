@@ -20,7 +20,7 @@ const VALID_TO: &str = "2014-06-01";
 /// OpenFlights uses IATA codes only. A partial unique index on
 /// (origin_id, destination_iata, airline_iata, data_source) WHERE data_source = 'openflights'
 /// handles dedup. OPDI/OpenSky routes use a separate ICAO-based index.
-pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Result<FetchResult> {
+pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Result<FetchResult> {
     let icao = airport
         .icao_code
         .as_deref()
@@ -29,6 +29,24 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         .iata_code
         .as_deref()
         .context("Airport has no IATA code")?;
+
+    // OpenFlights is a frozen dataset — skip if already imported for this airport.
+    if !full_refresh {
+        let existing: (i64,) = sqlx::query_as(
+            "SELECT COUNT(*) FROM routes WHERE origin_id = $1 AND data_source = 'openflights'",
+        )
+        .bind(airport.id)
+        .fetch_one(pool)
+        .await?;
+
+        if existing.0 > 0 {
+            info!(airport = iata, routes = existing.0, "OpenFlights already imported, skipping");
+            return Ok(FetchResult {
+                records_processed: 0,
+                last_record_date: None,
+            });
+        }
+    }
 
     let text = download_routes_cached().await?;
 

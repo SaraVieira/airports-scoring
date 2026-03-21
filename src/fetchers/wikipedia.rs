@@ -66,7 +66,7 @@ struct WikiQuery {
 
 /// Fetch Wikipedia data for an airport: infobox fields, passenger tables, and notes.
 /// Stores results in `wikipedia_snapshots` and `pax_yearly` tables.
-pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Result<FetchResult> {
+pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Result<FetchResult> {
     let iata = airport
         .iata_code
         .as_deref()
@@ -91,6 +91,30 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         .build()?;
 
     let revision_id = fetch_revision_id(&client, title).await?;
+
+    // Skip if article hasn't changed since our last fetch.
+    if !full_refresh {
+        if let Some(rev) = revision_id {
+            let last_rev: Option<(Option<i64>,)> = sqlx::query_as(
+                "SELECT article_revision_id FROM wikipedia_snapshots \
+                 WHERE airport_id = $1 ORDER BY fetched_at DESC LIMIT 1",
+            )
+            .bind(airport.id)
+            .fetch_optional(pool)
+            .await?;
+
+            if let Some((Some(stored_rev),)) = last_rev {
+                if stored_rev == rev {
+                    info!(airport = iata, revision = rev, "Wikipedia article unchanged, skipping");
+                    return Ok(FetchResult {
+                        records_processed: 0,
+                        last_record_date: None,
+                    });
+                }
+            }
+        }
+    }
+
     let wikitext = fetch_wikitext(&client, title).await?;
 
     let opened_year = parse_infobox_field(&wikitext, "opened")

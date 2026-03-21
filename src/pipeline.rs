@@ -18,11 +18,10 @@ const COUNTRIES_WITH_PAX_FETCHER: &[&str] = &[
 /// Sources that produce passenger data (write to pax_yearly).
 const PAX_SOURCES: &[&str] = &["aena", "eurostat", "wikipedia"];
 
-/// Data sources run by the Rust CLI.
-/// skytrax and sentiment are handled by the Python ML pipeline
-/// and must be requested explicitly via --source skytrax/sentiment.
+/// Data sources run by the Rust CLI per-airport.
+/// ourairports is handled separately in main.rs (bulk bootstrap).
+/// skytrax and sentiment need the Python ML pipeline.
 pub const ALL_SOURCES: &[&str] = &[
-    "ourairports",
     "eurocontrol",
     "metar",
     "opensky",
@@ -88,48 +87,7 @@ pub async fn run_pipeline(
         None => ALL_SOURCES.to_vec(),
     };
 
-    // Handle ourairports specially: it's a bulk download, so call it once
-    // rather than per-airport.
-    if sources.contains(&"ourairports") {
-        info!(source = "ourairports", "Starting bulk fetch (once for all airports)");
-        let run_id = db::start_pipeline_run(pool, airports[0].id, "ourairports").await?;
-        match fetchers::ourairports::fetch_all(pool, full_refresh, seed_iata_codes).await {
-            Ok(result) => {
-                info!(
-                    source = "ourairports",
-                    records = result.records_processed,
-                    "Fetch completed"
-                );
-                db::complete_pipeline_run(
-                    pool,
-                    run_id,
-                    "success",
-                    result.records_processed,
-                    result.last_record_date,
-                    None,
-                )
-                .await?;
-            }
-            Err(e) => {
-                error!(
-                    source = "ourairports",
-                    error = %e,
-                    "Fetch failed"
-                );
-                db::complete_pipeline_run(
-                    pool,
-                    run_id,
-                    "failed",
-                    0,
-                    None,
-                    Some(&e.to_string()),
-                )
-                .await?;
-            }
-        }
-    }
-
-    // Run remaining sources per airport.
+    // Run sources per airport.
     for airport in airports {
         let iata = airport
             .iata_code
@@ -140,11 +98,6 @@ pub async fn run_pipeline(
         let mut pax_records_by_source: Vec<(&str, i32)> = Vec::new();
 
         for &src in &sources {
-            // Skip ourairports — already handled above.
-            if src == "ourairports" {
-                continue;
-            }
-
             info!(airport = iata, source = src, "Starting fetch");
 
             let run_id = db::start_pipeline_run(pool, airport.id, src).await?;

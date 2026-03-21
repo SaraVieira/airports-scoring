@@ -31,7 +31,7 @@ struct MonthBucket {
 }
 
 /// Fetch delay and operational statistics from Eurocontrol ANS Performance CSVs.
-pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Result<FetchResult> {
+pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Result<FetchResult> {
     let icao = airport
         .icao_code
         .as_deref()
@@ -46,8 +46,25 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
     let mut latest_date: Option<NaiveDate> = None;
 
     let current_year = Utc::now().year();
-    // Fetch last 3 years of data
-    let start_year = current_year - 2;
+
+    // Check last successful run to determine start year.
+    let last_run: Option<(Option<NaiveDate>,)> = sqlx::query_as(
+        "SELECT last_record_date FROM pipeline_runs \
+         WHERE airport_id = $1 AND source = 'eurocontrol' AND status = 'success' \
+         ORDER BY completed_at DESC LIMIT 1",
+    )
+    .bind(airport.id)
+    .fetch_optional(pool)
+    .await?;
+
+    let start_year = if full_refresh {
+        current_year - 2
+    } else {
+        match last_run {
+            Some((Some(d),)) => d.year(), // only fetch from the year we left off
+            _ => current_year - 2,
+        }
+    };
 
     for dataset in DATASETS {
         for year in start_year..=current_year {

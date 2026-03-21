@@ -75,18 +75,22 @@ async fn main() -> Result<()> {
     let pool = db::get_pool().await?;
     info!("Connected to database");
 
-    // Bootstrap: if source is ourairports, run it first before resolving airports.
-    // OurAirports is what populates the airports table — can't query it before seeding.
-    if cli.source.as_deref() == Some("ourairports") || cli.source.is_none() {
-        info!("Running OurAirports bootstrap fetch");
+    // Bootstrap: OurAirports populates the airports table.
+    // Only run if explicitly requested or if the DB is empty.
+    if cli.source.as_deref() == Some("ourairports") {
+        info!("Running OurAirports fetch (explicitly requested)");
+        let result = fetchers::ourairports::fetch_all(&pool, cli.full_refresh, &seed_iata_codes).await?;
+        info!(records = result.records_processed, "OurAirports fetch complete");
+        info!("Pipeline complete");
+        return Ok(());
+    }
+
+    // Check if airports exist; if not, bootstrap from OurAirports first.
+    let existing = db::get_seed_airports(&pool).await.unwrap_or_default();
+    if existing.is_empty() {
+        info!("No airports in DB — running OurAirports bootstrap");
         let result = fetchers::ourairports::fetch_all(&pool, cli.full_refresh, &seed_iata_codes).await?;
         info!(records = result.records_processed, "OurAirports bootstrap complete");
-
-        // If only ourairports was requested, we're done.
-        if cli.source.as_deref() == Some("ourairports") {
-            info!("Pipeline complete");
-            return Ok(());
-        }
     }
 
     // Resolve the list of airports.
