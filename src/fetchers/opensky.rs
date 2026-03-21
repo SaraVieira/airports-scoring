@@ -151,6 +151,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         .build()?;
 
     let mut route_counts: HashMap<RouteKey, (i64, NaiveDate, NaiveDate)> = HashMap::new();
+    let mut consecutive_failures: u32 = 0;
 
     // Iterate in 2-day chunks, fetching both arrivals and departures
     let mut chunk_begin = start_ts;
@@ -199,9 +200,18 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
             }
 
             if !resp.status().is_success() {
-                warn!(status = %resp.status(), url = %url, "OpenSky non-success, skipping");
+                // 400 is common — OpenSky returns it for time ranges with no data.
+                // Don't log each one; just count and stop early if too many.
+                consecutive_failures += 1;
+                if consecutive_failures >= 10 {
+                    info!(airport = icao, "10+ consecutive OpenSky failures, stopping early");
+                    chunk_begin = end_ts; // break outer loop
+                    break;
+                }
                 continue;
             }
+
+            consecutive_failures = 0;
 
             let flights: Vec<FlightRecord> = match resp.json().await {
                 Ok(f) => f,

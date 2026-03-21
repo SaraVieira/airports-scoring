@@ -284,7 +284,7 @@ export const routes = pgTable("routes", {
   destinationId: integer("destination_id").references(() => airports.id, {
     onDelete: "set null",
   }),
-  destinationIcao: char("destination_icao", { length: 4 }),
+  destinationIcao: text("destination_icao"),
   destinationIata: char("destination_iata", { length: 3 }),
   airlineIcao: text("airline_icao"),
   airlineIata: text("airline_iata"),

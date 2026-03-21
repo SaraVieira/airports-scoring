@@ -494,7 +494,7 @@ CREATE TABLE routes (
     id                  SERIAL PRIMARY KEY,
     origin_id           INTEGER NOT NULL REFERENCES airports(id) ON DELETE CASCADE,
     destination_id      INTEGER REFERENCES airports(id) ON DELETE SET NULL,
-    destination_icao    CHAR(4),               -- kept even if destination not in our DB
+    destination_icao    TEXT,                   -- kept even if destination not in our DB
     destination_iata    CHAR(3),
     airline_icao        TEXT,
     airline_iata        TEXT,
