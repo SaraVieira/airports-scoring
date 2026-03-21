@@ -454,3 +454,126 @@ ORDER BY avg_score DESC NULLS LAST;
 
 -- Nearest airports to a point (example: 50km radius around Madrid)
 -- Usage: SELECT * FROM airports WHERE ST_DWithin(location, ST_MakePoint(-3.7038, 40.4168)::geography, 50000);
+
+-- ============================================================
+-- DAILY WEATHER (METAR aggregates)
+-- ============================================================
+
+CREATE TABLE metar_daily (
+    id                  SERIAL PRIMARY KEY,
+    airport_id          INTEGER NOT NULL REFERENCES airports(id) ON DELETE CASCADE,
+    observation_date    DATE NOT NULL,
+    avg_temp_c          NUMERIC(5,2),
+    min_temp_c          NUMERIC(5,2),
+    max_temp_c          NUMERIC(5,2),
+    avg_visibility_m    NUMERIC(8,2),
+    min_visibility_m    NUMERIC(8,2),
+    avg_wind_speed_kt   NUMERIC(5,2),
+    max_wind_speed_kt   NUMERIC(5,2),
+    max_wind_gust_kt    NUMERIC(5,2),
+    precipitation_flag  BOOLEAN DEFAULT FALSE,
+    thunderstorm_flag   BOOLEAN DEFAULT FALSE,
+    fog_flag            BOOLEAN DEFAULT FALSE,
+    low_ceiling_flag    BOOLEAN DEFAULT FALSE,  -- ceiling < 1000ft
+    metar_count         INTEGER,                -- number of METARs aggregated
+    created_at          TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (airport_id, observation_date)
+);
+
+CREATE INDEX metar_airport_idx ON metar_daily (airport_id);
+CREATE INDEX metar_date_idx ON metar_daily (observation_date);
+
+-- ============================================================
+-- ROUTES (from OPDI + OpenSky)
+-- ============================================================
+
+CREATE TABLE routes (
+    id                  SERIAL PRIMARY KEY,
+    origin_id           INTEGER NOT NULL REFERENCES airports(id) ON DELETE CASCADE,
+    destination_id      INTEGER REFERENCES airports(id) ON DELETE SET NULL,
+    destination_icao    CHAR(4),               -- kept even if destination not in our DB
+    destination_iata    CHAR(3),
+    airline_icao        TEXT,
+    airline_iata        TEXT,
+    airline_name        TEXT,
+    flights_per_month   INTEGER,
+    first_observed      DATE,
+    last_observed       DATE,
+    data_source         TEXT NOT NULL           -- 'opdi', 'opensky', 'openflights'
+        CHECK (data_source IN ('opdi', 'opensky', 'openflights')),
+    created_at          TIMESTAMPTZ DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX routes_origin_idx ON routes (origin_id);
+CREATE INDEX routes_dest_idx ON routes (destination_id);
+CREATE INDEX routes_airline_idx ON routes (airline_icao);
+
+-- ============================================================
+-- REVIEWS RAW (staging for ML pipeline)
+-- ============================================================
+
+CREATE TABLE reviews_raw (
+    id                  SERIAL PRIMARY KEY,
+    airport_id          INTEGER NOT NULL REFERENCES airports(id) ON DELETE CASCADE,
+    source              TEXT NOT NULL DEFAULT 'skytrax',
+    review_date         DATE,
+    author              TEXT,
+    author_country      TEXT,
+    overall_rating      SMALLINT               -- 1-10 for Skytrax
+        CHECK (overall_rating BETWEEN 1 AND 10),
+    score_queuing       SMALLINT CHECK (score_queuing BETWEEN 1 AND 5),
+    score_cleanliness   SMALLINT CHECK (score_cleanliness BETWEEN 1 AND 5),
+    score_staff         SMALLINT CHECK (score_staff BETWEEN 1 AND 5),
+    score_food_bev      SMALLINT CHECK (score_food_bev BETWEEN 1 AND 5),
+    score_wifi          SMALLINT CHECK (score_wifi BETWEEN 1 AND 5),
+    score_wayfinding    SMALLINT CHECK (score_wayfinding BETWEEN 1 AND 5),
+    score_transport     SMALLINT CHECK (score_transport BETWEEN 1 AND 5),
+    recommended         BOOLEAN,
+    verified            BOOLEAN DEFAULT FALSE,
+    trip_type           TEXT,                  -- 'Solo Leisure', 'Business', 'Family Leisure', etc.
+    review_title        TEXT,
+    review_text         TEXT,
+    source_url          TEXT,
+    processed           BOOLEAN DEFAULT FALSE, -- flag for ML pipeline
+    created_at          TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX reviews_airport_idx ON reviews_raw (airport_id);
+CREATE INDEX reviews_date_idx ON reviews_raw (review_date);
+CREATE INDEX reviews_unprocessed_idx ON reviews_raw (processed) WHERE processed = FALSE;
+
+-- ============================================================
+-- AIRPORT SLUGS (source-specific identifiers)
+-- ============================================================
+
+CREATE TABLE airport_slugs (
+    airport_id          INTEGER NOT NULL REFERENCES airports(id) ON DELETE CASCADE,
+    source              TEXT NOT NULL,          -- 'skytrax', 'skytrax_ratings', 'trustpilot', 'eurocontrol'
+    slug                TEXT NOT NULL,
+    PRIMARY KEY (airport_id, source)
+);
+
+CREATE INDEX slugs_source_idx ON airport_slugs (source);
+
+-- ============================================================
+-- PIPELINE RUNS (tracking/audit)
+-- ============================================================
+
+CREATE TABLE pipeline_runs (
+    id                  SERIAL PRIMARY KEY,
+    airport_id          INTEGER REFERENCES airports(id) ON DELETE CASCADE,
+    source              TEXT NOT NULL,          -- matches data source name
+    started_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    completed_at        TIMESTAMPTZ,
+    status              TEXT NOT NULL DEFAULT 'running'
+        CHECK (status IN ('running', 'success', 'failed')),
+    records_processed   INTEGER DEFAULT 0,
+    last_record_date    DATE,                  -- drives incremental: next run fetches since this date
+    error_message       TEXT,
+    created_at          TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX pipeline_airport_idx ON pipeline_runs (airport_id);
+CREATE INDEX pipeline_source_idx ON pipeline_runs (source);
+CREATE INDEX pipeline_status_idx ON pipeline_runs (status);
