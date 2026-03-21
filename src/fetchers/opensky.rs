@@ -3,6 +3,7 @@ use chrono::{NaiveDate, Utc};
 use serde::Deserialize;
 use sqlx::PgPool;
 use std::collections::HashMap;
+use std::sync::Mutex;
 use tracing::{info, warn};
 
 use crate::models::{Airport, FetchResult};
@@ -10,6 +11,10 @@ use crate::models::{Airport, FetchResult};
 /// Maximum window per OpenSky API request (seconds). API allows 7 days but
 /// we use 2-day chunks to stay well within limits.
 const CHUNK_SECS: i64 = 2 * 24 * 3600;
+
+/// OpenSky OAuth2 token endpoint.
+const TOKEN_URL: &str =
+    "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token";
 
 /// OpenSky flight record (arrival or departure).
 #[derive(Debug, Deserialize)]
@@ -30,6 +35,80 @@ struct FlightRecord {
     arrival_airport_candidates_count: Option<i32>,
 }
 
+/// OAuth2 token response.
+#[derive(Debug, Deserialize)]
+struct TokenResponse {
+    access_token: String,
+    expires_in: u64,
+}
+
+/// Cached access token with expiry.
+struct CachedToken {
+    token: String,
+    expires_at: i64,
+}
+
+static TOKEN_CACHE: Mutex<Option<CachedToken>> = Mutex::new(None);
+
+/// Get a valid OAuth2 access token, refreshing if needed.
+async fn get_access_token(client: &reqwest::Client) -> Result<String> {
+    // Check cache first.
+    {
+        let cache = TOKEN_CACHE.lock().unwrap();
+        if let Some(ref cached) = *cache {
+            // Refresh 60 seconds before expiry.
+            if Utc::now().timestamp() < cached.expires_at - 60 {
+                return Ok(cached.token.clone());
+            }
+        }
+    }
+
+    let client_id = std::env::var("OPENSKY_ID").unwrap_or_default();
+    let client_secret = std::env::var("OPENSKY_SECRET").unwrap_or_default();
+
+    if client_id.is_empty() || client_secret.is_empty() {
+        anyhow::bail!(
+            "OPENSKY_ID and OPENSKY_SECRET env vars are required for the OpenSky fetcher"
+        );
+    }
+
+    info!("Requesting OpenSky OAuth2 access token");
+    let resp = client
+        .post(TOKEN_URL)
+        .form(&[
+            ("grant_type", "client_credentials"),
+            ("client_id", &client_id),
+            ("client_secret", &client_secret),
+        ])
+        .send()
+        .await
+        .context("Failed to request OpenSky OAuth2 token")?;
+
+    if !resp.status().is_success() {
+        let status = resp.status();
+        let body = resp.text().await.unwrap_or_default();
+        anyhow::bail!("OpenSky OAuth2 token request failed: {} — {}", status, body);
+    }
+
+    let token_resp: TokenResponse = resp
+        .json()
+        .await
+        .context("Failed to parse OpenSky token response")?;
+
+    let expires_at = Utc::now().timestamp() + token_resp.expires_in as i64;
+
+    let token = token_resp.access_token.clone();
+    {
+        let mut cache = TOKEN_CACHE.lock().unwrap();
+        *cache = Some(CachedToken {
+            token: token_resp.access_token,
+            expires_at,
+        });
+    }
+
+    Ok(token)
+}
+
 /// Aggregation key for route counts.
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 struct RouteKey {
@@ -44,15 +123,6 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         .icao_code
         .as_deref()
         .context("Airport has no ICAO code")?;
-
-    let username = std::env::var("OPENSKY_USERNAME").unwrap_or_default();
-    let password = std::env::var("OPENSKY_PASSWORD").unwrap_or_default();
-
-    if username.is_empty() || password.is_empty() {
-        anyhow::bail!(
-            "OPENSKY_USERNAME and OPENSKY_PASSWORD env vars are required for the OpenSky fetcher"
-        );
-    }
 
     // Determine start time
     let now = Utc::now();
@@ -86,6 +156,15 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
     while chunk_begin < end_ts {
         let chunk_end = (chunk_begin + CHUNK_SECS).min(end_ts);
 
+        // Get a fresh token (cached if still valid).
+        let token = match get_access_token(&client).await {
+            Ok(t) => t,
+            Err(e) => {
+                warn!(error = %e, "Failed to get OpenSky access token, stopping");
+                break;
+            }
+        };
+
         for direction in &["arrival", "departure"] {
             let url = format!(
                 "https://opensky-network.org/api/flights/{}?airport={}&begin={}&end={}",
@@ -94,7 +173,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
 
             let resp = match client
                 .get(&url)
-                .basic_auth(&username, Some(&password))
+                .bearer_auth(&token)
                 .send()
                 .await
             {
@@ -104,6 +183,14 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
                     continue;
                 }
             };
+
+            if resp.status() == reqwest::StatusCode::UNAUTHORIZED {
+                // Token expired mid-run — clear cache and retry next chunk.
+                warn!("OpenSky token expired, clearing cache");
+                let mut cache = TOKEN_CACHE.lock().unwrap();
+                *cache = None;
+                break;
+            }
 
             if resp.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
                 warn!("OpenSky rate limit hit, stopping");
@@ -149,7 +236,6 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
                     airline_prefix: airline,
                 };
 
-                // Determine the flight date from last_seen or first_seen
                 let ts = flight.last_seen.or(flight.first_seen).unwrap_or(chunk_begin);
                 let flight_date = chrono::DateTime::from_timestamp(ts, 0)
                     .map(|dt| dt.naive_utc().date())
@@ -188,6 +274,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
                  flights_per_month, first_observed, last_observed, data_source)
             VALUES ($1, $2, $3, $4, $5, $6, 'opensky')
             ON CONFLICT (origin_id, destination_icao, airline_icao, data_source)
+                WHERE data_source IN ('opdi', 'opensky')
             DO UPDATE SET
                 flights_per_month = EXCLUDED.flights_per_month,
                 first_observed    = LEAST(routes.first_observed, EXCLUDED.first_observed),

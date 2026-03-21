@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "WebFetch(domain:openskynetwork.github.io)",
+      "Bash(cargo check:*)"
+    ]
+  }
+}
