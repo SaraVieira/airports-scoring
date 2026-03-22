@@ -5,11 +5,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { chartTooltipStyle, chartTooltipLabelStyle } from "~/utils/styles";
+import type { PaxData } from "~/utils/types";
 
 export function PaxSparkline({
   data,
 }: {
-  data: { year: number; pax: number | null }[];
+  data: PaxData[];
 }) {
   if (data.length === 0) return null;
   const maxPax = Math.max(...data.map((d) => d.pax ?? 0));
@@ -36,16 +38,8 @@ export function PaxSparkline({
               if (!active || !payload?.[0]) return null;
               const d = payload[0].payload;
               return (
-                <div style={{
-                  backgroundColor: "#18181b",
-                  border: "1px solid #27272a",
-                  borderRadius: 4,
-                  padding: "6px 10px",
-                  fontSize: 11,
-                  fontFamily: "monospace",
-                  color: "#d4d4d8",
-                }}>
-                  <div style={{ color: "#a1a1aa", marginBottom: 2 }}>{d.name}</div>
+                <div style={chartTooltipStyle}>
+                  <div style={chartTooltipLabelStyle}>{d.name}</div>
                   <div>{Number(d.value) >= 1_000_000 ? `${(Number(d.value) / 1_000_000).toFixed(1)}M` : Number(d.value).toLocaleString()} passengers</div>
                 </div>
               );

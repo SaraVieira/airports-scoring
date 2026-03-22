@@ -1,12 +1,10 @@
 import { useMemo, useState } from "react";
+import { useSingleAirport } from "~/hooks/use-single-airport";
 import { routeDisplayName, routeIata, routeRegion } from "~/utils/routes";
-import { RouteRow } from "~/utils/types";
+import { Airport, RouteRow } from "~/utils/types";
 
-export function RouteSection({
-  routesWithFlights,
-}: {
-  routesWithFlights: RouteRow[];
-}) {
+export function RouteSection({ airport }: { airport: Airport }) {
+  const { routesWithFlights } = useSingleAirport({ airport });
   const [showAll, setShowAll] = useState(false);
   const [search, setSearch] = useState("");
   const query = search.toLowerCase().trim();
@@ -67,7 +65,8 @@ export function RouteSection({
 
       {/* Route summary stats */}
       <span className="font-mono text-[11px] text-zinc-400">
-        {summary.total} routes · {summary.regions} region{summary.regions !== 1 ? "s" : ""}
+        {summary.total} routes · {summary.regions} region
+        {summary.regions !== 1 ? "s" : ""}
         {summary.topName && summary.topFlights
           ? ` · Top: ${summary.topName} (${summary.topFlights}/mo)`
           : ""}

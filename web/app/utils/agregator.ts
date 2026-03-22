@@ -1,5 +1,4 @@
-type OpsRow =
-  (typeof import("../db/schema"))["operationalStats"]["$inferSelect"];
+import type { OpsRow } from "~/utils/types";
 
 export function aggregateOps(rows: OpsRow[]) {
   let totalFlights = 0;

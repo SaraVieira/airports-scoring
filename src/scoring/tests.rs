@@ -129,7 +129,7 @@ fn operational_no_data_defaults() {
 #[test]
 fn sentiment_high_rating_high_confidence() {
     let data = ScoringData {
-        weighted_avg_rating: Some(4.5), // 0-5 -> 9.0 on 0-10 -> (9-1)/9*100 = 88.89
+        weighted_avg_rating: Some(9.0), // 1-10 scale -> (9-1)/9*100 = 88.89
         total_review_count: Some(1000),     // confidence = 1.0
         sub_score_count: 4,
         sub_score_sum: 18.0,          // (18-4)/(4*4)*100 = 87.5
@@ -150,7 +150,7 @@ fn sentiment_no_data_returns_neutral() {
 #[test]
 fn sentiment_low_confidence() {
     let data = ScoringData {
-        weighted_avg_rating: Some(4.0), // -> 8.0 -> (8-1)/9*100 = 77.78
+        weighted_avg_rating: Some(8.0), // 1-10 scale -> (8-1)/9*100 = 77.78
         total_review_count: Some(50),       // confidence = 0.1
         sub_score_count: 0,
         ..empty_data()

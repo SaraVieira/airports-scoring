@@ -5,14 +5,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-
-type SentimentSnap =
-  (typeof import("../../../db/schema"))["sentimentSnapshots"]["$inferSelect"];
+import { chartTooltipStyle, chartTooltipLabelStyle } from "~/utils/styles";
+import type { SentimentSnapshot } from "~/utils/types";
 
 export function SentimentTimeline({
   snapshots,
 }: {
-  snapshots: SentimentSnap[];
+  snapshots: SentimentSnapshot[];
 }) {
   const byYear = new Map<number, { ratings: number[]; reviews: number }>();
   for (const s of snapshots) {
@@ -74,16 +73,8 @@ export function SentimentTimeline({
                 if (!active || !payload?.[0]) return null;
                 const d = payload[0].payload;
                 return (
-                  <div style={{
-                    backgroundColor: "#18181b",
-                    border: "1px solid #27272a",
-                    borderRadius: 4,
-                    padding: "6px 10px",
-                    fontSize: 11,
-                    fontFamily: "monospace",
-                    color: "#d4d4d8",
-                  }}>
-                    <div style={{ color: "#a1a1aa", marginBottom: 2 }}>{d.name}</div>
+                  <div style={chartTooltipStyle}>
+                    <div style={chartTooltipLabelStyle}>{d.name}</div>
                     <div>{Number(d.value).toFixed(1)}/5 ({Number(d.reviews).toLocaleString()} reviews)</div>
                   </div>
                 );
