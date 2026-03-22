@@ -37,30 +37,35 @@ logger = logging.getLogger(__name__)
 AIRPORT_SLUGS = {
     "LHR": "london-heathrow-airport",
     "LGW": "london-gatwick-airport",
-    "LTN": "london-luton-airport",
+    "LTN": "luton-airport",
     "OPO": "porto-airport",
     "MAD": "madrid-barajas-airport",
-    "BCN": "barcelona-el-prat-airport",
+    "BCN": "barcelona-airport",
     "BER": "berlin-brandenburg-airport",
     "MUC": "munich-airport",
-    "CDG": "paris-charles-de-gaulle-airport",
+    "CDG": "paris-cdg-airport",
     "NCE": "nice-cote-dazur-airport",
     "AMS": "amsterdam-schiphol-airport",
     "CPH": "copenhagen-airport",
     "FCO": "rome-fiumicino-airport",
     "WAW": "warsaw-chopin-airport",
-    "BUD": "budapest-airport",
+    "BUD": "budapest-ferihegy-airport",
 }
 
-# Sub-rating labels as they appear on the page -> output field names
+# Sub-rating labels as they appear on the page -> output field names.
+# Skytrax uses slightly different labels across versions of their site.
 SUB_SCORE_MAP = {
     "Queuing Times":       "score_queuing",
     "Terminal Cleanliness": "score_cleanliness",
     "Staff Service":       "score_staff",
+    "Airport Staff":       "score_staff",
     "Food & Beverages":    "score_food_bev",
+    "Food Beverages":      "score_food_bev",
     "Wifi & Connectivity": "score_wifi",
-    "Airport Wayfinding":  "score_wayfinding",  # sometimes "Airport Signs"
+    "Wifi Connectivity":   "score_wifi",
+    "Airport Wayfinding":  "score_wayfinding",
     "Airport Signs":       "score_wayfinding",
+    "Terminal Signs":      "score_wayfinding",
     "Transport Links":     "score_transport",
 }
 
@@ -83,16 +88,33 @@ def _parse_date(text: str) -> datetime | None:
 
 
 def _extract_star_count(cell) -> int | None:
-    """Count filled star images in a rating cell."""
+    """Count filled stars in a rating cell.
+
+    New format: <span class="star fill">1</span><span class="star">2</span>...
+    Old format: <img src="...star-fill..."> images
+    """
     if cell is None:
         return None
-    stars = cell.find_all("img", src=True)
-    filled = sum(1 for s in stars if "star-fill" in s.get("src", ""))
-    return filled if filled > 0 else None
+    # New format: span elements with class "fill"
+    stars = cell.find_all("span", class_="star")
+    if stars:
+        filled = sum(1 for s in stars if "fill" in s.get("class", []))
+        return filled if filled > 0 else None
+    # Old format: img elements
+    imgs = cell.find_all("img", src=True)
+    if imgs:
+        filled = sum(1 for s in imgs if "star-fill" in s.get("src", ""))
+        return filled if filled > 0 else None
+    return None
 
 
 def _parse_review(article, page_url: str) -> dict:
     """Parse a single <article> block into a review dict."""
+    # Extract unique review ID from article class (e.g. "review-939112")
+    classes = article.get("class", [])
+    review_id = next((c for c in classes if c.startswith("review-")), None)
+    source_url = f"{page_url}#{review_id}" if review_id else page_url
+
     review: dict = {
         "review_date": None,
         "author": None,
@@ -110,7 +132,7 @@ def _parse_review(article, page_url: str) -> dict:
         "trip_type": None,
         "review_title": None,
         "review_text": None,
-        "source_url": page_url,
+        "source_url": source_url,
     }
 
     # --- Review title ---
@@ -236,7 +258,7 @@ async def scrape_star_rating(page, slug: str) -> int | None:
     return None
 
 
-async def scrape_reviews(airport: str, since: datetime, max_pages: int = 10) -> dict:
+async def scrape_reviews(airport: str, since: datetime, max_pages: int = 50) -> dict:
     """Main scraping routine. Returns the full result dict."""
     iata = airport.upper()
     slug = AIRPORT_SLUGS.get(iata)
@@ -271,7 +293,7 @@ async def scrape_reviews(airport: str, since: datetime, max_pages: int = 10) -> 
         while not stop and page_num <= max_pages:
             url = (
                 f"https://www.airlinequality.com/airport-reviews/{slug}"
-                f"/page/{page_num}/?sortby=post_date:Desc&pagesize=100"
+                f"/page/{page_num}/"
             )
             logger.info("Fetching reviews page %d: %s", page_num, url)
             try:
@@ -328,8 +350,8 @@ def main():
         help="Only include reviews on or after this date (YYYY-MM-DD)"
     )
     parser.add_argument(
-        "--max-pages", type=int, default=10,
-        help="Maximum number of review pages to scrape (default: 10, ~1000 reviews)"
+        "--max-pages", type=int, default=50,
+        help="Maximum number of review pages to scrape (default: 50, ~500 reviews at 10/page)"
     )
     args = parser.parse_args()
 
