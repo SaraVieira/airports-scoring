@@ -771,32 +771,37 @@ function AirportDetail() {
               </>
             )}
 
+            <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[1.5px] uppercase">
+              ACI Service Quality Awards
+            </span>
             {wiki.aciAwards && typeof wiki.aciAwards === "object" && Object.keys(wiki.aciAwards).length > 0 ? (
-              <>
-                <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[1.5px] uppercase">
-                  ACI Awards
-                </span>
-                <p className="font-mono text-xs text-zinc-500">
-                  {Object.entries(wiki.aciAwards as Record<string, Record<string, string>>)
-                    .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([year, placements]) => {
-                      const details = Object.entries(placements)
-                        .map(([place, category]) => `${place} — ${category}`)
-                        .join(", ");
-                      return `${year}: ${details}`;
-                    })
-                    .join(" · ")}
-                </p>
-              </>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2 mt-1">
+                {Object.entries(wiki.aciAwards as Record<string, Record<string, string>>)
+                  .sort(([a], [b]) => b.localeCompare(a))
+                  .map(([year, placements]) => {
+                    const entries = Object.entries(placements);
+                    const place = entries[0]?.[0] ?? "";
+                    const category = entries[0]?.[1] ?? "";
+                    const medal = place === "1st" ? "🥇" : place === "2nd" ? "🥈" : place === "3rd" ? "🥉" : "🏆";
+                    return (
+                      <div
+                        key={year}
+                        className="border border-zinc-800 rounded px-3 py-2 flex flex-col gap-0.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-xs font-bold text-zinc-300">{year}</span>
+                          <span className="text-sm">{medal}</span>
+                        </div>
+                        <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wide">{place}</span>
+                        <span className="font-mono text-[10px] text-zinc-600 leading-tight">{category}</span>
+                      </div>
+                    );
+                  })}
+              </div>
             ) : (
-              <>
-                <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[1.5px] uppercase">
-                  ACI Awards
-                </span>
-                <p className="font-mono text-xs text-zinc-500 italic">
-                  None recorded. A clean record — in the worst sense.
-                </p>
-              </>
+              <p className="font-mono text-xs text-zinc-500 italic mt-1">
+                None recorded. A clean record — in the worst sense.
+              </p>
             )}
           </section>
         )}
