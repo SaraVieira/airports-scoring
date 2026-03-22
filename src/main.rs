@@ -14,7 +14,7 @@ use tracing_subscriber::EnvFilter;
 /// Airport Intelligence Platform — data fetch orchestrator.
 ///
 /// Fetches data from multiple sources (OurAirports, Eurocontrol, METAR,
-/// OpenSky, OPDI, Eurostat, CAA, Skytrax, Sentiment) and upserts into
+/// OpenSky, OPDI, Eurostat, CAA, Reviews, Sentiment) and upserts into
 /// Postgres.
 #[derive(Parser, Debug)]
 #[command(name = "airport-fetch", version, about)]
@@ -29,8 +29,9 @@ struct Cli {
     all: bool,
 
     /// Only fetch from this source.
-    /// Valid sources: ourairports, eurocontrol, metar, opensky, opdi,
-    /// eurostat, caa, skytrax, sentiment.
+    /// Valid sources: reviews (Skytrax + Google), skytrax (Skytrax only),
+    /// google_reviews (Google only), eurocontrol, metar, opensky, routes,
+    /// eurostat, caa, aena, wikipedia, sentiment.
     #[arg(long, value_name = "SOURCE")]
     source: Option<String>,
 
@@ -41,6 +42,7 @@ struct Cli {
     /// Compute all-time airport scores after fetching data.
     #[arg(long)]
     score: bool,
+
 }
 
 #[tokio::main]
@@ -116,6 +118,7 @@ async fn main() -> Result<()> {
         cli.full_refresh,
         cli.score,
         &seed_iata_codes,
+        &seed_config,
     )
     .await?;
 

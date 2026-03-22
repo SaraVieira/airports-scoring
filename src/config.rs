@@ -11,6 +11,7 @@ pub struct SeedAirport {
     pub name: String,
     pub skytrax_review_slug: Option<String>,
     pub skytrax_rating_slug: Option<String>,
+    pub google_maps_url: Option<String>,
 }
 
 /// Load the seed airport list from `airports.json` (or a custom path).

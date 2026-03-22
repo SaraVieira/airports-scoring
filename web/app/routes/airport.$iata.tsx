@@ -4,6 +4,22 @@ import { createServerFn } from "@tanstack/react-start";
 import { db } from "../db";
 import { airports, airportScores } from "../db/schema";
 import { eq, sql } from "drizzle-orm";
+import { aggregateOps, computeOpsTrend } from "~/utils/agregator";
+import {
+  delaySnark,
+  paxSnark,
+  totalCommentary,
+  totalVerdict,
+} from "~/utils/snark";
+import { Header } from "~/components/single/header";
+import { ScoreBar } from "~/components/single/score-bar";
+import { Stat } from "~/components/single/stat";
+import { PaxSparkline } from "~/components/single/pax-bar";
+import { fmt, fmtM } from "~/utils/format";
+import { SentimentBar } from "~/components/single/sentiment/bar";
+import { SentimentTimeline } from "~/components/single/sentiment/timeline";
+import { RouteSection } from "~/components/single/routes";
+import { scoreColor } from "~/components/single/score-bar";
 
 const getAirport = createServerFn({ method: "GET" })
   .inputValidator((iata: string) => iata.toUpperCase())
@@ -55,324 +71,17 @@ export const Route = createFileRoute("/airport/$iata")({
 
 // ── Helpers ──────────────────────────────────────────────
 
-function fmt(n: number | string | null | undefined): string {
-  if (n == null) return "—";
-  const num = typeof n === "string" ? parseFloat(n) : n;
-  if (isNaN(num)) return "—";
-  return num.toLocaleString("en-US");
-}
-
-function fmtM(n: number | string | null | undefined): string {
-  if (n == null) return "—";
-  const num = typeof n === "string" ? parseFloat(n) : n;
-  if (isNaN(num)) return "—";
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
-  if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K`;
-  return fmt(num);
-}
-
-function scoreColor(score: number | null | undefined): string {
-  if (score == null) return "text-zinc-600";
-  if (score >= 70) return "text-green-500";
-  if (score >= 40) return "text-yellow-500";
-  return "text-red-500";
-}
-
-function scoreBg(score: number | null | undefined): string {
-  if (score == null) return "bg-zinc-600";
-  if (score >= 70) return "bg-green-500";
-  if (score >= 40) return "bg-yellow-500";
-  return "bg-red-500";
-}
-
-function scoreVerdict(score: number | null | undefined): string {
-  if (score == null) return "No data";
-  if (score >= 90) return "Suspiciously good";
-  if (score >= 70) return "Actually decent";
-  if (score >= 50) return "Passable";
-  if (score >= 30) return "Painful";
-  return "Dire";
-}
-
-function totalVerdict(score: number | null | undefined): string {
-  if (score == null) return "Unscored";
-  if (score >= 81) return "Fine. We'll allow it.";
-  if (score >= 61) return "Surprisingly not awful";
-  if (score >= 41) return "Could be worse (but not by much)";
-  if (score >= 21) return "A masterclass in mediocrity";
-  return "Impressively terrible";
-}
-
-function totalCommentary(
-  score:
-    | {
-        scoreInfrastructure?: string | null;
-        scoreOperational?: string | null;
-        scoreSentiment?: string | null;
-        scoreConnectivity?: string | null;
-        scoreSentimentVelocity?: string | null;
-        commentary?: string | null;
-      }
-    | undefined,
-): string {
-  if (!score) return "";
-  if (score.commentary) return score.commentary;
-
-  const infra = parseFloat(score.scoreInfrastructure ?? "0");
-  const ops = parseFloat(score.scoreOperational ?? "0");
-  const sent = parseFloat(score.scoreSentiment ?? "0");
-  const conn = parseFloat(score.scoreConnectivity ?? "0");
-
-  const parts: string[] = [];
-  if (conn >= 70 && ops < 50)
-    parts.push("Strong connectivity can't save poor operations.");
-  if (infra < 40) parts.push("Infrastructure is the weak link.");
-  if (sent < 40)
-    parts.push("Passengers have noticed — and they're not happy about it.");
-
-  const vel = parseFloat(score.scoreSentimentVelocity ?? "50");
-  if (vel > 60) parts.push("At least the trend is improving.");
-  else if (vel < 40) parts.push("And it's getting worse.");
-  else parts.push("The trajectory is flat — no improvement in sight.");
-
-  return parts.join(" ") || "The data speaks for itself.";
-}
-
-function paxSnark(latest: number | null, capacity: number | null): string {
-  if (!latest || !capacity) return "";
-  const pct = Math.round((latest / capacity) * 100);
-  if (pct > 100)
-    return `Running at ${pct}% capacity. The airport is literally bursting.`;
-  if (pct > 85)
-    return `Running at ${pct}% capacity. Efficiently full without feeling cramped. Show-offs.`;
-  if (pct > 60)
-    return `Running at ${pct}% capacity. The remaining ${100 - pct}% is probably the baggage claim area everyone avoids.`;
-  return `Running at ${pct}% capacity. Plenty of room — and plenty of reasons people aren't coming.`;
-}
-
-type OpsRow =
-  (typeof import("../db/schema"))["operationalStats"]["$inferSelect"];
-
-function aggregateOps(rows: OpsRow[]) {
-  let totalFlights = 0;
-  let delayedFlights = 0;
-  let totalDelayMin = 0;
-  let delayMinCount = 0;
-  let weatherMin = 0;
-  let carrierMin = 0;
-  let atcMin = 0;
-  let airportMin = 0;
-  let totalAtfmMin = 0;
-  let cancelledFlights = 0;
-  let mishandledSum = 0;
-  let mishandledCount = 0;
-
-  for (const r of rows) {
-    const flights = r.totalFlights ?? 0;
-    totalFlights += flights;
-
-    if (r.delayPct != null && flights > 0) {
-      delayedFlights += Math.round((parseFloat(r.delayPct) / 100) * flights);
-    }
-
-    if (r.avgDelayMinutes != null) {
-      totalDelayMin += parseFloat(r.avgDelayMinutes) * flights;
-      delayMinCount += flights;
-    }
-
-    if (r.cancellationPct != null && flights > 0) {
-      cancelledFlights += Math.round(
-        (parseFloat(r.cancellationPct) / 100) * flights,
-      );
-    }
-
-    const monthAtfm =
-      r.delayPct != null ? (parseFloat(r.delayPct) / 100) * flights : 0;
-    if (r.delayWeatherPct != null)
-      weatherMin += (parseFloat(r.delayWeatherPct) / 100) * monthAtfm;
-    if (r.delayCarrierPct != null)
-      carrierMin += (parseFloat(r.delayCarrierPct) / 100) * monthAtfm;
-    if (r.delayAtcPct != null)
-      atcMin += (parseFloat(r.delayAtcPct) / 100) * monthAtfm;
-    if (r.delayAirportPct != null)
-      airportMin += (parseFloat(r.delayAirportPct) / 100) * monthAtfm;
-    if (monthAtfm > 0) totalAtfmMin += monthAtfm;
-
-    if (r.mishandledBagsPer1k != null) {
-      mishandledSum += parseFloat(r.mishandledBagsPer1k);
-      mishandledCount++;
-    }
-  }
-
-  const delayPct =
-    totalFlights > 0 ? (delayedFlights / totalFlights) * 100 : null;
-  const avgDelay = delayMinCount > 0 ? totalDelayMin / delayMinCount : null;
-  const cancellationPct =
-    totalFlights > 0 ? (cancelledFlights / totalFlights) * 100 : null;
-
-  return {
-    totalFlights,
-    delayPct,
-    avgDelayMinutes: avgDelay,
-    cancellationPct:
-      cancellationPct && cancellationPct > 0 ? cancellationPct : null,
-    delayWeatherPct:
-      totalAtfmMin > 0 ? (weatherMin / totalAtfmMin) * 100 : null,
-    delayCarrierPct:
-      totalAtfmMin > 0 ? (carrierMin / totalAtfmMin) * 100 : null,
-    delayAtcPct: totalAtfmMin > 0 ? (atcMin / totalAtfmMin) * 100 : null,
-    delayAirportPct:
-      totalAtfmMin > 0 ? (airportMin / totalAtfmMin) * 100 : null,
-    mishandledBagsPer1k:
-      mishandledCount > 0 ? mishandledSum / mishandledCount : null,
-    periodLabel:
-      rows.length > 1
-        ? `${rows[rows.length - 1].periodYear}/${String(rows[rows.length - 1].periodMonth).padStart(2, "0")}–${rows[0].periodYear}/${String(rows[0].periodMonth).padStart(2, "0")}`
-        : rows[0]?.periodYear
-          ? `${rows[0].periodYear}/${String(rows[0].periodMonth).padStart(2, "0")}`
-          : "",
-  };
-}
-
-function delaySnark(delayPct: number | null): string {
-  if (delayPct == null) return "";
-  const pct = parseFloat(String(delayPct));
-  if (pct > 40)
-    return "Nearly half of flights delayed. At this point, 'on time' is the exception.";
-  if (pct > 25)
-    return "Nearly a third of flights delayed. Pack a book. Maybe two.";
-  if (pct > 15)
-    return "One in five flights delayed. Not great, not apocalyptic.";
-  if (pct > 8)
-    return `${pct.toFixed(0)}% of flights delayed. Under ten percent. We checked twice.`;
-  return "Delays are genuinely rare here. We're suspicious.";
-}
-
-// ── Compute ops trend vs prior year ────────────────────────
-function computeOpsTrend(allOps: OpsRow[]) {
-  if (allOps.length < 24) return null;
-  const recent = aggregateOps(allOps.slice(0, 12));
-  const prior = aggregateOps(allOps.slice(12, 24));
-  if (recent.delayPct == null || prior.delayPct == null) return null;
-  return {
-    delayChange: recent.delayPct - prior.delayPct,
-    avgDelayChange:
-      recent.avgDelayMinutes != null && prior.avgDelayMinutes != null
-        ? recent.avgDelayMinutes - prior.avgDelayMinutes
-        : null,
-  };
-}
-
-// ── Score Bar ────────────────────────────────────────────
-
-function ScoreBar({
-  label,
-  score,
-  weight,
-}: {
-  label: string;
-  score: string | null | undefined;
-  weight: string;
-}) {
-  const num = score ? parseFloat(score) : null;
-  const width = num != null ? `${Math.min(num, 100)}%` : "0%";
-  return (
-    <div className="flex items-center gap-2 w-full">
-      <span className="font-grotesk text-[11px] font-bold text-zinc-500 tracking-wider w-36 shrink-0 uppercase">
-        {label}
-      </span>
-      <span className="font-mono text-[10px] text-zinc-600 w-8 shrink-0 tabular-nums">
-        {weight}
-      </span>
-      <div className="flex-1 h-2 bg-zinc-900 relative">
-        <div
-          className={`h-2 ${scoreBg(num)} absolute left-0 top-0 transition-all duration-500`}
-          style={{ width }}
-        />
-      </div>
-      <span
-        className={`font-mono text-xs font-bold w-7 shrink-0 tabular-nums ${scoreColor(num)}`}
-      >
-        {num != null ? Math.round(num) : "—"}
-      </span>
-      <span
-        className={`font-mono text-[11px] italic w-[120px] shrink-0 ${scoreColor(num)}`}
-      >
-        {scoreVerdict(num)}
-      </span>
-    </div>
-  );
-}
-
-// ── Sentiment Bar ────────────────────────────────────────
-
-function SentimentBar({
-  label,
-  score,
-}: {
-  label: string;
-  score: string | number | null | undefined;
-}) {
-  const num = score != null ? parseFloat(String(score)) : null;
-  const width = num != null ? `${(num / 10) * 100}%` : "0%";
-  return (
-    <div className="flex items-center gap-2 w-full">
-      <span className="font-grotesk text-[10px] font-bold text-zinc-500 tracking-wider w-24 shrink-0 uppercase">
-        {label}
-      </span>
-      <div className="flex-1 h-1.5 bg-zinc-900 relative">
-        <div
-          className={`h-1.5 absolute left-0 top-0 ${num != null && num >= 6 ? "bg-green-500" : num != null && num >= 4 ? "bg-yellow-500" : "bg-red-500"}`}
-          style={{ width }}
-        />
-      </div>
-      <span
-        className={`font-mono text-[11px] font-bold w-7 shrink-0 tabular-nums ${num != null && num >= 6 ? "text-green-500" : num != null && num >= 4 ? "text-yellow-500" : "text-red-500"}`}
-      >
-        {num != null ? num.toFixed(1) : "—"}
-      </span>
-    </div>
-  );
-}
-
-// ── Divider ──────────────────────────────────────────────
-
 function Divider() {
   return <div className="w-full h-px bg-zinc-800" />;
 }
 
 // ── Exhibit Header ───────────────────────────────────────
 
-function ExhibitHeader({ children }: { children: React.ReactNode }) {
+export function ExhibitHeader({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="font-grotesk text-[13px] font-bold text-yellow-400 tracking-[2px] uppercase">
       {children}
     </h3>
-  );
-}
-
-// ── Stat ─────────────────────────────────────────────────
-
-function Stat({
-  value,
-  label,
-  color = "text-zinc-100",
-  size = "text-[42px]",
-}: {
-  value: string;
-  label: string;
-  color?: string;
-  size?: string;
-}) {
-  return (
-    <div className="flex-1 flex flex-col gap-1">
-      <span className={`font-grotesk ${size} font-bold ${color} tabular-nums`}>
-        {value}
-      </span>
-      <span className="font-mono text-[11px] text-zinc-500 tracking-wider uppercase">
-        {label}
-      </span>
-    </div>
   );
 }
 
@@ -400,149 +109,6 @@ function TrendIndicator({
   );
 }
 
-// ── Pax Sparkline (CSS bar chart) ────────────────────────
-
-function PaxSparkline({
-  data,
-}: {
-  data: { year: number; pax: number | null }[];
-}) {
-  if (data.length === 0) return null;
-  const maxPax = Math.max(...data.map((d) => d.pax ?? 0));
-  if (maxPax === 0) return null;
-
-  // Find covid dip (lowest non-zero year between 2019-2022)
-  const covidYear = data.find(
-    (d) =>
-      d.year >= 2020 && d.year <= 2021 && d.pax != null && d.pax < maxPax * 0.5,
-  );
-
-  return (
-    <div className="flex items-end gap-[3px] h-16">
-      {data.map((d) => {
-        const h = d.pax ? Math.max((d.pax / maxPax) * 100, 3) : 3;
-        const isCovid = d.year === covidYear?.year;
-        const isLatest = d === data[0];
-        const bg = isCovid
-          ? "bg-red-500/70"
-          : isLatest
-            ? "bg-yellow-400"
-            : "bg-zinc-600";
-        return (
-          <div key={d.year} className="flex flex-col items-center gap-1 flex-1">
-            <div className="w-full flex flex-col items-center justify-end h-12">
-              <div
-                className={`w-full max-w-[24px] ${bg} transition-all`}
-                style={{ height: `${h}%` }}
-              />
-            </div>
-            <span
-              className={`font-mono text-[9px] tabular-nums ${isLatest ? "text-zinc-300" : isCovid ? "text-red-500" : "text-zinc-600"}`}
-            >
-              {String(d.year).slice(2)}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── Sentiment Timeline ──────────────────────────────────
-
-type SentimentSnap =
-  (typeof import("../db/schema"))["sentimentSnapshots"]["$inferSelect"];
-
-function SentimentTimeline({ snapshots }: { snapshots: SentimentSnap[] }) {
-  // Group by year, take average rating per year
-  const byYear = new Map<number, { ratings: number[]; reviews: number }>();
-  for (const s of snapshots) {
-    if (s.avgRating == null) continue;
-    const year = s.snapshotYear;
-    const entry = byYear.get(year) ?? { ratings: [], reviews: 0 };
-    entry.ratings.push(parseFloat(String(s.avgRating)));
-    entry.reviews += s.reviewCount ?? 0;
-    byYear.set(year, entry);
-  }
-
-  const years = Array.from(byYear.entries())
-    .map(([year, data]) => ({
-      year,
-      avg: data.ratings.reduce((a, b) => a + b, 0) / data.ratings.length,
-      reviews: data.reviews,
-    }))
-    .filter((y) => y.reviews >= 5) // Filter out noise from low-count years
-    .sort((a, b) => a.year - b.year);
-
-  if (years.length < 2) return null;
-
-  const maxRating = 5;
-  // Use first/last year with meaningful review count (>10) for "Then vs Now"
-  const meaningful = years.filter((y) => y.reviews >= 10);
-  const first = meaningful[0] ?? years[0];
-  const last = meaningful[meaningful.length - 1] ?? years[years.length - 1];
-  const delta = last.avg - first.avg;
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[1.5px] uppercase">
-          Sentiment Trajectory ({first.year}–{last.year})
-        </span>
-        <span
-          className={`font-mono text-[11px] font-bold ${delta > 0.2 ? "text-green-500" : delta < -0.2 ? "text-red-500" : "text-zinc-500"}`}
-        >
-          {delta > 0 ? "+" : ""}
-          {delta.toFixed(2)} over {years.length} years
-        </span>
-      </div>
-      <div className="flex items-end gap-[2px] h-20">
-        {years.map((y) => {
-          const h = Math.max((y.avg / maxRating) * 100, 8);
-          const color =
-            y.avg >= 3.5
-              ? "bg-green-500/70"
-              : y.avg >= 2.5
-                ? "bg-yellow-500/70"
-                : "bg-red-500/70";
-          return (
-            <div
-              key={y.year}
-              className="flex flex-col items-center gap-1 flex-1"
-              title={`${y.year}: ${y.avg.toFixed(2)} (${y.reviews} reviews)`}
-            >
-              <span className="font-mono text-[9px] text-zinc-600 tabular-nums">
-                {y.avg.toFixed(1)}
-              </span>
-              <div className="w-full flex justify-center h-14">
-                <div
-                  className={`w-full max-w-[28px] ${color}`}
-                  style={{ height: `${h}%`, alignSelf: "flex-end" }}
-                />
-              </div>
-              <span className="font-mono text-[9px] text-zinc-600 tabular-nums">
-                {String(y.year).slice(2)}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex justify-between">
-        <span className="font-mono text-[10px] text-zinc-600">
-          Then: {first.avg.toFixed(1)}/5 ({first.reviews} reviews)
-        </span>
-        <span
-          className={`font-mono text-[10px] font-bold ${last.avg > first.avg ? "text-green-500" : "text-red-500"}`}
-        >
-          Now: {last.avg.toFixed(1)}/5 ({last.reviews} reviews)
-        </span>
-      </div>
-    </div>
-  );
-}
-
-// ── Main Component ───────────────────────────────────────
-
 function AirportDetail() {
   const airport = Route.useLoaderData();
   const score = airport.scores[0];
@@ -550,14 +116,20 @@ function AirportDetail() {
   // Find latest full year (skip current partial year — if latest year's pax is <50% of previous, it's likely partial)
   const currentYear = new Date().getFullYear();
   const paxData = airport.paxYearly;
-  const latestPax = paxData[0]?.year === currentYear && paxData.length > 1 && paxData[1]?.totalPax
-    && paxData[0].totalPax && paxData[0].totalPax < paxData[1].totalPax * 0.5
-    ? paxData[1]  // skip partial current year
-    : paxData[0];
+  const latestPax =
+    paxData[0]?.year === currentYear &&
+    paxData.length > 1 &&
+    paxData[1]?.totalPax &&
+    paxData[0].totalPax &&
+    paxData[0].totalPax < paxData[1].totalPax * 0.5
+      ? paxData[1] // skip partial current year
+      : paxData[0];
   // For YoY, compare against the year before latestPax, skipping 2020 (covid anomaly)
   const latestPaxIdx = paxData.indexOf(latestPax);
   const prevCandidates = paxData.slice(latestPaxIdx + 1);
-  const prevPax = prevCandidates.find(p => p.year !== 2020 && p.year !== 2021) ?? prevCandidates[0];
+  const prevPax =
+    prevCandidates.find((p) => p.year !== 2020 && p.year !== 2021) ??
+    prevCandidates[0];
   const recentOps = airport.operationalStats.slice(0, 12);
   const opsAgg = recentOps.length > 0 ? aggregateOps(recentOps) : null;
   const opsTrend = computeOpsTrend(airport.operationalStats);
@@ -673,16 +245,19 @@ function AirportDetail() {
       (r) =>
         (r.flightsPerMonth != null && r.flightsPerMonth > 0) || r.airlineName,
     );
-    const byDest = new Map<string, typeof all[number]>();
+    const byDest = new Map<string, (typeof all)[number]>();
     for (const r of all) {
       const key = r.destinationIata ?? r.destinationIcao ?? `${r.id}`;
       const existing = byDest.get(key);
-      if (!existing || (r.flightsPerMonth ?? 0) > (existing.flightsPerMonth ?? 0)) {
+      if (
+        !existing ||
+        (r.flightsPerMonth ?? 0) > (existing.flightsPerMonth ?? 0)
+      ) {
         byDest.set(key, r);
       }
     }
     return Array.from(byDest.values()).sort(
-      (a, b) => (b.flightsPerMonth ?? 0) - (a.flightsPerMonth ?? 0)
+      (a, b) => (b.flightsPerMonth ?? 0) - (a.flightsPerMonth ?? 0),
     );
   }, [airport.routesOut]);
 
@@ -721,37 +296,8 @@ function AirportDetail() {
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-zinc-100">
       <div className="max-w-5xl mx-auto px-16 pt-20 pb-12 flex flex-col gap-9">
-        {/* ── Header ──────────────────────────────── */}
-        <header className="flex flex-col gap-1">
-          <span className="font-grotesk text-[100px] font-bold text-white/10 leading-none tracking-[8px]">
-            {airport.iataCode}
-          </span>
-          <h1 className="font-grotesk text-[32px] font-bold text-zinc-100 tracking-wide">
-            {airport.name}
-          </h1>
-          <p className="font-mono text-[13px] text-zinc-500 tracking-[1.5px] uppercase">
-            {airport.city}, {airport.country?.name}
-          </p>
-          {airport.operator && (
-            <p className="font-mono text-[11px] text-zinc-600 tracking-wider uppercase">
-              Operated by {airport.operator.name}
-            </p>
-          )}
-          <div className="flex gap-3 mt-3 flex-wrap">
-            {airport.openedYear && (
-              <Badge label="Opened" value={String(airport.openedYear)} bright />
-            )}
-            {airport.icaoCode && (
-              <Badge label="ICAO" value={airport.icaoCode} />
-            )}
-            {airport.elevationFt && (
-              <Badge label="Elev" value={`${fmt(airport.elevationFt)} ft`} />
-            )}
-          </div>
-        </header>
-
         <Divider />
-
+        <Header airport={airport} />
         {/* ── The Verdict ─────────────────────────── */}
         <section className="flex flex-col gap-1 py-6">
           <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[2px] uppercase">
@@ -764,7 +310,9 @@ function AirportDetail() {
               {totalNum != null ? Math.round(totalNum) : "?"}
             </span>
             <span className="font-mono text-sm text-zinc-600 pb-2">/100</span>
-            <span className={`font-mono text-sm italic pb-2 ${scoreColor(totalNum)}`}>
+            <span
+              className={`font-mono text-sm italic pb-2 ${scoreColor(totalNum)}`}
+            >
               {totalVerdict(totalNum)}
             </span>
           </div>
@@ -851,33 +399,36 @@ function AirportDetail() {
             </p>
           )}
 
-          {latestPax && (latestPax.internationalPax || latestPax.domesticPax || latestPax.aircraftMovements) && (
-            <div className="flex gap-8">
-              {latestPax.internationalPax && (
-                <Stat
-                  value={fmtM(latestPax.internationalPax)}
-                  label={`International${latestPax.totalPax ? ` (${Math.round((latestPax.internationalPax / latestPax.totalPax) * 100)}%)` : ""}`}
-                  size="text-[28px]"
-                />
-              )}
-              {latestPax.domesticPax && (
-                <Stat
-                  value={fmtM(latestPax.domesticPax)}
-                  label={`Domestic${latestPax.totalPax ? ` (${Math.round((latestPax.domesticPax / latestPax.totalPax) * 100)}%)` : ""}`}
-                  size="text-[28px]"
-                  color="text-zinc-600"
-                />
-              )}
-              {latestPax.aircraftMovements && (
-                <Stat
-                  value={fmt(latestPax.aircraftMovements)}
-                  label="Aircraft Movements"
-                  size="text-[28px]"
-                  color="text-zinc-600"
-                />
-              )}
-            </div>
-          )}
+          {latestPax &&
+            (latestPax.internationalPax ||
+              latestPax.domesticPax ||
+              latestPax.aircraftMovements) && (
+              <div className="flex gap-8">
+                {latestPax.internationalPax && (
+                  <Stat
+                    value={fmtM(latestPax.internationalPax)}
+                    label={`International${latestPax.totalPax ? ` (${Math.round((latestPax.internationalPax / latestPax.totalPax) * 100)}%)` : ""}`}
+                    size="text-[28px]"
+                  />
+                )}
+                {latestPax.domesticPax && (
+                  <Stat
+                    value={fmtM(latestPax.domesticPax)}
+                    label={`Domestic${latestPax.totalPax ? ` (${Math.round((latestPax.domesticPax / latestPax.totalPax) * 100)}%)` : ""}`}
+                    size="text-[28px]"
+                    color="text-zinc-600"
+                  />
+                )}
+                {latestPax.aircraftMovements && (
+                  <Stat
+                    value={fmt(latestPax.aircraftMovements)}
+                    label="Aircraft Movements"
+                    size="text-[28px]"
+                    color="text-zinc-600"
+                  />
+                )}
+              </div>
+            )}
 
           {/* Passenger History Sparkline */}
           {paxSparkData.length > 2 && (
@@ -993,21 +544,23 @@ function AirportDetail() {
                 </span>
 
                 {/* Call out airport-caused delays when dominant */}
-                {opsAgg.delayAirportPct != null && opsAgg.delayAirportPct > 50 && (
-                  <div className="flex items-center gap-3 py-2 px-3 bg-red-500/[0.08] border border-red-500/20">
-                    <span className="font-grotesk text-[28px] font-bold text-red-500 tabular-nums">
-                      {opsAgg.delayAirportPct.toFixed(0)}%
-                    </span>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-grotesk text-[11px] font-bold text-red-500 tracking-wider uppercase">
-                        Airport-Caused
+                {opsAgg.delayAirportPct != null &&
+                  opsAgg.delayAirportPct > 50 && (
+                    <div className="flex items-center gap-3 py-2 px-3 bg-red-500/8 border border-red-500/20">
+                      <span className="font-grotesk text-[28px] font-bold text-red-500 tabular-nums">
+                        {opsAgg.delayAirportPct.toFixed(0)}%
                       </span>
-                      <span className="font-mono text-[10px] text-red-400/70 italic">
-                        The airport itself is the primary reason for delays. Not weather. Not ATC. Them.
-                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-grotesk text-[11px] font-bold text-red-500 tracking-wider uppercase">
+                          Airport-Caused
+                        </span>
+                        <span className="font-mono text-[10px] text-red-400/70 italic">
+                          The airport itself is the primary reason for delays.
+                          Not weather. Not ATC. Them.
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 <div className="flex gap-4">
                   {[
@@ -1117,11 +670,14 @@ function AirportDetail() {
                   {
                     l: "Positive",
                     v: latestSentiment.positivePct,
-                    c: latestSentiment.positivePct && parseFloat(latestSentiment.positivePct) >= 50
-                      ? "text-green-500"
-                      : latestSentiment.positivePct && parseFloat(latestSentiment.positivePct) >= 30
-                        ? "text-yellow-500"
-                        : "text-red-500",
+                    c:
+                      latestSentiment.positivePct &&
+                      parseFloat(latestSentiment.positivePct) >= 50
+                        ? "text-green-500"
+                        : latestSentiment.positivePct &&
+                            parseFloat(latestSentiment.positivePct) >= 30
+                          ? "text-yellow-500"
+                          : "text-red-500",
                   },
                   {
                     l: "Neutral",
@@ -1337,10 +893,20 @@ function AirportDetail() {
 
 // ── Backstory Timeline ──────────────────────────────────
 
-function TruncatedText({ text, maxLength = 200 }: { text: string; maxLength?: number }) {
+function TruncatedText({
+  text,
+  maxLength = 200,
+}: {
+  text: string;
+  maxLength?: number;
+}) {
   const [expanded, setExpanded] = useState(false);
   if (text.length <= maxLength) {
-    return <span className="font-mono text-[10px] text-zinc-600 leading-relaxed">{text}</span>;
+    return (
+      <span className="font-mono text-[10px] text-zinc-600 leading-relaxed">
+        {text}
+      </span>
+    );
   }
   return (
     <span className="font-mono text-[10px] text-zinc-600 leading-relaxed">
@@ -1460,368 +1026,5 @@ function BackstoryTimeline({
         </div>
       )}
     </div>
-  );
-}
-
-// ── Route Section (grouped by region, top 10 + toggle) ───
-
-type RouteRow = (typeof import("../db/schema"))["routes"]["$inferSelect"] & {
-  destination?: Record<string, unknown> | null;
-  destinationAirport?: {
-    name: string;
-    iata: string | null;
-    icao: string;
-    city: string;
-    country: string;
-  } | null;
-};
-
-function routeDisplayName(r: RouteRow): string {
-  return (
-    r.destinationAirport?.name ??
-    (r.destination as { name?: string } | null)?.name ??
-    r.destinationIata ??
-    r.destinationIcao ??
-    "Unknown"
-  );
-}
-
-function routeIata(r: RouteRow): string | null {
-  return r.destinationAirport?.iata ?? r.destinationIata ?? null;
-}
-
-function routeCountry(r: RouteRow): string {
-  return r.destinationAirport?.country ?? "Unknown";
-}
-
-// Simple continent mapping by country code prefix
-function routeRegion(r: RouteRow): string {
-  const country = routeCountry(r);
-  // European countries
-  const europe = [
-    "AT",
-    "BE",
-    "BG",
-    "HR",
-    "CY",
-    "CZ",
-    "DK",
-    "EE",
-    "FI",
-    "FR",
-    "DE",
-    "GR",
-    "HU",
-    "IE",
-    "IT",
-    "LV",
-    "LT",
-    "LU",
-    "MT",
-    "NL",
-    "PL",
-    "PT",
-    "RO",
-    "SK",
-    "SI",
-    "ES",
-    "SE",
-    "GB",
-    "NO",
-    "CH",
-    "IS",
-    "AL",
-    "BA",
-    "ME",
-    "MK",
-    "RS",
-    "XK",
-    "UA",
-    "MD",
-    "BY",
-  ];
-  if (europe.includes(country)) return "Europe";
-  const africa = [
-    "DZ",
-    "AO",
-    "BJ",
-    "BW",
-    "BF",
-    "BI",
-    "CV",
-    "CM",
-    "CF",
-    "TD",
-    "KM",
-    "CD",
-    "CG",
-    "CI",
-    "DJ",
-    "EG",
-    "GQ",
-    "ER",
-    "SZ",
-    "ET",
-    "GA",
-    "GM",
-    "GH",
-    "GN",
-    "GW",
-    "KE",
-    "LS",
-    "LR",
-    "LY",
-    "MG",
-    "MW",
-    "ML",
-    "MR",
-    "MU",
-    "MA",
-    "MZ",
-    "NA",
-    "NE",
-    "NG",
-    "RW",
-    "ST",
-    "SN",
-    "SC",
-    "SL",
-    "SO",
-    "ZA",
-    "SS",
-    "SD",
-    "TZ",
-    "TG",
-    "TN",
-    "UG",
-    "ZM",
-    "ZW",
-  ];
-  if (africa.includes(country)) return "Africa";
-  const middleEast = [
-    "AE",
-    "BH",
-    "IL",
-    "IQ",
-    "IR",
-    "JO",
-    "KW",
-    "LB",
-    "OM",
-    "PS",
-    "QA",
-    "SA",
-    "SY",
-    "TR",
-    "YE",
-  ];
-  if (middleEast.includes(country)) return "Middle East";
-  const asia = [
-    "AF",
-    "AM",
-    "AZ",
-    "BD",
-    "BT",
-    "BN",
-    "KH",
-    "CN",
-    "GE",
-    "IN",
-    "ID",
-    "JP",
-    "KZ",
-    "KG",
-    "LA",
-    "MY",
-    "MV",
-    "MN",
-    "MM",
-    "NP",
-    "KP",
-    "PK",
-    "PH",
-    "RU",
-    "SG",
-    "KR",
-    "LK",
-    "TW",
-    "TJ",
-    "TH",
-    "TL",
-    "TM",
-    "UZ",
-    "VN",
-  ];
-  if (asia.includes(country)) return "Asia";
-  const americas = [
-    "US",
-    "CA",
-    "MX",
-    "BR",
-    "AR",
-    "CL",
-    "CO",
-    "PE",
-    "VE",
-    "EC",
-    "BO",
-    "PY",
-    "UY",
-    "GY",
-    "SR",
-    "CR",
-    "PA",
-    "CU",
-    "DO",
-    "HT",
-    "JM",
-    "TT",
-    "BS",
-    "BB",
-    "GT",
-    "HN",
-    "SV",
-    "NI",
-    "BZ",
-    "PR",
-  ];
-  if (americas.includes(country)) return "Americas";
-  return "Other";
-}
-
-function RouteSection({
-  routesWithFlights,
-}: {
-  routesWithFlights: RouteRow[];
-}) {
-  const [showAll, setShowAll] = useState(false);
-  const [search, setSearch] = useState("");
-  const query = search.toLowerCase().trim();
-
-  const topRoutes = routesWithFlights.slice(0, 10);
-  const displayRoutes = showAll ? routesWithFlights : topRoutes;
-
-  const filtered = query
-    ? displayRoutes.filter((r) => {
-        const name = routeDisplayName(r).toLowerCase();
-        const iata = (routeIata(r) ?? "").toLowerCase();
-        const icao = (r.destinationIcao ?? "").toLowerCase();
-        return (
-          name.includes(query) || iata.includes(query) || icao.includes(query)
-        );
-      })
-    : displayRoutes;
-
-  // Group by region
-  const grouped = useMemo(() => {
-    const map = new Map<string, RouteRow[]>();
-    for (const r of filtered) {
-      const region = routeRegion(r);
-      const list = map.get(region) ?? [];
-      list.push(r);
-      map.set(region, list);
-    }
-    // Sort regions: Europe first, then by count
-    return Array.from(map.entries()).sort((a, b) => {
-      if (a[0] === "Europe") return -1;
-      if (b[0] === "Europe") return 1;
-      return b[1].length - a[1].length;
-    });
-  }, [filtered]);
-
-  return (
-    <section className="flex flex-col gap-4">
-      <ExhibitHeader>Where You Can Escape To</ExhibitHeader>
-      <span className="font-grotesk text-[11px] font-bold text-zinc-100 tracking-wider uppercase">
-        {routesWithFlights.length} Routes Served
-      </span>
-
-      <input
-        type="text"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search destinations..."
-        className="w-full bg-zinc-900/50 border border-white/5 px-3 py-2 font-mono text-xs text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-yellow-400/30 transition-colors"
-      />
-
-      <div className="max-h-[500px] overflow-y-auto scrollbar-thin">
-        {grouped.map(([region, routes]) => (
-          <div key={region} className="mb-4">
-            <div className="flex items-center gap-2 mb-2 sticky top-0 bg-[#0a0a0b] py-1 z-10">
-              <span className="font-grotesk text-[10px] font-bold text-zinc-500 tracking-[1.5px] uppercase">
-                {region}
-              </span>
-              <span className="font-mono text-[10px] text-zinc-700">
-                {routes.length}
-              </span>
-            </div>
-            {routes.map((r, idx) => {
-              const isTop = idx === 0;
-              return (
-                <div
-                  key={r.id}
-                  className={`flex justify-between items-center border-b border-white/5 last:border-0 ${
-                    isTop ? "py-3 px-4 bg-[#111113] -mx-4" : "py-1.5"
-                  }`}
-                >
-                  <span className={`font-mono truncate ${
-                    isTop ? "text-[13px] font-bold text-zinc-200" : "text-[11px] text-zinc-500"
-                  }`}>
-                    {routeDisplayName(r)}
-                    {routeIata(r) ? ` (${routeIata(r)})` : ""}
-                  </span>
-                  <span className={`font-mono font-bold tabular-nums shrink-0 ${
-                    isTop ? "text-base text-green-500" : "text-xs text-zinc-400"
-                  }`}>
-                    {r.flightsPerMonth ?? "—"}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        ))}
-        {filtered.length === 0 && (
-          <p className="font-mono text-xs text-zinc-600 italic py-4">
-            No routes matching "{search}". Trapped.
-          </p>
-        )}
-      </div>
-
-      {routesWithFlights.length > 10 && !query && (
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="font-grotesk text-[11px] font-bold text-yellow-400 tracking-wider hover:text-yellow-300 transition-colors uppercase self-start"
-        >
-          {showAll
-            ? `Show Top 10`
-            : `Show All ${routesWithFlights.length} Routes`}
-        </button>
-      )}
-    </section>
-  );
-}
-
-// ── Badge ────────────────────────────────────────────────
-
-function Badge({
-  label,
-  value,
-  bright = false,
-}: {
-  label: string;
-  value: string;
-  bright?: boolean;
-}) {
-  return (
-    <span className="inline-flex items-center gap-1.5 bg-white/[0.03] px-2.5 py-1">
-      <span className="font-grotesk text-[9px] font-bold text-zinc-600 tracking-wider uppercase">
-        {label}
-      </span>
-      <span
-        className={`font-mono text-xs font-bold ${bright ? "text-zinc-100" : "text-zinc-400"}`}
-      >
-        {value}
-      </span>
-    </span>
   );
 }

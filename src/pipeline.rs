@@ -2,6 +2,7 @@ use anyhow::{bail, Result};
 use sqlx::PgPool;
 use tracing::{error, info, warn};
 
+use crate::config::SeedAirport;
 use crate::db;
 use crate::fetchers;
 use crate::models::{Airport, FetchResult};
@@ -19,7 +20,8 @@ const PAX_SOURCES: &[&str] = &["aena", "eurostat", "wikipedia"];
 
 /// Data sources run by the Rust CLI per-airport.
 /// ourairports is handled separately in main.rs (bulk bootstrap).
-/// skytrax + sentiment call Python subprocesses.
+/// "reviews" runs both Skytrax + Google reviews scrapers.
+/// "sentiment" runs the ML pipeline on unprocessed reviews.
 pub const ALL_SOURCES: &[&str] = &[
     "eurocontrol",
     "metar",
@@ -29,9 +31,12 @@ pub const ALL_SOURCES: &[&str] = &[
     "caa",
     "aena",
     "wikipedia",
-    "skytrax",
+    "reviews",
     "sentiment",
 ];
+
+/// Additional source aliases accepted by --source but not in ALL_SOURCES.
+const SOURCE_ALIASES: &[&str] = &["skytrax", "google_reviews"];
 
 /// Dispatch to the correct fetcher for a given source name.
 async fn dispatch_fetcher(
@@ -40,6 +45,7 @@ async fn dispatch_fetcher(
     source: &str,
     full_refresh: bool,
     seed_iata_codes: &[&str],
+    seed_airports: &[SeedAirport],
 ) -> Result<FetchResult> {
     match source {
         "ourairports" => fetchers::ourairports::fetch(pool, airport, full_refresh, seed_iata_codes).await,
@@ -53,10 +59,19 @@ async fn dispatch_fetcher(
         "aena" => fetchers::aena::fetch(pool, airport, full_refresh).await,
         "openflights" => fetchers::openflights::fetch(pool, airport, full_refresh).await,
         "wikipedia" => fetchers::wikipedia::fetch(pool, airport, full_refresh).await,
+        // Unified reviews: runs Skytrax + Google in sequence
+        "reviews" => fetchers::reviews::fetch(pool, airport, full_refresh, seed_airports).await,
+        // Individual review sources (for targeted runs)
         "skytrax" => fetchers::skytrax::fetch(pool, airport, full_refresh).await,
+        "google_reviews" => fetchers::google_reviews::fetch(pool, airport, full_refresh, seed_airports).await,
         "sentiment" => fetchers::sentiment::fetch(pool, airport, full_refresh).await,
         other => bail!("Unknown source: {}", other),
     }
+}
+
+/// Check if a source name is valid (either in ALL_SOURCES or a known alias).
+fn is_valid_source(source: &str) -> bool {
+    ALL_SOURCES.contains(&source) || SOURCE_ALIASES.contains(&source)
 }
 
 /// Run the pipeline for a set of airports and (optionally) a single source.
@@ -70,14 +85,16 @@ pub async fn run_pipeline(
     full_refresh: bool,
     score: bool,
     seed_iata_codes: &[&str],
+    seed_airports: &[SeedAirport],
 ) -> Result<()> {
     let sources: Vec<&str> = match source {
         Some(s) => {
-            if !ALL_SOURCES.contains(&s) {
+            if !is_valid_source(s) {
                 bail!(
-                    "Unknown source '{}'. Valid sources: {}",
+                    "Unknown source '{}'. Valid sources: {}, {}",
                     s,
-                    ALL_SOURCES.join(", ")
+                    ALL_SOURCES.join(", "),
+                    SOURCE_ALIASES.join(", ")
                 );
             }
             vec![s]
@@ -100,7 +117,7 @@ pub async fn run_pipeline(
 
             let run_id = db::start_pipeline_run(pool, airport.id, src).await?;
 
-            match dispatch_fetcher(pool, airport, src, full_refresh, seed_iata_codes).await {
+            match dispatch_fetcher(pool, airport, src, full_refresh, seed_iata_codes, seed_airports).await {
                 Ok(result) => {
                     info!(
                         airport = iata,

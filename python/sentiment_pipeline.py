@@ -225,11 +225,13 @@ def classify_sentiment(emotions: list[dict]) -> str:
 # Database helpers
 # ---------------------------------------------------------------------------
 
-def fetch_unprocessed_reviews(conn, airport: str) -> list[dict]:
-    """Fetch unprocessed reviews for an airport from reviews_raw."""
+def fetch_unprocessed_reviews(conn, airport: str, source: str | None = None) -> list[dict]:
+    """Fetch unprocessed reviews for an airport from reviews_raw.
+
+    If source is provided, only fetch reviews from that source (e.g. 'skytrax', 'google').
+    """
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-        cur.execute(
-            """
+        query = """
             SELECT r.id, r.review_date, r.overall_rating, r.review_text,
                    r.score_queuing, r.score_cleanliness, r.score_staff,
                    r.score_food_bev, r.score_wayfinding, r.score_transport
@@ -237,12 +239,18 @@ def fetch_unprocessed_reviews(conn, airport: str) -> list[dict]:
             JOIN airports a ON r.airport_id = a.id
             WHERE a.iata_code = %s
               AND (r.processed IS NULL OR r.processed = false)
-            ORDER BY r.review_date ASC
-            """,
-            (airport.upper(),),
-        )
+        """
+        params: list = [airport.upper()]
+
+        if source:
+            query += "  AND r.source = %s\n"
+            params.append(source)
+
+        query += "            ORDER BY r.review_date ASC"
+        cur.execute(query, params)
         rows = cur.fetchall()
-    logger.info("Fetched %d unprocessed reviews for %s", len(rows), airport)
+    source_label = f" (source={source})" if source else ""
+    logger.info("Fetched %d unprocessed reviews for %s%s", len(rows), airport, source_label)
     return [dict(r) for r in rows]
 
 
@@ -362,8 +370,11 @@ def aggregate_snapshots(reviews_with_analysis: list[dict], airport: str) -> list
 # Main pipeline
 # ---------------------------------------------------------------------------
 
-def run_pipeline(airport: str, db_url: str):
-    """Run the full sentiment pipeline for an airport."""
+def run_pipeline(airport: str, db_url: str, source: str | None = None):
+    """Run the full sentiment pipeline for an airport.
+
+    If source is provided, only process reviews from that source (e.g. 'skytrax', 'google').
+    """
     airport = airport.upper()
 
     # Connect to DB
@@ -375,10 +386,10 @@ def run_pipeline(airport: str, db_url: str):
         sys.exit(1)
 
     # Fetch reviews
-    reviews = fetch_unprocessed_reviews(conn, airport)
+    reviews = fetch_unprocessed_reviews(conn, airport, source=source)
     if not reviews:
         logger.info("No unprocessed reviews for %s. Nothing to do.", airport)
-        result = {"airport": airport, "sentiment_snapshots": []}
+        result = {"airport": airport, "source": source, "sentiment_snapshots": []}
         json.dump(result, sys.stdout, indent=2)
         sys.stdout.write("\n")
         conn.close()
@@ -439,6 +450,7 @@ def run_pipeline(airport: str, db_url: str):
     # Output
     result = {
         "airport": airport,
+        "source": source,
         "sentiment_snapshots": snapshots,
     }
     json.dump(result, sys.stdout, indent=2, ensure_ascii=False)
@@ -458,6 +470,10 @@ def main():
         "--db-url", default=None,
         help="Postgres connection string (default: DATABASE_URL env var)"
     )
+    parser.add_argument(
+        "--source", default=None,
+        help="Only process reviews from this source (e.g. skytrax, google)"
+    )
     args = parser.parse_args()
 
     db_url = args.db_url or os.environ.get("DATABASE_URL")
@@ -465,7 +481,7 @@ def main():
         logger.error("No database URL provided. Use --db-url or set DATABASE_URL env var.")
         sys.exit(1)
 
-    run_pipeline(args.airport, db_url)
+    run_pipeline(args.airport, db_url, source=args.source)
 
 
 if __name__ == "__main__":

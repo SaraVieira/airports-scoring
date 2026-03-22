@@ -10,8 +10,6 @@ import {
   date,
   bigint,
   doublePrecision,
-  uniqueIndex,
-  index,
   timestamp,
   jsonb,
 } from "drizzle-orm/pg-core";
@@ -49,7 +47,7 @@ export const organisations = pgTable("organisations", {
   name: text("name").notNull(),
   shortName: text("short_name"),
   countryCode: char("country_code", { length: 2 }).references(
-    () => countries.isoCode
+    () => countries.isoCode,
   ),
   orgType: text("org_type").notNull(),
   ownershipModel: text("ownership_model"),

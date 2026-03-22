@@ -1,0 +1,125 @@
+import { useMemo, useState } from "react";
+import { routeDisplayName, routeIata, routeRegion } from "~/utils/routes";
+import { RouteRow } from "~/utils/types";
+
+export function RouteSection({
+  routesWithFlights,
+}: {
+  routesWithFlights: RouteRow[];
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const [search, setSearch] = useState("");
+  const query = search.toLowerCase().trim();
+
+  const topRoutes = routesWithFlights.slice(0, 10);
+  const displayRoutes = showAll ? routesWithFlights : topRoutes;
+
+  const filtered = query
+    ? displayRoutes.filter((r) => {
+        const name = routeDisplayName(r).toLowerCase();
+        const iata = (routeIata(r) ?? "").toLowerCase();
+        const icao = (r.destinationIcao ?? "").toLowerCase();
+        return (
+          name.includes(query) || iata.includes(query) || icao.includes(query)
+        );
+      })
+    : displayRoutes;
+
+  // Group by region
+  const grouped = useMemo(() => {
+    const map = new Map<string, RouteRow[]>();
+    for (const r of filtered) {
+      const region = routeRegion(r);
+      const list = map.get(region) ?? [];
+      list.push(r);
+      map.set(region, list);
+    }
+    // Sort regions: Europe first, then by count
+    return Array.from(map.entries()).sort((a, b) => {
+      if (a[0] === "Europe") return -1;
+      if (b[0] === "Europe") return 1;
+      return b[1].length - a[1].length;
+    });
+  }, [filtered]);
+
+  return (
+    <section className="flex flex-col gap-4">
+      <h3 className="font-grotesk text-[13px] font-bold text-yellow-400 tracking-[2px] uppercase">
+        Where You Can Escape To
+      </h3>
+      <span className="font-grotesk text-[11px] font-bold text-zinc-100 tracking-wider uppercase">
+        {routesWithFlights.length} Routes Served
+      </span>
+
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search destinations..."
+        className="w-full bg-zinc-900/50 border border-white/5 px-3 py-2 font-mono text-xs text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-yellow-400/30 transition-colors"
+      />
+
+      <div className="max-h-125 overflow-y-auto scrollbar-thin">
+        {grouped.map(([region, routes]) => (
+          <div key={region} className="mb-4">
+            <div className="flex items-center gap-2 mb-2 sticky top-0 bg-[#0a0a0b] py-1 z-10">
+              <span className="font-grotesk text-[10px] font-bold text-zinc-500 tracking-[1.5px] uppercase">
+                {region}
+              </span>
+              <span className="font-mono text-[10px] text-zinc-700">
+                {routes.length}
+              </span>
+            </div>
+            {routes.map((r, idx) => {
+              const isTop = idx === 0;
+              return (
+                <div
+                  key={r.id}
+                  className={`flex justify-between items-center border-b border-white/5 last:border-0 ${
+                    isTop ? "py-3 px-4 bg-[#111113] -mx-4" : "py-1.5"
+                  }`}
+                >
+                  <span
+                    className={`font-mono truncate ${
+                      isTop
+                        ? "text-[13px] font-bold text-zinc-200"
+                        : "text-[11px] text-zinc-500"
+                    }`}
+                  >
+                    {routeDisplayName(r)}
+                    {routeIata(r) ? ` (${routeIata(r)})` : ""}
+                  </span>
+                  <span
+                    className={`font-mono font-bold tabular-nums shrink-0 ${
+                      isTop
+                        ? "text-base text-green-500"
+                        : "text-xs text-zinc-400"
+                    }`}
+                  >
+                    {r.flightsPerMonth ?? "—"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <p className="font-mono text-xs text-zinc-600 italic py-4">
+            No routes matching "{search}". Trapped.
+          </p>
+        )}
+      </div>
+
+      {routesWithFlights.length > 10 && !query && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="font-grotesk text-[11px] font-bold text-yellow-400 tracking-wider hover:text-yellow-300 transition-colors uppercase self-start"
+        >
+          {showAll
+            ? `Show Top 10`
+            : `Show All ${routesWithFlights.length} Routes`}
+        </button>
+      )}
+    </section>
+  );
+}
