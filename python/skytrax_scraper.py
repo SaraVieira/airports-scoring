@@ -251,73 +251,45 @@ def _parse_review(article, page_url: str) -> dict:
 
 
 async def scrape_star_rating(page, iata: str) -> int | None:
-    """Scrape the overall star rating from skytraxratings.com."""
+    """Scrape the overall star rating from skytraxratings.com.
+
+    The most reliable method: parse the page title which contains
+    e.g. "London Luton Airport is a 3-Star Regional Airport".
+    """
     rating_slug = RATING_SLUGS.get(iata)
     if not rating_slug:
         logger.warning("No rating slug for %s", iata)
         return None
 
-    # Try the direct rating page URL
     url = f"https://skytraxratings.com/airports/{rating_slug}-rating"
     logger.info("Fetching star rating from %s", url)
     try:
-        await page.goto(url, timeout=30000)
+        resp = await page.goto(url, timeout=30000)
         await page.wait_for_load_state("domcontentloaded")
-        content = await page.content()
-        soup = BeautifulSoup(content, "html.parser")
 
-        # New format: star spans in the rating header area
-        # Look for filled star SVGs/spans in the page
-        star_containers = soup.find_all("div", class_=re.compile(r"star|rating"))
-        for container in star_containers:
-            filled_stars = container.find_all(
-                lambda tag: tag.name in ("span", "div")
-                and "star" in " ".join(tag.get("class", []))
-            )
-            # Count elements that look "filled" vs "empty"
-            filled = 0
-            for star in filled_stars:
-                classes = " ".join(star.get("class", []))
-                # Filled stars have specific classes/styles
-                if "empty" not in classes and "grey" not in classes and "unfilled" not in classes:
-                    filled += 1
-            if filled > 0 and filled <= 5:
-                return filled
+        # Check for 404
+        if resp and resp.status == 404:
+            logger.warning("Rating page 404 for %s", iata)
+            return None
 
-        # Fallback: look for text like "3-Star Airport" or "3 Star"
-        text = soup.get_text()
-        match = re.search(r"(\d)\s*-?\s*[Ss]tar", text)
+        title = await page.title()
+        # Title format: "London Luton Airport is a 3-Star Regional Airport | Skytrax"
+        match = re.search(r"(\d)\s*-?\s*[Ss]tar", title)
         if match:
-            return int(match.group(1))
+            stars = int(match.group(1))
+            logger.info("Extracted %d stars from page title for %s", stars, iata)
+            return stars
 
-    except Exception as exc:
-        logger.warning("Could not fetch star rating from %s: %s", url, exc)
-
-    # Fallback: try the search page which shows stars in results
-    try:
-        search_url = f"https://skytraxratings.com/airports?s={rating_slug.replace('-airport', '').replace('-', '+')}"
-        logger.info("Trying search fallback: %s", search_url)
-        await page.goto(search_url, timeout=30000)
-        await page.wait_for_load_state("domcontentloaded")
+        # Fallback: check page text for "certified as a N-Star Airport"
         content = await page.content()
-        soup = BeautifulSoup(content, "html.parser")
+        text_match = re.search(r"certified as a\s+(\d)\s*-?\s*[Ss]tar", content)
+        if text_match:
+            stars = int(text_match.group(1))
+            logger.info("Extracted %d stars from page text for %s", stars, iata)
+            return stars
 
-        # Search results show stars as filled/empty spans
-        first_result = soup.find("a", href=re.compile(rating_slug))
-        if first_result:
-            stars = first_result.find_all(
-                lambda tag: tag.name in ("span", "div")
-                and "star" in " ".join(tag.get("class", []))
-            )
-            if stars:
-                # Stars without "empty" class are filled
-                filled = sum(1 for s in stars
-                    if "empty" not in " ".join(s.get("class", []))
-                    and "grey" not in " ".join(s.get("class", [])))
-                if 0 < filled <= 5:
-                    return filled
     except Exception as exc:
-        logger.warning("Search fallback failed: %s", exc)
+        logger.warning("Could not fetch star rating for %s: %s", iata, exc)
 
     return None
 
