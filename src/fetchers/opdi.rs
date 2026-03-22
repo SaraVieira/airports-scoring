@@ -168,6 +168,21 @@ except Exception as e:
                         _ => continue,
                     };
 
+                    let origin = rec.origin_icao.as_deref().unwrap_or("");
+
+                    // Filter out self-referencing routes (e.g. EDDB→EDDB)
+                    if origin == dest {
+                        continue;
+                    }
+
+                    // Only count routes where this airport is the origin.
+                    // The Python helper fetches flights where the airport is
+                    // either origin or destination, but we only want outbound
+                    // routes to avoid duplicates.
+                    if origin != icao {
+                        continue;
+                    }
+
                     let airline = rec.airline.as_ref().and_then(|a| {
                         let a = a.trim();
                         if a.is_empty() || a == "None" {
@@ -252,6 +267,24 @@ except Exception as e:
 
         records_processed += 1;
     }
+
+    // Link destination_id and destination_iata by looking up airports table
+    sqlx::query(
+        r#"
+        UPDATE routes
+        SET destination_id   = a.id,
+            destination_iata = a.iata_code
+        FROM airports a
+        WHERE routes.origin_id = $1
+          AND routes.data_source = 'opdi'
+          AND routes.destination_icao = a.icao_code
+          AND (routes.destination_id IS NULL OR routes.destination_iata IS NULL)
+        "#,
+    )
+    .bind(airport.id)
+    .execute(pool)
+    .await
+    .context("Failed to link route destination_id/destination_iata")?;
 
     info!(
         airport = icao,

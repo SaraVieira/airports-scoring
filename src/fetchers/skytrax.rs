@@ -184,6 +184,39 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
 
     info!(airport = iata, records = records, "Skytrax reviews upserted");
 
+    // Store star_rating in the most recent sentiment snapshot for this airport
+    if let Some(stars) = result.star_rating {
+        let updated = sqlx::query(
+            r#"
+            UPDATE sentiment_snapshots
+            SET skytrax_stars = $1
+            WHERE id = (
+                SELECT id FROM sentiment_snapshots
+                WHERE airport_id = $2 AND source = 'skytrax'
+                ORDER BY snapshot_year DESC, snapshot_quarter DESC
+                LIMIT 1
+            )
+            "#,
+        )
+        .bind(stars)
+        .bind(airport.id)
+        .execute(pool)
+        .await;
+
+        match updated {
+            Ok(r) => {
+                if r.rows_affected() > 0 {
+                    info!(airport = iata, stars = stars, "Updated skytrax_stars on latest sentiment snapshot");
+                } else {
+                    warn!(airport = iata, stars = stars, "No sentiment snapshot found to store skytrax_stars — run sentiment pipeline first");
+                }
+            }
+            Err(e) => {
+                warn!(airport = iata, error = %e, "Failed to update skytrax_stars");
+            }
+        }
+    }
+
     Ok(FetchResult {
         records_processed: records,
         last_record_date: latest_date,

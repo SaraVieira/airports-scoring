@@ -9,6 +9,8 @@ pub struct SeedAirport {
     pub iata: String,
     pub country: String,
     pub name: String,
+    pub skytrax_review_slug: Option<String>,
+    pub skytrax_rating_slug: Option<String>,
 }
 
 /// Load the seed airport list from `airports.json` (or a custom path).

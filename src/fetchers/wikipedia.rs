@@ -132,6 +132,41 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
         .or_else(|| parse_infobox_field(&wikitext, "num_terminals"))
         .and_then(|s| s.trim().parse::<i16>().ok());
 
+    // Parse stat* infobox fields for current-year passenger/movement data
+    let infobox_stats = parse_infobox_stats(&wikitext);
+    if let Some(ref stats) = infobox_stats {
+        if let Some(stat_year) = stats.year {
+            // Upsert infobox stat data into pax_yearly
+            sqlx::query(
+                "INSERT INTO pax_yearly (airport_id, year, total_pax, domestic_pax, international_pax, aircraft_movements, source)
+                 VALUES ($1, $2, $3, $4, $5, $6, 'wikipedia_infobox')
+                 ON CONFLICT (airport_id, year) DO UPDATE SET
+                     total_pax          = COALESCE(EXCLUDED.total_pax, pax_yearly.total_pax),
+                     domestic_pax       = COALESCE(EXCLUDED.domestic_pax, pax_yearly.domestic_pax),
+                     international_pax  = COALESCE(EXCLUDED.international_pax, pax_yearly.international_pax),
+                     aircraft_movements = COALESCE(EXCLUDED.aircraft_movements, pax_yearly.aircraft_movements),
+                     source             = CASE WHEN pax_yearly.source IS NULL THEN 'wikipedia_infobox' ELSE pax_yearly.source END",
+            )
+            .bind(airport.id)
+            .bind(stat_year)
+            .bind(stats.total_pax)
+            .bind(stats.domestic_pax)
+            .bind(stats.international_pax)
+            .bind(stats.aircraft_movements)
+            .execute(pool)
+            .await
+            .with_context(|| format!("Failed to upsert infobox stats for {} year {}", iata, stat_year))?;
+
+            info!(
+                airport = iata,
+                year = stat_year,
+                total_pax = stats.total_pax,
+                aircraft_movements = stats.aircraft_movements,
+                "Parsed infobox stat fields"
+            );
+        }
+    }
+
     let pax_rows = parse_passenger_table(&wikitext);
     let mut pax_count: i32 = 0;
 
@@ -353,6 +388,98 @@ fn strip_wiki_markup(text: &str) -> String {
     let s = RE_TEMPLATE.replace_all(&s, "");
     let s = RE_HTML_TAG.replace_all(&s, "");
     s.trim().to_string()
+}
+
+/// Parsed stat* infobox fields.
+#[derive(Debug, Default)]
+struct InfoboxStats {
+    year: Option<i16>,
+    total_pax: Option<i64>,
+    domestic_pax: Option<i64>,
+    international_pax: Option<i64>,
+    aircraft_movements: Option<i32>,
+}
+
+/// Parse `stat-year`, `stat{N}-header`, and `stat{N}-data` fields from the infobox.
+fn parse_infobox_stats(wikitext: &str) -> Option<InfoboxStats> {
+    let mut stats = InfoboxStats::default();
+
+    // Extract stat-year
+    let year_raw = parse_infobox_field_raw(wikitext, "stat-year")
+        .or_else(|| parse_infobox_field_raw(wikitext, "stat_year"))?;
+    let year_stripped = strip_wiki_markup(&year_raw);
+    // Remove non-digit chars and parse
+    let year_digits: String = year_stripped.chars().filter(|c| c.is_ascii_digit()).collect();
+    let year = year_digits.parse::<i16>().ok()?;
+    if !(1950..=2030).contains(&year) {
+        return None;
+    }
+    stats.year = Some(year);
+
+    // Scan stat1 through stat9
+    for n in 1..=9 {
+        let header_field = format!("stat{}-header", n);
+        let data_field = format!("stat{}-data", n);
+
+        let header = match parse_infobox_field_raw(wikitext, &header_field) {
+            Some(h) => strip_wiki_markup(&h).to_lowercase(),
+            None => continue,
+        };
+
+        let data_raw = match parse_infobox_field_raw(wikitext, &data_field) {
+            Some(d) => d,
+            None => continue,
+        };
+
+        // Strip wiki markup (removes {{increase}}, {{decrease}}, {{steady}}, refs, etc.)
+        let data_clean = strip_wiki_markup(&data_raw);
+        // Take only the first number token (before any percentage or text suffix)
+        // e.g. "41,560,000 12.2%" → "41,560,000"
+        let first_token = data_clean
+            .split_whitespace()
+            .next()
+            .unwrap_or("");
+        let digits: String = first_token.chars().filter(|c| c.is_ascii_digit()).collect();
+        if digits.is_empty() {
+            continue;
+        }
+
+        // Skip percentage/change headers — they contain "passenger" but are not counts
+        if header.contains("change") || header.contains("growth") || header.contains("%") {
+            continue;
+        }
+
+        if header.contains("passenger") || header.contains("total passenger") {
+            if let Ok(v) = digits.parse::<i64>() {
+                if v > 1000 { // sanity check: real pax counts are always > 1000
+                    stats.total_pax = Some(v);
+                }
+            }
+        } else if header.contains("domestic") {
+            if let Ok(v) = digits.parse::<i64>() {
+                stats.domestic_pax = Some(v);
+            }
+        } else if header.contains("international") {
+            if let Ok(v) = digits.parse::<i64>() {
+                stats.international_pax = Some(v);
+            }
+        } else if header.contains("aircraft movement") || header.contains("aircraft operation") {
+            if let Ok(v) = digits.parse::<i32>() {
+                stats.aircraft_movements = Some(v);
+            }
+        }
+    }
+
+    // Only return if we found at least some data
+    if stats.total_pax.is_some()
+        || stats.domestic_pax.is_some()
+        || stats.international_pax.is_some()
+        || stats.aircraft_movements.is_some()
+    {
+        Some(stats)
+    } else {
+        None
+    }
 }
 
 fn parse_passenger_table(wikitext: &str) -> Vec<(i16, i64)> {
@@ -772,5 +899,89 @@ mod tests {
             Some("Berlin_Brandenburg_Airport")
         );
         assert_eq!(article_title_from_url("https://example.com/no-wiki"), None);
+    }
+
+    #[test]
+    fn parse_infobox_stats_basic() {
+        let wikitext = r#"{{Infobox airport
+| name = Istanbul Airport
+| stat-year    = 2024
+| stat1-header = Passengers
+| stat1-data   = 83,859,729 {{increase}}
+| stat2-header = Aircraft movements
+| stat2-data   = 473,965 {{increase}}
+}}"#;
+        let stats = parse_infobox_stats(wikitext).unwrap();
+        assert_eq!(stats.year, Some(2024));
+        assert_eq!(stats.total_pax, Some(83_859_729));
+        assert_eq!(stats.aircraft_movements, Some(473_965));
+        assert_eq!(stats.domestic_pax, None);
+        assert_eq!(stats.international_pax, None);
+    }
+
+    #[test]
+    fn parse_infobox_stats_with_domestic_international() {
+        let wikitext = r#"{{Infobox airport
+| name = Test Airport
+| stat-year    = 2023
+| stat1-header = Passengers
+| stat1-data   = 32,433,694
+| stat2-header = Aircraft movements
+| stat2-data   = 250,000
+| stat3-header = Domestic
+| stat3-data   = 1,329,005
+| stat4-header = International
+| stat4-data   = 31,104,689
+}}"#;
+        let stats = parse_infobox_stats(wikitext).unwrap();
+        assert_eq!(stats.year, Some(2023));
+        assert_eq!(stats.total_pax, Some(32_433_694));
+        assert_eq!(stats.aircraft_movements, Some(250_000));
+        assert_eq!(stats.domestic_pax, Some(1_329_005));
+        assert_eq!(stats.international_pax, Some(31_104_689));
+    }
+
+    #[test]
+    fn parse_infobox_stats_with_decrease_template() {
+        let wikitext = r#"{{Infobox airport
+| name = Test Airport
+| stat-year = 2020
+| stat1-header = Passengers
+| stat1-data = 22,109,550 {{decrease}}
+}}"#;
+        let stats = parse_infobox_stats(wikitext).unwrap();
+        assert_eq!(stats.year, Some(2020));
+        assert_eq!(stats.total_pax, Some(22_109_550));
+    }
+
+    #[test]
+    fn parse_infobox_stats_no_stat_year() {
+        let wikitext = r#"{{Infobox airport
+| name = Test Airport
+| stat1-header = Passengers
+| stat1-data = 1,000,000
+}}"#;
+        assert!(parse_infobox_stats(wikitext).is_none());
+    }
+
+    #[test]
+    fn parse_infobox_stats_no_data_fields() {
+        let wikitext = r#"{{Infobox airport
+| name = Test Airport
+| stat-year = 2024
+}}"#;
+        assert!(parse_infobox_stats(wikitext).is_none());
+    }
+
+    #[test]
+    fn parse_infobox_stats_with_refs() {
+        let wikitext = r#"{{Infobox airport
+| name = Test Airport
+| stat-year = 2024
+| stat1-header = Passengers
+| stat1-data = 5,000,000<ref>source</ref> {{steady}}
+}}"#;
+        let stats = parse_infobox_stats(wikitext).unwrap();
+        assert_eq!(stats.total_pax, Some(5_000_000));
     }
 }

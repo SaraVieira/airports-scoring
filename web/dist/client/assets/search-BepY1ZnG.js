@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-DAs1UGHr.js";var t=e();function n(){return(0,t.jsx)(`div`,{children:(0,t.jsx)(`h1`,{children:`Search`})})}export{n as component};

@@ -32,45 +32,27 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# IATA -> Skytrax slug mapping for the 15 seed airports
+# IATA -> Skytrax slug mapping loaded from airports.json
 # ---------------------------------------------------------------------------
-# Slugs for airlinequality.com review pages
-AIRPORT_SLUGS = {
-    "LHR": "london-heathrow-airport",
-    "LGW": "london-gatwick-airport",
-    "LTN": "luton-airport",
-    "OPO": "porto-airport",
-    "MAD": "madrid-barajas-airport",
-    "BCN": "barcelona-airport",
-    "BER": "berlin-brandenburg-airport",
-    "MUC": "munich-airport",
-    "CDG": "paris-cdg-airport",
-    "NCE": "nice-cote-dazur-airport",
-    "AMS": "amsterdam-schiphol-airport",
-    "CPH": "copenhagen-airport",
-    "FCO": "rome-fiumicino-airport",
-    "WAW": "warsaw-chopin-airport",
-    "BUD": "budapest-ferihegy-airport",
-}
+import json as _json
+from pathlib import Path as _Path
 
-# Slugs for skytraxratings.com star rating pages (different from review slugs)
-RATING_SLUGS = {
-    "LHR": "london-heathrow-airport",
-    "LGW": "london-gatwick-airport",
-    "LTN": "london-luton-airport",
-    "OPO": "porto-airport",
-    "MAD": "madrid-barajas-airport",
-    "BCN": "barcelona-el-prat-airport",
-    "BER": "berlin-brandenburg-airport",
-    "MUC": "munich-airport",
-    "CDG": "paris-charles-de-gaulle-airport",
-    "NCE": "nice-cote-d-azur-airport",
-    "AMS": "amsterdam-schiphol-airport",
-    "CPH": "copenhagen-airport",
-    "FCO": "rome-fiumicino-airport",
-    "WAW": "warsaw-chopin-airport",
-    "BUD": "budapest-airport",
-}
+def _load_slugs():
+    """Load Skytrax slugs from airports.json."""
+    airports_path = _Path(__file__).parent.parent / "airports.json"
+    with open(airports_path) as f:
+        airports = _json.load(f)
+    review_slugs = {}
+    rating_slugs = {}
+    for a in airports:
+        iata = a["iata"]
+        if a.get("skytrax_review_slug"):
+            review_slugs[iata] = a["skytrax_review_slug"]
+        if a.get("skytrax_rating_slug"):
+            rating_slugs[iata] = a["skytrax_rating_slug"]
+    return review_slugs, rating_slugs
+
+AIRPORT_SLUGS, RATING_SLUGS = _load_slugs()
 
 # Sub-rating labels as they appear on the page -> output field names.
 # Skytrax uses slightly different labels across versions of their site.
@@ -261,17 +243,28 @@ async def scrape_star_rating(page, iata: str) -> int | None:
         logger.warning("No rating slug for %s", iata)
         return None
 
-    url = f"https://skytraxratings.com/airports/{rating_slug}-rating"
-    logger.info("Fetching star rating from %s", url)
+    # Try multiple URL patterns — some airports use -rating, others -quality-rating
+    urls = [
+        f"https://skytraxratings.com/airports/{rating_slug}-rating",
+        f"https://skytraxratings.com/airports/{rating_slug}-quality-rating",
+        f"https://skytraxratings.com/airports/{rating_slug}",
+    ]
+    resp = None
+    for url in urls:
+        logger.info("Trying star rating URL: %s", url)
+        try:
+            resp = await page.goto(url, timeout=30000)
+            await page.wait_for_load_state("domcontentloaded")
+            if resp and resp.status != 404:
+                break
+        except Exception:
+            continue
+
+    if not resp or resp.status == 404:
+        logger.warning("Rating page not found for %s (tried %d URLs)", iata, len(urls))
+        return None
+
     try:
-        resp = await page.goto(url, timeout=30000)
-        await page.wait_for_load_state("domcontentloaded")
-
-        # Check for 404
-        if resp and resp.status == 404:
-            logger.warning("Rating page 404 for %s", iata)
-            return None
-
         title = await page.title()
         # Title format: "London Luton Airport is a 3-Star Regional Airport | Skytrax"
         match = re.search(r"(\d)\s*-?\s*[Ss]tar", title)
@@ -287,7 +280,6 @@ async def scrape_star_rating(page, iata: str) -> int | None:
             stars = int(text_match.group(1))
             logger.info("Extracted %d stars from page text for %s", stars, iata)
             return stars
-
     except Exception as exc:
         logger.warning("Could not fetch star rating for %s: %s", iata, exc)
 
@@ -299,9 +291,8 @@ async def scrape_reviews(airport: str, since: datetime, max_pages: int = 50) -> 
     iata = airport.upper()
     slug = AIRPORT_SLUGS.get(iata)
     if slug is None:
-        logger.error("Unknown airport IATA code: %s. Supported: %s",
-                      iata, ", ".join(sorted(AIRPORT_SLUGS)))
-        sys.exit(1)
+        logger.warning("No Skytrax review slug for %s, skipping reviews", iata)
+        return {"airport": iata, "star_rating": None, "reviews": []}
 
     result = {
         "airport": iata,

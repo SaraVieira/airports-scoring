@@ -1,17 +1,151 @@
 [
-  { "iata": "LHR", "country": "GB", "name": "London Heathrow" },
-  { "iata": "LGW", "country": "GB", "name": "London Gatwick" },
-  { "iata": "LTN", "country": "GB", "name": "London Luton" },
-  { "iata": "OPO", "country": "PT", "name": "Porto" },
-  { "iata": "MAD", "country": "ES", "name": "Madrid Barajas" },
-  { "iata": "BCN", "country": "ES", "name": "Barcelona El Prat" },
-  { "iata": "BER", "country": "DE", "name": "Berlin Brandenburg" },
-  { "iata": "MUC", "country": "DE", "name": "Munich" },
-  { "iata": "CDG", "country": "FR", "name": "Paris Charles de Gaulle" },
-  { "iata": "NCE", "country": "FR", "name": "Nice Côte d'Azur" },
-  { "iata": "AMS", "country": "NL", "name": "Amsterdam Schiphol" },
-  { "iata": "CPH", "country": "DK", "name": "Copenhagen" },
-  { "iata": "FCO", "country": "IT", "name": "Rome Fiumicino" },
-  { "iata": "WAW", "country": "PL", "name": "Warsaw Chopin" },
-  { "iata": "BUD", "country": "HU", "name": "Budapest" }
+  {
+    "iata": "LHR",
+    "country": "GB",
+    "name": "London Heathrow",
+    "skytrax_review_slug": "london-heathrow-airport",
+    "skytrax_rating_slug": "london-heathrow-airport"
+  },
+  {
+    "iata": "LGW",
+    "country": "GB",
+    "name": "London Gatwick",
+    "skytrax_review_slug": "london-gatwick-airport",
+    "skytrax_rating_slug": "london-gatwick-airport"
+  },
+  {
+    "iata": "LTN",
+    "country": "GB",
+    "name": "London Luton",
+    "skytrax_review_slug": "luton-airport",
+    "skytrax_rating_slug": "london-luton-airport"
+  },
+  {
+    "iata": "OPO",
+    "country": "PT",
+    "name": "Porto",
+    "skytrax_review_slug": "porto-airport",
+    "skytrax_rating_slug": "porto-airport"
+  },
+  {
+    "iata": "MAD",
+    "country": "ES",
+    "name": "Madrid Barajas",
+    "skytrax_review_slug": "madrid-barajas-airport",
+    "skytrax_rating_slug": "madrid-barajas-airport"
+  },
+  {
+    "iata": "BCN",
+    "country": "ES",
+    "name": "Barcelona El Prat",
+    "skytrax_review_slug": "barcelona-airport",
+    "skytrax_rating_slug": "barcelona-el-prat-airport"
+  },
+  {
+    "iata": "BER",
+    "country": "DE",
+    "name": "Berlin Brandenburg",
+    "skytrax_review_slug": "berlin-brandenburg-airport",
+    "skytrax_rating_slug": "berlin-brandenburg-airport"
+  },
+  {
+    "iata": "MUC",
+    "country": "DE",
+    "name": "Munich",
+    "skytrax_review_slug": "munich-airport",
+    "skytrax_rating_slug": "munich-airport"
+  },
+  {
+    "iata": "CDG",
+    "country": "FR",
+    "name": "Paris Charles de Gaulle",
+    "skytrax_review_slug": "paris-cdg-airport",
+    "skytrax_rating_slug": "paris-cdg-airport"
+  },
+  {
+    "iata": "NCE",
+    "country": "FR",
+    "name": "Nice Côte d'Azur",
+    "skytrax_review_slug": "nice-cote-dazur-airport",
+    "skytrax_rating_slug": "nice-airport"
+  },
+  {
+    "iata": "AMS",
+    "country": "NL",
+    "name": "Amsterdam Schiphol",
+    "skytrax_review_slug": "amsterdam-schiphol-airport",
+    "skytrax_rating_slug": "amsterdam-airport-schiphol"
+  },
+  {
+    "iata": "CPH",
+    "country": "DK",
+    "name": "Copenhagen",
+    "skytrax_review_slug": "copenhagen-airport",
+    "skytrax_rating_slug": "copenhagen-airport"
+  },
+  {
+    "iata": "FCO",
+    "country": "IT",
+    "name": "Rome Fiumicino",
+    "skytrax_review_slug": "rome-fiumicino-airport",
+    "skytrax_rating_slug": "rome-fiumicino-airport"
+  },
+  {
+    "iata": "WAW",
+    "country": "PL",
+    "name": "Warsaw Chopin",
+    "skytrax_review_slug": "warsaw-chopin-airport",
+    "skytrax_rating_slug": "warsaw-chopin-airport"
+  },
+  {
+    "iata": "BUD",
+    "country": "HU",
+    "name": "Budapest",
+    "skytrax_review_slug": "budapest-ferihegy-airport",
+    "skytrax_rating_slug": "budapest-airport"
+  },
+  {
+    "iata": "CLJ",
+    "country": "RO",
+    "name": "Avram Iancu Cluj International Airport",
+    "skytrax_review_slug": "cluj-napoca-airport",
+    "skytrax_rating_slug": ""
+  },
+  {
+    "iata": "LIS",
+    "country": "PT",
+    "name": "Humberto Delgado Airport",
+    "skytrax_review_slug": "lisbon-airport-rating",
+    "skytrax_rating_slug": "lisbon-airport"
+  },
+  {
+    "iata": "FAO",
+    "country": "PT",
+    "name": "Faro International Airport",
+    "skytrax_review_slug": "faro-airport-rating",
+    "skytrax_rating_slug": "faro-airport"
+  },
+  { "iata": "AGP", "country": "ES", "name": "Malaga-Costa del Sol Airport", "skytrax_review_slug": "malaga-airport", "skytrax_rating_slug": "malaga-costa-del-sol-airport" },
+  { "iata": "ALC", "country": "ES", "name": "Alicante-Elche Airport", "skytrax_review_slug": "alicante-airport", "skytrax_rating_slug": "" },
+  { "iata": "PMI", "country": "ES", "name": "Palma de Mallorca Airport", "skytrax_review_slug": "", "skytrax_rating_slug": "palma-de-mallorca-airport" },
+  { "iata": "IBZ", "country": "ES", "name": "Ibiza Airport", "skytrax_review_slug": "ibiza-airport", "skytrax_rating_slug": "ibiza-airport" },
+  { "iata": "BIO", "country": "ES", "name": "Bilbao Airport", "skytrax_review_slug": "bilbao-airport", "skytrax_rating_slug": "bilbao-airport" },
+  { "iata": "VLC", "country": "ES", "name": "Valencia Airport", "skytrax_review_slug": "valencia-airport", "skytrax_rating_slug": "valencia-airport" },
+  { "iata": "SVQ", "country": "ES", "name": "Seville Airport", "skytrax_review_slug": "seville-airport", "skytrax_rating_slug": "seville-airport" },
+  { "iata": "LPA", "country": "ES", "name": "Gran Canaria Airport", "skytrax_review_slug": "gran-canaria-airport", "skytrax_rating_slug": "gran-canaria-airport" },
+  { "iata": "TFS", "country": "ES", "name": "Tenerife South Airport", "skytrax_review_slug": "tenerife-airport", "skytrax_rating_slug": "" },
+  { "iata": "TFN", "country": "ES", "name": "Tenerife North Airport", "skytrax_review_slug": "", "skytrax_rating_slug": "" },
+  { "iata": "ACE", "country": "ES", "name": "Lanzarote Airport", "skytrax_review_slug": "", "skytrax_rating_slug": "" },
+  { "iata": "FUE", "country": "ES", "name": "Fuerteventura Airport", "skytrax_review_slug": "fuerteventura-airport", "skytrax_rating_slug": "" },
+  { "iata": "MAH", "country": "ES", "name": "Menorca Airport", "skytrax_review_slug": "mahon-airport", "skytrax_rating_slug": "" },
+  { "iata": "SCQ", "country": "ES", "name": "Santiago de Compostela Airport", "skytrax_review_slug": "", "skytrax_rating_slug": "" },
+  { "iata": "OVD", "country": "ES", "name": "Asturias Airport", "skytrax_review_slug": "asturias-airport", "skytrax_rating_slug": "" },
+  { "iata": "LCG", "country": "ES", "name": "A Coruna Airport", "skytrax_review_slug": "", "skytrax_rating_slug": "" },
+  { "iata": "GRX", "country": "ES", "name": "Granada-Jaen Airport", "skytrax_review_slug": "granada-airport", "skytrax_rating_slug": "" },
+  { "iata": "SDR", "country": "ES", "name": "Santander Airport", "skytrax_review_slug": "", "skytrax_rating_slug": "" },
+  { "iata": "EAS", "country": "ES", "name": "San Sebastian Airport", "skytrax_review_slug": "", "skytrax_rating_slug": "" },
+  { "iata": "VGO", "country": "ES", "name": "Vigo Airport", "skytrax_review_slug": "", "skytrax_rating_slug": "" },
+  { "iata": "RMU", "country": "ES", "name": "Murcia Airport", "skytrax_review_slug": "", "skytrax_rating_slug": "" },
+  { "iata": "GRO", "country": "ES", "name": "Girona Airport", "skytrax_review_slug": "", "skytrax_rating_slug": "" },
+  { "iata": "PNA", "country": "ES", "name": "Pamplona Airport", "skytrax_review_slug": "", "skytrax_rating_slug": "" }
 ]

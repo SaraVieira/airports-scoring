@@ -4,6 +4,7 @@ import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  envDir: '..',
   server: {
     port: 3000,
   },

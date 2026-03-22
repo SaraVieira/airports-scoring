@@ -162,7 +162,7 @@ def load_emotion_pipeline():
     logger.info("Loading emotion classification model…")
     emotion_pipe = pipeline(
         "text-classification",
-        model="cardiffnlp/roberta-base-go_emotions",
+        model="SamLowe/roberta-base-go_emotions",
         top_k=None,
         device=0 if torch.cuda.is_available() else -1,
         truncation=True,

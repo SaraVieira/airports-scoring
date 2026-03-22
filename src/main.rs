@@ -38,13 +38,9 @@ struct Cli {
     #[arg(long)]
     full_refresh: bool,
 
-    /// Compute airport scores after fetching data.
+    /// Compute all-time airport scores after fetching data.
     #[arg(long)]
     score: bool,
-
-    /// Reference year for scoring (defaults to current year).
-    #[arg(long, value_name = "YEAR")]
-    reference_year: Option<i16>,
 }
 
 #[tokio::main]
@@ -119,7 +115,6 @@ async fn main() -> Result<()> {
         cli.source.as_deref(),
         cli.full_refresh,
         cli.score,
-        cli.reference_year,
         &seed_iata_codes,
     )
     .await?;

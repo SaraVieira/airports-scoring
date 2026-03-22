@@ -1,5 +1,4 @@
 use anyhow::{bail, Result};
-use chrono::Datelike;
 use sqlx::PgPool;
 use tracing::{error, info, warn};
 
@@ -25,11 +24,10 @@ pub const ALL_SOURCES: &[&str] = &[
     "eurocontrol",
     "metar",
     "opensky",
-    "opdi",
+    "routes",
     "eurostat",
     "caa",
     "aena",
-    "openflights",
     "wikipedia",
     "skytrax",
     "sentiment",
@@ -49,6 +47,7 @@ async fn dispatch_fetcher(
         "metar" => fetchers::metar::fetch(pool, airport, full_refresh).await,
         "opensky" => fetchers::opensky::fetch(pool, airport, full_refresh).await,
         "opdi" => fetchers::opdi::fetch(pool, airport, full_refresh).await,
+        "routes" => fetchers::routes::fetch(pool, airport, full_refresh).await,
         "eurostat" => fetchers::eurostat::fetch(pool, airport, full_refresh).await,
         "caa" => fetchers::caa::fetch(pool, airport, full_refresh).await,
         "aena" => fetchers::aena::fetch(pool, airport, full_refresh).await,
@@ -70,7 +69,6 @@ pub async fn run_pipeline(
     source: Option<&str>,
     full_refresh: bool,
     score: bool,
-    reference_year: Option<i16>,
     seed_iata_codes: &[&str],
 ) -> Result<()> {
     let sources: Vec<&str> = match source {
@@ -154,13 +152,10 @@ pub async fn run_pipeline(
         }
     }
 
-    // Compute scores after all fetchers have run.
+    // Compute all-time scores after all fetchers have run.
     if score {
-        let year = reference_year.unwrap_or_else(|| {
-            chrono::Utc::now().naive_utc().date().year() as i16
-        });
-        info!(reference_year = year, "Computing scores for all airports");
-        scoring::score_airports(pool, airports, year).await?;
+        info!("Computing all-time scores for all airports");
+        scoring::score_airports(pool, airports).await?;
     }
 
     Ok(())

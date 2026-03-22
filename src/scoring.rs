@@ -1,4 +1,5 @@
 use anyhow::Result;
+use chrono::Datelike;
 use rust_decimal::prelude::*;
 use sqlx::PgPool;
 use tracing::info;
@@ -17,7 +18,6 @@ const W_OPERATOR: f64 = 0.10;
 #[derive(Debug, Clone)]
 pub struct ScoreOutput {
     pub airport_id: i32,
-    pub reference_year: i16,
     pub score_infrastructure: f64,
     pub score_operational: f64,
     pub score_sentiment: f64,
@@ -39,20 +39,20 @@ struct ScoringData {
     annual_pax_latest_m: Option<f64>,
     opened_year: Option<i16>,
     last_major_reno: Option<i16>,
-    // Operational
+    // Operational (weighted average across all years)
     avg_delay_pct: Option<f64>,
     avg_cancellation_pct: Option<f64>,
     avg_delay_minutes: Option<f64>,
     delay_airport_pct: Option<f64>,
     taxi_out_additional_min: Option<f64>,
-    // Sentiment
-    latest_avg_rating: Option<f64>,
-    review_count: Option<i32>,
+    // Sentiment (weighted average across all snapshots)
+    weighted_avg_rating: Option<f64>,
+    total_review_count: Option<i32>,
     sub_score_count: i32,
     sub_score_sum: f64,
-    // Velocity (4-quarter rolling averages)
-    avg_rating_last_4q: Option<f64>,
-    avg_rating_prior_4q: Option<f64>,
+    // Velocity (8-quarter rolling averages for longer arc)
+    avg_rating_last_8q: Option<f64>,
+    avg_rating_prior_8q: Option<f64>,
     // Connectivity
     destination_count: i64,
     airline_count: i64,
@@ -64,15 +64,16 @@ struct ScoringData {
     operator_airport_count: i64,
 }
 
-/// Compute the composite score for a single airport.
+/// Compute the all-time composite score for a single airport.
+/// Uses weighted averages across all years of data, with recency weighting.
 pub async fn compute_score(
     pool: &PgPool,
     airport: &Airport,
-    reference_year: i16,
 ) -> Result<ScoreOutput> {
-    let data = gather_scoring_data(pool, airport, reference_year).await?;
+    let data = gather_scoring_data(pool, airport).await?;
 
-    let infra = score_infrastructure(&data, reference_year);
+    let current_year = chrono::Utc::now().naive_utc().date().year() as i16;
+    let infra = score_infrastructure(&data, current_year);
     let operational = score_operational(&data);
     let sentiment = score_sentiment(&data);
     let velocity = score_sentiment_velocity(&data);
@@ -88,7 +89,6 @@ pub async fn compute_score(
 
     Ok(ScoreOutput {
         airport_id: airport.id,
-        reference_year,
         score_infrastructure: infra,
         score_operational: operational,
         score_sentiment: sentiment,
@@ -100,12 +100,46 @@ pub async fn compute_score(
     })
 }
 
+/// Year-based recency weight: recent years count more.
+/// weight(year) = 1 + max(0, (year - 2015) * 0.3)
+/// 2015: 1.0, 2020: 2.5, 2025: 4.0
+fn year_weight(year: i16) -> f64 {
+    1.0 + (year as f64 - 2015.0).max(0.0) * 0.3
+}
+
+/// Operational stats for a single year, used for weighted averaging.
+#[derive(Debug, sqlx::FromRow)]
+struct YearlyOps {
+    period_year: i16,
+    avg_delay_pct: Option<Decimal>,
+    avg_cancellation_pct: Option<Decimal>,
+    avg_delay_minutes: Option<Decimal>,
+    avg_delay_airport_pct: Option<Decimal>,
+}
+
+/// Sentiment snapshot for weighted averaging across all time.
+#[derive(Debug, sqlx::FromRow)]
+#[allow(dead_code)]
+struct SentimentRow {
+    snapshot_year: i16,
+    snapshot_quarter: Option<i16>,
+    avg_rating: Option<Decimal>,
+    review_count: Option<i32>,
+    score_queuing: Option<Decimal>,
+    score_cleanliness: Option<Decimal>,
+    score_staff: Option<Decimal>,
+    score_food_bev: Option<Decimal>,
+    score_shopping: Option<Decimal>,
+    score_wifi: Option<Decimal>,
+    score_wayfinding: Option<Decimal>,
+    score_transport: Option<Decimal>,
+}
+
 async fn gather_scoring_data(
     pool: &PgPool,
     airport: &Airport,
-    reference_year: i16,
 ) -> Result<ScoringData> {
-    // Runway stats
+    // Runway stats (current state — no time filtering)
     let runway_stats: (i64, Option<i32>) = sqlx::query_as(
         "SELECT COUNT(*), MAX(length_ft) FROM runways WHERE airport_id = $1 AND closed = FALSE",
     )
@@ -113,94 +147,68 @@ async fn gather_scoring_data(
     .fetch_one(pool)
     .await?;
 
-    // Operational stats (average over reference year)
-    let ops: (Option<Decimal>, Option<Decimal>, Option<Decimal>, Option<Decimal>) = sqlx::query_as(
-        "SELECT AVG(delay_pct), AVG(cancellation_pct), AVG(avg_delay_minutes), AVG(delay_airport_pct) \
-         FROM operational_stats WHERE airport_id = $1 AND period_year = $2",
+    // Operational stats — ALL years, grouped by year for weighted averaging in Rust
+    let yearly_ops: Vec<YearlyOps> = sqlx::query_as(
+        "SELECT period_year, \
+                AVG(delay_pct) as avg_delay_pct, \
+                AVG(cancellation_pct) as avg_cancellation_pct, \
+                AVG(avg_delay_minutes) as avg_delay_minutes, \
+                AVG(delay_airport_pct) as avg_delay_airport_pct \
+         FROM operational_stats WHERE airport_id = $1 \
+         GROUP BY period_year ORDER BY period_year",
     )
     .bind(airport.id)
-    .bind(reference_year)
-    .fetch_one(pool)
+    .fetch_all(pool)
     .await?;
 
-    // Taxi-out additional time from Eurocontrol (stored in operational_stats notes or as a
-    // separate metric). For now we approximate from avg_delay_minutes * a factor if not
-    // available directly. In future, ASMA/taxi-out data from Eurocontrol PRU can be stored
-    // in a dedicated column.
-    // TODO: Add taxi_out_additional_min column to operational_stats when Eurocontrol PRU
-    // ASMA/taxi-out CSV parsing is implemented.
-    let taxi_out: Option<f64> = None;
+    // Compute weighted averages for operational data
+    let (avg_delay_pct, avg_cancellation_pct, avg_delay_minutes, delay_airport_pct) =
+        weighted_avg_ops(&yearly_ops);
 
-    // Latest 4 quarters of sentiment for rolling average.
-    // Annual snapshots (snapshot_quarter IS NULL) are treated as belonging to
-    // (snapshot_year, Q4) so they anchor to year-end.
-    let last_4q: Option<(Option<Decimal>, Option<i32>)> = sqlx::query_as(
-        "SELECT AVG(avg_rating), SUM(review_count)::INT \
+    // Sentiment — ALL snapshots for weighted averaging
+    let all_sentiment: Vec<SentimentRow> = sqlx::query_as(
+        "SELECT snapshot_year, snapshot_quarter, avg_rating, review_count, \
+                score_queuing, score_cleanliness, score_staff, score_food_bev, \
+                score_shopping, score_wifi, score_wayfinding, score_transport \
          FROM sentiment_snapshots \
          WHERE airport_id = $1 \
-         AND (snapshot_year * 4 + COALESCE(snapshot_quarter, 4)) > ($2 * 4 - 4) \
-         AND (snapshot_year * 4 + COALESCE(snapshot_quarter, 4)) <= ($2 * 4)",
+         ORDER BY snapshot_year, snapshot_quarter",
     )
     .bind(airport.id)
-    .bind(reference_year as i32)
-    .fetch_optional(pool)
+    .fetch_all(pool)
     .await?;
 
-    // Prior 4 quarters of sentiment (year before last 4Q).
-    let prior_4q: Option<(Option<Decimal>,)> = sqlx::query_as(
+    // Compute weighted sentiment averages (by recency AND review count)
+    let (weighted_avg_rating, total_review_count, sub_score_sum, sub_score_count) =
+        weighted_avg_sentiment(&all_sentiment);
+
+    // Velocity: compare last 8 quarters vs prior 8 quarters (longer arc)
+    let current_year = chrono::Utc::now().naive_utc().date().year() as i32;
+    let last_8q: Option<(Option<Decimal>,)> = sqlx::query_as(
         "SELECT AVG(avg_rating) \
          FROM sentiment_snapshots \
          WHERE airport_id = $1 \
          AND (snapshot_year * 4 + COALESCE(snapshot_quarter, 4)) > ($2 * 4 - 8) \
-         AND (snapshot_year * 4 + COALESCE(snapshot_quarter, 4)) <= ($2 * 4 - 4)",
+         AND (snapshot_year * 4 + COALESCE(snapshot_quarter, 4)) <= ($2 * 4)",
     )
     .bind(airport.id)
-    .bind(reference_year as i32)
+    .bind(current_year)
     .fetch_optional(pool)
     .await?;
 
-    // Latest sentiment snapshot for sub-scores and avg_rating
-    let latest_sentiment: Option<(
-        Option<Decimal>, Option<i32>,
-        Option<Decimal>, Option<Decimal>, Option<Decimal>, Option<Decimal>,
-        Option<Decimal>, Option<Decimal>, Option<Decimal>, Option<Decimal>,
-    )> = sqlx::query_as(
-        "SELECT avg_rating, review_count, \
-         score_queuing, score_cleanliness, score_staff, score_food_bev, \
-         score_shopping, score_wifi, score_wayfinding, score_transport \
+    let prior_8q: Option<(Option<Decimal>,)> = sqlx::query_as(
+        "SELECT AVG(avg_rating) \
          FROM sentiment_snapshots \
          WHERE airport_id = $1 \
-         ORDER BY snapshot_year DESC, snapshot_quarter DESC NULLS LAST LIMIT 1",
+         AND (snapshot_year * 4 + COALESCE(snapshot_quarter, 4)) > ($2 * 4 - 16) \
+         AND (snapshot_year * 4 + COALESCE(snapshot_quarter, 4)) <= ($2 * 4 - 8)",
     )
     .bind(airport.id)
+    .bind(current_year)
     .fetch_optional(pool)
     .await?;
 
-    // Compute sub-score sum and count from the latest snapshot
-    let (sub_score_sum, sub_score_count, latest_avg_rating, review_count) =
-        if let Some(ref s) = latest_sentiment {
-            let scores = [s.2, s.3, s.4, s.5, s.6, s.7, s.8, s.9];
-            let mut sum = 0.0_f64;
-            let mut count = 0_i32;
-            for score in &scores {
-                if let Some(ref d) = score {
-                    if let Some(f) = d.to_f64() {
-                        sum += f;
-                        count += 1;
-                    }
-                }
-            }
-            (
-                sum,
-                count,
-                s.0.as_ref().and_then(|d| d.to_f64()),
-                s.1,
-            )
-        } else {
-            (0.0, 0, None, None)
-        };
-
-    // Route connectivity — COALESCE handles openflights routes that only have IATA columns.
+    // Route connectivity — current state only
     let connectivity: (i64, i64) = sqlx::query_as(
         "SELECT COUNT(DISTINCT COALESCE(destination_icao, destination_iata)), \
                 COUNT(DISTINCT COALESCE(airline_icao, airline_iata)) \
@@ -219,7 +227,7 @@ async fn gather_scoring_data(
     .fetch_optional(pool)
     .await?;
 
-    // Operator portfolio: average sentiment + operational scores across other airports
+    // Operator portfolio
     let operator_portfolio: Option<(Option<Decimal>, Option<Decimal>, i64)> = sqlx::query_as(
         "SELECT AVG(s.score_sentiment), AVG(s.score_operational), COUNT(DISTINCT a.id) \
          FROM airport_scores s \
@@ -237,20 +245,20 @@ async fn gather_scoring_data(
         annual_pax_latest_m: airport.annual_pax_latest_m.as_ref().and_then(|d| d.to_f64()),
         opened_year: airport.opened_year,
         last_major_reno: airport.last_major_reno,
-        avg_delay_pct: ops.0.and_then(|d| d.to_f64()),
-        avg_cancellation_pct: ops.1.and_then(|d| d.to_f64()),
-        avg_delay_minutes: ops.2.and_then(|d| d.to_f64()),
-        delay_airport_pct: ops.3.and_then(|d| d.to_f64()),
-        taxi_out_additional_min: taxi_out,
-        latest_avg_rating,
-        review_count,
+        avg_delay_pct,
+        avg_cancellation_pct,
+        avg_delay_minutes,
+        delay_airport_pct,
+        taxi_out_additional_min: None, // TODO: Eurocontrol PRU ASMA/taxi-out
+        weighted_avg_rating,
+        total_review_count,
         sub_score_count,
         sub_score_sum,
-        avg_rating_last_4q: last_4q
+        avg_rating_last_8q: last_8q
             .as_ref()
             .and_then(|s| s.0.as_ref())
             .and_then(|d| d.to_f64()),
-        avg_rating_prior_4q: prior_4q
+        avg_rating_prior_8q: prior_8q
             .as_ref()
             .and_then(|s| s.0.as_ref())
             .and_then(|d| d.to_f64()),
@@ -271,6 +279,126 @@ async fn gather_scoring_data(
             .map(|o| o.2)
             .unwrap_or(0),
     })
+}
+
+/// Compute weighted averages for operational data across all years.
+/// weight(year) = 1 + max(0, (year - 2015) * 0.3)
+fn weighted_avg_ops(
+    yearly: &[YearlyOps],
+) -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
+    if yearly.is_empty() {
+        return (None, None, None, None);
+    }
+
+    let mut delay_sum = 0.0_f64;
+    let mut delay_weight = 0.0_f64;
+    let mut cancel_sum = 0.0_f64;
+    let mut cancel_weight = 0.0_f64;
+    let mut avg_delay_sum = 0.0_f64;
+    let mut avg_delay_weight = 0.0_f64;
+    let mut airport_pct_sum = 0.0_f64;
+    let mut airport_pct_weight = 0.0_f64;
+
+    for row in yearly {
+        let w = year_weight(row.period_year);
+
+        if let Some(v) = row.avg_delay_pct.and_then(|d| d.to_f64()) {
+            delay_sum += v * w;
+            delay_weight += w;
+        }
+        if let Some(v) = row.avg_cancellation_pct.and_then(|d| d.to_f64()) {
+            cancel_sum += v * w;
+            cancel_weight += w;
+        }
+        if let Some(v) = row.avg_delay_minutes.and_then(|d| d.to_f64()) {
+            avg_delay_sum += v * w;
+            avg_delay_weight += w;
+        }
+        if let Some(v) = row.avg_delay_airport_pct.and_then(|d| d.to_f64()) {
+            airport_pct_sum += v * w;
+            airport_pct_weight += w;
+        }
+    }
+
+    let avg = |sum: f64, weight: f64| -> Option<f64> {
+        if weight > 0.0 { Some(sum / weight) } else { None }
+    };
+
+    (
+        avg(delay_sum, delay_weight),
+        avg(cancel_sum, cancel_weight),
+        avg(avg_delay_sum, avg_delay_weight),
+        avg(airport_pct_sum, airport_pct_weight),
+    )
+}
+
+/// Compute weighted sentiment averages across all snapshots.
+/// Weight = year_weight(year) * sqrt(review_count) — more reviews = higher confidence.
+fn weighted_avg_sentiment(
+    snapshots: &[SentimentRow],
+) -> (Option<f64>, Option<i32>, f64, i32) {
+    if snapshots.is_empty() {
+        return (None, None, 0.0, 0);
+    }
+
+    let mut rating_sum = 0.0_f64;
+    let mut rating_weight = 0.0_f64;
+    let mut total_reviews = 0_i32;
+
+    // For sub-scores, accumulate weighted values from ALL snapshots
+    let mut sub_sums = [0.0_f64; 8]; // queuing, cleanliness, staff, food, shopping, wifi, wayfinding, transport
+    let mut sub_weights = [0.0_f64; 8];
+
+    for snap in snapshots {
+        let w = year_weight(snap.snapshot_year);
+        let review_factor = snap.review_count.map(|c| (c as f64).sqrt()).unwrap_or(1.0);
+        let combined_weight = w * review_factor;
+
+        if let Some(rating) = snap.avg_rating.as_ref().and_then(|d| d.to_f64()) {
+            rating_sum += rating * combined_weight;
+            rating_weight += combined_weight;
+        }
+
+        if let Some(c) = snap.review_count {
+            total_reviews += c;
+        }
+
+        // Sub-scores
+        let sub_scores = [
+            &snap.score_queuing, &snap.score_cleanliness, &snap.score_staff,
+            &snap.score_food_bev, &snap.score_shopping, &snap.score_wifi,
+            &snap.score_wayfinding, &snap.score_transport,
+        ];
+        for (i, score) in sub_scores.iter().enumerate() {
+            if let Some(v) = score.as_ref().and_then(|d| d.to_f64()) {
+                sub_sums[i] += v * combined_weight;
+                sub_weights[i] += combined_weight;
+            }
+        }
+    }
+
+    let weighted_rating = if rating_weight > 0.0 {
+        Some(rating_sum / rating_weight)
+    } else {
+        None
+    };
+
+    // Compute weighted sub-score average
+    let mut sub_score_sum = 0.0_f64;
+    let mut sub_score_count = 0_i32;
+    for i in 0..8 {
+        if sub_weights[i] > 0.0 {
+            sub_score_sum += sub_sums[i] / sub_weights[i];
+            sub_score_count += 1;
+        }
+    }
+
+    (
+        weighted_rating,
+        if total_reviews > 0 { Some(total_reviews) } else { None },
+        sub_score_sum,
+        sub_score_count,
+    )
 }
 
 /// Infrastructure score (weight: 15%)
@@ -361,7 +489,7 @@ fn score_operational(data: &ScoringData) -> f64 {
 /// score = (rating_score * 0.6 + sub_score_avg * 0.4) * confidence
 ///       + rating_score * (1 - confidence) * 0.6
 fn score_sentiment(data: &ScoringData) -> f64 {
-    match data.latest_avg_rating {
+    match data.weighted_avg_rating {
         Some(rating) => {
             // avg_rating is on 0-5 scale in sentiment_snapshots, but reviews are 1-10.
             // The HANDOFF formula uses 1-10, so we convert: multiply by 2 to get 0-10 range.
@@ -377,7 +505,7 @@ fn score_sentiment(data: &ScoringData) -> f64 {
             };
 
             let confidence = data
-                .review_count
+                .total_review_count
                 .map(|c| (c as f64 / 500.0).min(1.0))
                 .unwrap_or(0.0);
 
@@ -392,15 +520,18 @@ fn score_sentiment(data: &ScoringData) -> f64 {
 
 /// Sentiment velocity score (weight: 15%)
 ///
-/// yoy_delta = avg_rating_last_4_quarters - avg_rating_prior_4_quarters  (on 0-5 scale)
-/// score = LEAST(100, GREATEST(0, 50 + (yoy_delta * 20)))
+/// Compares last 2 years (8 quarters) vs prior 2 years (8 quarters).
+/// This captures longer improvement arcs (e.g., Luton's renovation journey).
 ///
-/// 50 = flat, 70 = +1.0 rating improvement YoY, 30 = -1.0 YoY decline
+/// delta = avg_rating_last_8q - avg_rating_prior_8q  (on 0-5 scale)
+/// score = LEAST(100, GREATEST(0, 50 + (delta * 20)))
+///
+/// 50 = flat, 70 = +1.0 rating improvement, 30 = -1.0 decline
 fn score_sentiment_velocity(data: &ScoringData) -> f64 {
-    match (data.avg_rating_last_4q, data.avg_rating_prior_4q) {
+    match (data.avg_rating_last_8q, data.avg_rating_prior_8q) {
         (Some(last), Some(prior)) => {
-            let yoy_delta = last - prior;
-            (50.0 + yoy_delta * 20.0).clamp(0.0, 100.0)
+            let delta = last - prior;
+            (50.0 + delta * 20.0).clamp(0.0, 100.0)
         }
         _ => 50.0, // no trend data = flat
     }
@@ -470,7 +601,7 @@ pub async fn upsert_score(pool: &PgPool, score: &ScoreOutput) -> Result<()> {
                  $10, $11, $12, $13, $14, $15, TRUE, $16)",
     )
     .bind(score.airport_id)
-    .bind(score.reference_year)
+    .bind(0_i16) // 0 = all-time composite score
     .bind(Decimal::from_f64(score.score_infrastructure))
     .bind(Decimal::from_f64(score.score_operational))
     .bind(Decimal::from_f64(score.score_sentiment))
@@ -493,17 +624,16 @@ pub async fn upsert_score(pool: &PgPool, score: &ScoreOutput) -> Result<()> {
     Ok(())
 }
 
-/// Compute and persist scores for all airports in the list.
+/// Compute and persist all-time scores for all airports in the list.
 pub async fn score_airports(
     pool: &PgPool,
     airports: &[Airport],
-    reference_year: i16,
 ) -> Result<()> {
     for airport in airports {
         let iata = airport.iata_code.as_deref().unwrap_or("???");
-        info!(airport = iata, "Computing score");
+        info!(airport = iata, "Computing all-time score");
 
-        let score = compute_score(pool, airport, reference_year).await?;
+        let score = compute_score(pool, airport).await?;
         upsert_score(pool, &score).await?;
 
         info!(
@@ -538,12 +668,12 @@ mod tests {
             avg_delay_minutes: None,
             delay_airport_pct: None,
             taxi_out_additional_min: None,
-            latest_avg_rating: None,
-            review_count: None,
+            weighted_avg_rating: None,
+            total_review_count: None,
             sub_score_count: 0,
             sub_score_sum: 0.0,
-            avg_rating_last_4q: None,
-            avg_rating_prior_4q: None,
+            avg_rating_last_8q: None,
+            avg_rating_prior_8q: None,
             destination_count: 0,
             airline_count: 0,
             international_pax: None,
@@ -648,8 +778,8 @@ mod tests {
     #[test]
     fn sentiment_high_rating_high_confidence() {
         let data = ScoringData {
-            latest_avg_rating: Some(4.5), // 0-5 -> 9.0 on 0-10 -> (9-1)/9*100 = 88.89
-            review_count: Some(1000),     // confidence = 1.0
+            weighted_avg_rating: Some(4.5), // 0-5 -> 9.0 on 0-10 -> (9-1)/9*100 = 88.89
+            total_review_count: Some(1000),     // confidence = 1.0
             sub_score_count: 4,
             sub_score_sum: 18.0,          // (18-4)/(4*4)*100 = 87.5
             ..empty_data()
@@ -669,8 +799,8 @@ mod tests {
     #[test]
     fn sentiment_low_confidence() {
         let data = ScoringData {
-            latest_avg_rating: Some(4.0), // -> 8.0 -> (8-1)/9*100 = 77.78
-            review_count: Some(50),       // confidence = 0.1
+            weighted_avg_rating: Some(4.0), // -> 8.0 -> (8-1)/9*100 = 77.78
+            total_review_count: Some(50),       // confidence = 0.1
             sub_score_count: 0,
             ..empty_data()
         };
@@ -682,8 +812,8 @@ mod tests {
     #[test]
     fn velocity_improving() {
         let data = ScoringData {
-            avg_rating_last_4q: Some(4.0),
-            avg_rating_prior_4q: Some(3.0),
+            avg_rating_last_8q: Some(4.0),
+            avg_rating_prior_8q: Some(3.0),
             ..empty_data()
         };
         let score = score_sentiment_velocity(&data);
@@ -693,8 +823,8 @@ mod tests {
     #[test]
     fn velocity_declining() {
         let data = ScoringData {
-            avg_rating_last_4q: Some(2.5),
-            avg_rating_prior_4q: Some(4.0),
+            avg_rating_last_8q: Some(2.5),
+            avg_rating_prior_8q: Some(4.0),
             ..empty_data()
         };
         let score = score_sentiment_velocity(&data);
@@ -780,12 +910,12 @@ mod tests {
             avg_delay_minutes: Some(999.0),
             delay_airport_pct: Some(100.0),
             taxi_out_additional_min: Some(999.0),
-            latest_avg_rating: Some(5.0),
-            review_count: Some(99999),
+            weighted_avg_rating: Some(5.0),
+            total_review_count: Some(99999),
             sub_score_count: 8,
             sub_score_sum: 40.0,
-            avg_rating_last_4q: Some(5.0),
-            avg_rating_prior_4q: Some(0.0),
+            avg_rating_last_8q: Some(5.0),
+            avg_rating_prior_8q: Some(0.0),
             destination_count: 9999,
             airline_count: 9999,
             international_pax: Some(999_999_999),
@@ -804,5 +934,70 @@ mod tests {
         ] {
             assert!(val >= 0.0 && val <= 100.0, "{} = {} out of bounds", name, val);
         }
+    }
+
+    #[test]
+    fn year_weight_values() {
+        assert!((year_weight(2015) - 1.0).abs() < 0.01);
+        assert!((year_weight(2020) - 2.5).abs() < 0.01);
+        assert!((year_weight(2025) - 4.0).abs() < 0.01);
+        // Pre-2015 should clamp to 1.0
+        assert!((year_weight(2010) - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn weighted_ops_recency_bias() {
+        // Recent year should dominate over old year
+        let ops = vec![
+            YearlyOps {
+                period_year: 2015,
+                avg_delay_pct: Some(Decimal::from(50)),
+                avg_cancellation_pct: None,
+                avg_delay_minutes: None,
+                avg_delay_airport_pct: None,
+            },
+            YearlyOps {
+                period_year: 2025,
+                avg_delay_pct: Some(Decimal::from(10)),
+                avg_cancellation_pct: None,
+                avg_delay_minutes: None,
+                avg_delay_airport_pct: None,
+            },
+        ];
+        let (delay, _, _, _) = weighted_avg_ops(&ops);
+        let d = delay.unwrap();
+        // 2015 weight=1.0, 2025 weight=4.0
+        // (50*1 + 10*4) / (1+4) = 90/5 = 18.0
+        assert!((d - 18.0).abs() < 0.01, "expected ~18.0, got {}", d);
+    }
+
+    #[test]
+    fn weighted_sentiment_recency_and_volume() {
+        let snapshots = vec![
+            SentimentRow {
+                snapshot_year: 2015,
+                snapshot_quarter: Some(1),
+                avg_rating: Some(Decimal::from(2)),
+                review_count: Some(100),
+                score_queuing: None, score_cleanliness: None, score_staff: None,
+                score_food_bev: None, score_shopping: None, score_wifi: None,
+                score_wayfinding: None, score_transport: None,
+            },
+            SentimentRow {
+                snapshot_year: 2025,
+                snapshot_quarter: Some(1),
+                avg_rating: Some(Decimal::from(4)),
+                review_count: Some(100),
+                score_queuing: None, score_cleanliness: None, score_staff: None,
+                score_food_bev: None, score_shopping: None, score_wifi: None,
+                score_wayfinding: None, score_transport: None,
+            },
+        ];
+        let (rating, total, _, _) = weighted_avg_sentiment(&snapshots);
+        let r = rating.unwrap();
+        // 2015: weight=1.0*10=10, 2025: weight=4.0*10=40
+        // (2*10 + 4*40) / (10+40) = 180/50 = 3.6
+        assert!((r - 3.6).abs() < 0.01, "expected ~3.6, got {}", r);
+        assert_eq!(total, Some(200));
     }
 }

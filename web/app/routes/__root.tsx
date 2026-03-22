@@ -1,4 +1,6 @@
-import { createRootRoute, Outlet, HeadContent, Scripts } from '@tanstack/react-router'
+import { createRootRoute, Outlet, HeadContent, Scripts, Link, useRouterState } from '@tanstack/react-router'
+import { AirportSearch } from '../components/airport-search'
+import '../styles.css'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -12,12 +14,28 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
+  const { location } = useRouterState()
+  const isHome = location.pathname === '/'
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="bg-[#0a0a0b]">
+        {!isHome && (
+          <nav className="fixed top-0 left-0 right-0 z-50 h-12 bg-[#0a0a0b]/90 backdrop-blur-sm border-b border-white/[0.05]">
+            <div className="max-w-5xl mx-auto px-16 h-full flex items-center justify-between">
+              <Link
+                to="/"
+                className="font-grotesk text-sm font-bold text-zinc-400 tracking-wider hover:text-zinc-100 transition-colors"
+              >
+                Airport Intelligence
+              </Link>
+              <AirportSearch compact />
+            </div>
+          </nav>
+        )}
         <Outlet />
         <Scripts />
       </body>

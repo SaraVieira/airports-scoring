@@ -273,6 +273,22 @@ export const airportScores = pgTable("airport_scores", {
 });
 
 // ============================================================
+// ALL AIRPORTS (lightweight reference table for route lookups)
+// ============================================================
+
+export const allAirports = pgTable("all_airports", {
+  icao: text("icao").primaryKey(),
+  iata: text("iata"),
+  name: text("name").notNull(),
+  city: text("city").notNull(),
+  country: char("country", { length: 2 }).notNull(),
+  elevation: integer("elevation"),
+  lat: doublePrecision("lat"),
+  lon: doublePrecision("lon"),
+  tz: text("tz"),
+});
+
+// ============================================================
 // ROUTES
 // ============================================================
 

@@ -11,6 +11,7 @@ import {
   sentimentSnapshots,
   airportScores,
   routes,
+  allAirports,
   metarDaily,
   reviewsRaw,
   wikipediaSnapshots,
@@ -135,6 +136,14 @@ export const routesRelations = relations(routes, ({ one }) => ({
     references: [airports.id],
     relationName: "destination",
   }),
+  destinationAirport: one(allAirports, {
+    fields: [routes.destinationIcao],
+    references: [allAirports.icao],
+  }),
+}));
+
+export const allAirportsRelations = relations(allAirports, ({ many }) => ({
+  routesTo: many(routes),
 }));
 
 export const metarDailyRelations = relations(metarDaily, ({ one }) => ({

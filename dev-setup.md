@@ -79,7 +79,7 @@ cargo run -- --all --score
 | **ourairports** | `--source ourairports` | Downloads OurAirports CSVs | Runways, frequencies, navaids, basic airport info |
 | **wikipedia** | `--source wikipedia` | Fetches Wikipedia articles via API | Passenger stats, opened year, operator, terminal count, renovation notes, Skytrax history, ACI awards |
 | **eurocontrol** | `--source eurocontrol` | Downloads Eurocontrol CSVs + local apt_dly bz2 files | Monthly flight counts, avg delay minutes, ATFM delay % and cause breakdown (weather/carrier/ATC/airport) |
-| **opdi** | `--source opdi` | Downloads OPDI parquet files via Python helper | Route network (destination ICAO, flights per month) |
+| **routes** | `--source routes` | Runs OPDI first (real flight counts for major airports), then fills gaps with [Jonty/airline-route-data](https://github.com/Jonty/airline-route-data) (weekly-updated from FlightRadar24, includes airline names). Small airports not in OPDI still get routes from Jonty. | Route network with destinations and airlines |
 | **eurostat** | `--source eurostat` | Downloads Eurostat passenger data | Historical passenger traffic by year |
 | **metar** | `--source metar` | Downloads IEM ASOS weather observations | Daily weather stats (temp, wind, visibility, precipitation) |
 | **skytrax** | `--source skytrax` | Scrapes Skytrax reviews via Python | Raw review text, ratings, sub-scores into `reviews_raw` |
@@ -106,7 +106,7 @@ cargo run -- --all --source ourairports     # Base airport data + runways
 cargo run -- --all --source wikipedia --full-refresh  # Pax stats, metadata
 cargo run -- --all --source eurostat        # Historical pax
 cargo run -- --all --source eurocontrol --full-refresh  # Ops stats + delays
-cargo run -- --all --source opdi            # Route network
+cargo run -- --all --source routes           # Route network (OPDI + Jonty fallback)
 cargo run -- --all --source skytrax         # Scrape reviews
 cargo run -- --all --source sentiment       # Analyze reviews (needs skytrax first)
 cargo run -- --all --score                  # Compute composite scores
@@ -141,10 +141,12 @@ All airport configuration lives in `airports.json` in the repo root. To add a ne
 ```bash
 cargo run -- JFK --source ourairports
 cargo run -- JFK --source wikipedia --full-refresh
+cargo run -- JFK --source eurostat
 cargo run -- JFK --source eurocontrol --full-refresh
-cargo run -- JFK --source opdi
+cargo run -- JFK --source routes
 cargo run -- JFK --source skytrax
 cargo run -- JFK --source sentiment
+cargo run -- JFK --score
 ```
 
 3. **Re-run route linking** (so existing airports' routes resolve the new destination):
