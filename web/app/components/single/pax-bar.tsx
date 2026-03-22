@@ -1,3 +1,11 @@
+import {
+  BarChart,
+  Bar,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+
 export function PaxSparkline({
   data,
 }: {
@@ -7,39 +15,49 @@ export function PaxSparkline({
   const maxPax = Math.max(...data.map((d) => d.pax ?? 0));
   if (maxPax === 0) return null;
 
-  // Find covid dip (lowest non-zero year between 2019-2022)
-  const covidYear = data.find(
-    (d) =>
-      d.year >= 2020 && d.year <= 2021 && d.pax != null && d.pax < maxPax * 0.5,
-  );
+  const chartData = data.map((d) => ({
+    name: String(d.year),
+    value: d.pax ?? 0,
+    fill:
+      d.year >= 2020 && d.year <= 2021
+        ? "#ef4444" // red for covid years
+        : d.year > 2021
+          ? "#22c55e" // green for recovery
+          : "#71717a", // grey for normal years
+  }));
 
   return (
-    <div className="flex items-end gap-1 h-16">
-      {data.map((d) => {
-        const h = d.pax ? Math.max((d.pax / maxPax) * 100, 3) : 3;
-        const isCovid = d.year === covidYear?.year;
-        const isLatest = d === data[0];
-        const bg = isCovid
-          ? "bg-red-500/70"
-          : isLatest
-            ? "bg-yellow-400"
-            : "bg-zinc-600";
-        return (
-          <div key={d.year} className="flex flex-col items-center gap-1 flex-1">
-            <div className="w-full flex flex-col items-center justify-end h-12">
-              <div
-                className={`w-full max-w-6 ${bg} transition-all`}
-                style={{ height: `${h}%` }}
-              />
-            </div>
-            <span
-              className={`font-mono text-[9px] tabular-nums ${isLatest ? "text-zinc-300" : isCovid ? "text-red-500" : "text-zinc-600"}`}
-            >
-              {String(d.year).slice(2)}
-            </span>
-          </div>
-        );
-      })}
+    <div style={{ width: "100%", height: 80 }}>
+      <ResponsiveContainer>
+        <BarChart data={chartData} margin={{ top: 5, right: 0, bottom: 0, left: 0 }}>
+          <Tooltip
+            cursor={false}
+            content={({ active, payload }) => {
+              if (!active || !payload?.[0]) return null;
+              const d = payload[0].payload;
+              return (
+                <div style={{
+                  backgroundColor: "#18181b",
+                  border: "1px solid #27272a",
+                  borderRadius: 4,
+                  padding: "6px 10px",
+                  fontSize: 11,
+                  fontFamily: "monospace",
+                  color: "#d4d4d8",
+                }}>
+                  <div style={{ color: "#a1a1aa", marginBottom: 2 }}>{d.name}</div>
+                  <div>{Number(d.value) >= 1_000_000 ? `${(Number(d.value) / 1_000_000).toFixed(1)}M` : Number(d.value).toLocaleString()} passengers</div>
+                </div>
+              );
+            }}
+          />
+          <Bar dataKey="value" radius={[2, 2, 0, 0]} maxBarSize={24}>
+            {chartData.map((entry, index) => (
+              <Cell key={index} fill={entry.fill} fillOpacity={0.8} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }

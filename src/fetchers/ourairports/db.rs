@@ -1,207 +1,26 @@
-#![allow(dead_code)]
 use std::collections::HashMap;
-
 use anyhow::{Context, Result};
 use rust_decimal::Decimal;
-use serde::Deserialize;
 use sqlx::PgPool;
 use tracing::info;
+use super::types::{
+    parse_bool_field, parse_opt_decimal, parse_opt_f64, parse_opt_i32, CsvAirport, CsvFrequency,
+    CsvNavaid, CsvRunway,
+};
 
-use crate::models::{Airport, FetchResult};
-
-// Seed IATA codes are loaded from airports.json at startup —
-// see config::load_seed_airports(). The fetch_all() function
-// receives them as a parameter.
-
-const AIRPORTS_CSV_URL: &str =
-    "https://davidmegginson.github.io/ourairports-data/airports.csv";
-const RUNWAYS_CSV_URL: &str =
-    "https://davidmegginson.github.io/ourairports-data/runways.csv";
-const FREQUENCIES_CSV_URL: &str =
-    "https://davidmegginson.github.io/ourairports-data/airport-frequencies.csv";
-const NAVAIDS_CSV_URL: &str =
-    "https://davidmegginson.github.io/ourairports-data/navaids.csv";
-
-// ── CSV row structs ─────────────────────────────────────────────
-
-/// Row from airports.csv
-#[derive(Debug, Deserialize)]
-struct CsvAirport {
-    id: i64,
-    ident: String,
-    #[serde(rename = "type")]
-    airport_type: String,
-    name: String,
-    latitude_deg: Option<f64>,
-    longitude_deg: Option<f64>,
-    elevation_ft: Option<String>,
-    continent: Option<String>,
-    iso_country: Option<String>,
-    iso_region: Option<String>,
-    municipality: Option<String>,
-    scheduled_service: Option<String>,
-    gps_code: Option<String>,
-    iata_code: Option<String>,
-    local_code: Option<String>,
-    home_link: Option<String>,
-    wikipedia_link: Option<String>,
-    keywords: Option<String>,
-}
-
-/// Row from runways.csv
-#[derive(Debug, Deserialize)]
-struct CsvRunway {
-    id: i64,
-    airport_ref: i64,
-    airport_ident: Option<String>,
-    length_ft: Option<String>,
-    width_ft: Option<String>,
-    surface: Option<String>,
-    lighted: Option<String>,
-    closed: Option<String>,
-    le_ident: Option<String>,
-    le_latitude_deg: Option<String>,
-    le_longitude_deg: Option<String>,
-    le_elevation_ft: Option<String>,
-    #[serde(rename = "le_heading_degT")]
-    le_heading_deg_t: Option<String>,
-    le_displaced_threshold_ft: Option<String>,
-    he_ident: Option<String>,
-    he_latitude_deg: Option<String>,
-    he_longitude_deg: Option<String>,
-    he_elevation_ft: Option<String>,
-    #[serde(rename = "he_heading_degT")]
-    he_heading_deg_t: Option<String>,
-    he_displaced_threshold_ft: Option<String>,
-}
-
-/// Row from airport-frequencies.csv
-#[derive(Debug, Deserialize)]
-struct CsvFrequency {
-    id: i64,
-    airport_ref: i64,
-    airport_ident: Option<String>,
-    #[serde(rename = "type")]
-    freq_type: Option<String>,
-    description: Option<String>,
-    frequency_mhz: Option<f64>,
-}
-
-/// Row from navaids.csv
-#[derive(Debug, Deserialize)]
-struct CsvNavaid {
-    id: i64,
-    #[serde(rename = "filename")]
-    _filename: Option<String>,
-    ident: Option<String>,
-    name: Option<String>,
-    #[serde(rename = "type")]
-    navaid_type: Option<String>,
-    frequency_khz: Option<String>,
-    latitude_deg: Option<f64>,
-    longitude_deg: Option<f64>,
-    elevation_ft: Option<String>,
-    iso_country: Option<String>,
-    dme_frequency_khz: Option<String>,
-    dme_channel: Option<String>,
-    dme_latitude_deg: Option<f64>,
-    dme_longitude_deg: Option<f64>,
-    dme_elevation_ft: Option<String>,
-    slaved_variation_deg: Option<String>,
-    magnetic_variation_deg: Option<String>,
-    #[serde(rename = "usageType")]
-    usage_type: Option<String>,
-    power: Option<String>,
-    associated_airport: Option<String>,
-}
-
-// ── Helper: parse optional numeric strings ──────────────────────
-
-fn parse_opt_i32(s: &Option<String>) -> Option<i32> {
-    s.as_deref()
-        .and_then(|v| v.trim().parse::<i32>().ok())
-}
-
-fn parse_opt_f64(s: &Option<String>) -> Option<f64> {
-    s.as_deref()
-        .and_then(|v| v.trim().parse::<f64>().ok())
-}
-
-fn parse_opt_decimal(s: &Option<String>) -> Option<Decimal> {
-    s.as_deref()
-        .and_then(|v| v.trim().parse::<Decimal>().ok())
-}
-
-fn parse_bool_field(s: &Option<String>) -> Option<bool> {
-    s.as_deref().map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-}
-
-// ── Public API ──────────────────────────────────────────────────
-
-/// Fetch airport, runway, and frequency data from OurAirports CSV files.
-///
-/// Because OurAirports is a bulk download, the per-airport `fetch` delegates
-/// to `fetch_all` which processes every seed airport in one pass.
-pub async fn fetch(pool: &PgPool, _airport: &Airport, full_refresh: bool, seed_iata_codes: &[&str]) -> Result<FetchResult> {
-    fetch_all(pool, full_refresh, seed_iata_codes).await
-}
-
-/// Download all three OurAirports CSVs and upsert seed airports, their
-/// runways, and frequencies into Postgres.
-pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&str]) -> Result<FetchResult> {
-    let client = reqwest::Client::new();
-
-    // 1. Download all four CSVs in parallel.
-    let (airports_text, runways_text, frequencies_text, navaids_text) = tokio::try_join!(
-        download_csv(&client, AIRPORTS_CSV_URL),
-        download_csv(&client, RUNWAYS_CSV_URL),
-        download_csv(&client, FREQUENCIES_CSV_URL),
-        download_csv(&client, NAVAIDS_CSV_URL),
-    )?;
-
-    // 2. Parse airports CSV and filter to seed set.
-    let csv_airports = parse_csv::<CsvAirport>(&airports_text)?;
-    let seed_airports: Vec<&CsvAirport> = csv_airports
-        .iter()
-        .filter(|a| {
-            a.iata_code
-                .as_deref()
-                .map(|code| seed_iata_codes.contains(&code))
-                .unwrap_or(false)
-        })
-        .collect();
-
-    info!(
-        total_csv = csv_airports.len(),
-        seed_matched = seed_airports.len(),
-        "Parsed airports CSV"
-    );
-
-    // Build a map from ourairports_id -> iata_code for seed airports,
-    // so we can match runways/frequencies later.
-    let seed_oa_ids: HashMap<i64, &str> = seed_airports
-        .iter()
-        .map(|a| (a.id, a.iata_code.as_deref().unwrap_or("")))
-        .collect();
-
-    // 3. Upsert airports.
+/// Upsert seed airports into Postgres and return the OA-id-to-DB-id mapping.
+pub(super) async fn upsert_airports(
+    pool: &PgPool,
+    seed_airports: &[&CsvAirport],
+) -> Result<(i32, HashMap<i64, i32>)> {
     let mut records: i32 = 0;
-    // We need to collect the mapping from ourairports_id -> db airport id
-    // for inserting runways and frequencies.
     let mut oa_id_to_db_id: HashMap<i64, i32> = HashMap::new();
-
-    for airport in &seed_airports {
+    for airport in seed_airports {
         let lat = airport.latitude_deg.unwrap_or(0.0);
         let lon = airport.longitude_deg.unwrap_or(0.0);
         let iata = airport.iata_code.as_deref().unwrap_or("");
-        let country = airport
-            .iso_country
-            .as_deref()
-            .unwrap_or("XX");
-        let municipality = airport
-            .municipality
-            .as_deref()
-            .unwrap_or("Unknown");
+        let country = airport.iso_country.as_deref().unwrap_or("XX");
+        let municipality = airport.municipality.as_deref().unwrap_or("Unknown");
         let scheduled = airport
             .scheduled_service
             .as_deref()
@@ -244,7 +63,10 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&s
         )
         .bind(iata)
         .bind(airport.gps_code.as_deref().or(Some(&airport.ident)))
-        .bind(airport.id as i32)
+        .bind(
+            i32::try_from(airport.id)
+                .with_context(|| format!("OurAirports ID {} exceeds i32 range", airport.id))?,
+        )
         .bind(&airport.name)
         .bind(municipality)
         .bind(country)
@@ -262,16 +84,20 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&s
         oa_id_to_db_id.insert(airport.id, row.0);
         records += 1;
     }
-
     info!(count = records, "Upserted airports");
+    Ok((records, oa_id_to_db_id))
+}
 
-    // 4. Parse and insert runways.
-    let csv_runways = parse_csv::<CsvRunway>(&runways_text)?;
+/// Delete-and-reinsert runways for seed airports.
+pub(super) async fn insert_runways(
+    pool: &PgPool,
+    csv_runways: &[CsvRunway],
+    seed_oa_ids: &HashMap<i64, &str>,
+    oa_id_to_db_id: &HashMap<i64, i32>,
+) -> Result<i32> {
     let mut runway_count: i32 = 0;
-
-    // Group runways by airport_ref for batch delete+insert.
     let mut runways_by_airport: HashMap<i64, Vec<&CsvRunway>> = HashMap::new();
-    for rwy in &csv_runways {
+    for rwy in csv_runways {
         if seed_oa_ids.contains_key(&rwy.airport_ref) {
             runways_by_airport
                 .entry(rwy.airport_ref)
@@ -279,13 +105,11 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&s
                 .push(rwy);
         }
     }
-
     for (oa_id, rwys) in &runways_by_airport {
         let db_id = match oa_id_to_db_id.get(oa_id) {
             Some(id) => *id,
             None => continue,
         };
-
         // Delete existing runways for this airport.
         sqlx::query("DELETE FROM runways WHERE airport_id = $1")
             .bind(db_id)
@@ -344,15 +168,20 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&s
             runway_count += 1;
         }
     }
-
     info!(count = runway_count, "Inserted runways");
+    Ok(runway_count)
+}
 
-    // 5. Parse and insert frequencies.
-    let csv_frequencies = parse_csv::<CsvFrequency>(&frequencies_text)?;
+/// Delete-and-reinsert frequencies for seed airports.
+pub(super) async fn insert_frequencies(
+    pool: &PgPool,
+    csv_frequencies: &[CsvFrequency],
+    seed_oa_ids: &HashMap<i64, &str>,
+    oa_id_to_db_id: &HashMap<i64, i32>,
+) -> Result<i32> {
     let mut freq_count: i32 = 0;
-
     let mut freqs_by_airport: HashMap<i64, Vec<&CsvFrequency>> = HashMap::new();
-    for freq in &csv_frequencies {
+    for freq in csv_frequencies {
         if seed_oa_ids.contains_key(&freq.airport_ref) {
             freqs_by_airport
                 .entry(freq.airport_ref)
@@ -360,13 +189,11 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&s
                 .push(freq);
         }
     }
-
     for (oa_id, freqs) in &freqs_by_airport {
         let db_id = match oa_id_to_db_id.get(oa_id) {
             Some(id) => *id,
             None => continue,
         };
-
         // Delete existing frequencies for this airport.
         sqlx::query("DELETE FROM frequencies WHERE airport_id = $1")
             .bind(db_id)
@@ -397,28 +224,28 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&s
             freq_count += 1;
         }
     }
-
     info!(count = freq_count, "Inserted frequencies");
+    Ok(freq_count)
+}
 
-    // 6. Parse and insert navaids.
-    let csv_navaids = parse_csv::<CsvNavaid>(&navaids_text)?;
+/// Delete-and-reinsert navaids for seed airports.
+pub(super) async fn insert_navaids(
+    pool: &PgPool,
+    csv_navaids: &[CsvNavaid],
+    seed_airports: &[&CsvAirport],
+    oa_id_to_db_id: &HashMap<i64, i32>,
+) -> Result<i32> {
     let mut navaid_count: i32 = 0;
-
     // Build a reverse map from ICAO ident -> db airport id.
     let mut icao_to_db_id: HashMap<String, i32> = HashMap::new();
-    for airport in &seed_airports {
-        let icao = airport
-            .gps_code
-            .as_deref()
-            .unwrap_or(&airport.ident);
+    for airport in seed_airports {
+        let icao = airport.gps_code.as_deref().unwrap_or(&airport.ident);
         if let Some(&db_id) = oa_id_to_db_id.get(&airport.id) {
             icao_to_db_id.insert(icao.to_string(), db_id);
         }
     }
-
-    // Group navaids by associated_airport.
     let mut navaids_by_airport: HashMap<String, Vec<&CsvNavaid>> = HashMap::new();
-    for nav in &csv_navaids {
+    for nav in csv_navaids {
         if let Some(ref assoc) = nav.associated_airport {
             if icao_to_db_id.contains_key(assoc) {
                 navaids_by_airport
@@ -468,40 +295,6 @@ pub async fn fetch_all(pool: &PgPool, _full_refresh: bool, seed_iata_codes: &[&s
             navaid_count += 1;
         }
     }
-
     info!(count = navaid_count, "Inserted navaids");
-
-    let total = records + runway_count + freq_count + navaid_count;
-    info!(total = total, "OurAirports fetch complete");
-
-    Ok(FetchResult {
-        records_processed: total,
-        last_record_date: None,
-    })
-}
-
-// ── Internal helpers ────────────────────────────────────────────
-
-async fn download_csv(client: &reqwest::Client, url: &str) -> Result<String> {
-    info!(url = url, "Downloading CSV");
-    let resp = client
-        .get(url)
-        .send()
-        .await
-        .with_context(|| format!("Failed to GET {}", url))?;
-    let text = resp
-        .text()
-        .await
-        .with_context(|| format!("Failed to read body from {}", url))?;
-    Ok(text)
-}
-
-fn parse_csv<T: serde::de::DeserializeOwned>(text: &str) -> Result<Vec<T>> {
-    let mut rdr = csv::ReaderBuilder::new()
-        .has_headers(true)
-        .flexible(true)
-        .from_reader(text.as_bytes());
-    rdr.deserialize()
-        .collect::<std::result::Result<Vec<T>, _>>()
-        .context("Failed to parse CSV")
+    Ok(navaid_count)
 }

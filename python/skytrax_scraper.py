@@ -17,6 +17,7 @@ import random
 import re
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
@@ -34,14 +35,16 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # IATA -> Skytrax slug mapping loaded from airports.json
 # ---------------------------------------------------------------------------
-import json as _json
-from pathlib import Path as _Path
 
-def _load_slugs():
+def _load_slugs() -> tuple[dict[str, str], dict[str, str]]:
     """Load Skytrax slugs from airports.json."""
-    airports_path = _Path(__file__).parent.parent / "airports.json"
-    with open(airports_path) as f:
-        airports = _json.load(f)
+    airports_path = Path(__file__).parent.parent / "airports.json"
+    try:
+        with open(airports_path) as f:
+            airports = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        logger.error("Failed to load airports.json: %s", exc)
+        return {}, {}
     review_slugs = {}
     rating_slugs = {}
     for a in airports:

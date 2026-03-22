@@ -31,7 +31,7 @@ async function main() {
   const data: Record<string, AirportEntry> = await resp.json();
 
   const entries = Object.values(data).filter(
-    (a) => a.icao && a.icao.length === 4
+    (a) => a.icao && a.icao.length === 4,
   );
   console.log(`Loaded ${entries.length} airports`);
 
@@ -72,7 +72,7 @@ async function main() {
         const a = batch[j];
         const offset = j * 9;
         placeholders.push(
-          `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9})`
+          `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9})`,
         );
         values.push(
           a.icao.substring(0, 4),
@@ -83,7 +83,7 @@ async function main() {
           a.elevation || null,
           a.lat || null,
           a.lon || null,
-          a.tz || null
+          a.tz || null,
         );
       }
 
@@ -99,7 +99,7 @@ async function main() {
            lat = EXCLUDED.lat,
            lon = EXCLUDED.lon,
            tz = EXCLUDED.tz`,
-        values
+        values,
       );
       inserted += batch.length;
     }

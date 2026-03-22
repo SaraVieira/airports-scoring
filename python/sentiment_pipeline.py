@@ -24,11 +24,7 @@ from datetime import datetime
 import psycopg2
 import psycopg2.extras
 import torch
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    pipeline,
-)
+from transformers import pipeline as hf_pipeline
 
 # ---------------------------------------------------------------------------
 # Logging – everything to stderr; stdout is reserved for JSON
@@ -63,6 +59,7 @@ TOPIC_LABELS = [
     "staff & service",
     "cleanliness",
     "food & beverage",
+    "wifi & connectivity",
     "wayfinding & signage",
     "transport links",
 ]
@@ -73,74 +70,73 @@ TOPIC_FIELD_MAP = {
     "staff & service":      "score_staff",
     "cleanliness":          "score_cleanliness",
     "food & beverage":      "score_food_bev",
+    "wifi & connectivity":  "score_wifi",
     "wayfinding & signage": "score_wayfinding",
     "transport links":      "score_transport",
 }
 
 # ---------------------------------------------------------------------------
-# Snarky commentary templates
+# Snarky commentary — loaded from commentary.toml
 # ---------------------------------------------------------------------------
-COMMENTARY_TEMPLATES = {
-    # High anger + queuing
-    "angry_queuing": [
-        "Passengers would rather queue at the DMV than at {airport}'s security. At least the DMV has chairs.",
-        "{airport} security lines: where dreams of catching your flight go to die.",
-        "If {airport} charged by the minute spent queuing, they'd outperform most airlines.",
-    ],
-    # High anger + staff
-    "angry_staff": [
-        "{airport} staff have perfected the art of looking busy while doing absolutely nothing.",
-        "Customer service at {airport}? More like customer survival.",
-    ],
-    # High anger + cleanliness
-    "angry_cleanliness": [
-        "{airport}: where the floors are as sticky as the situation.",
-        "The cleanest thing at {airport} is the passengers' disappointment.",
-    ],
-    # Generally negative
-    "general_negative": [
-        "{airport} makes a strong case for teleportation research funding.",
-        "{airport}: the airport equivalent of a participation trophy.",
-        "If airports had a Yelp, {airport} would be fighting for two stars.",
-    ],
-    # Improving sentiment
-    "improving": [
-        "{airport}: proof that rock bottom is a solid foundation.",
-        "{airport} is improving — like a student who discovered studying exists.",
-        "Things are looking up at {airport}. Admittedly, the bar was underground.",
-    ],
-    # Great scores
-    "great": [
-        "{airport} is so good it makes other airports look like bus stations.",
-        "{airport}: where even the delays feel civilized.",
-        "Passengers at {airport} are suspiciously happy. Someone check the water.",
-    ],
-    # Neutral/mixed
-    "neutral_mixed": [
-        "{airport}: aggressively adequate. Not great, not terrible — the airport equivalent of a shrug.",
-        "{airport} is the human trafficking-free airport equivalent of 'it's fine.'",
-        "{airport}: solidly in the 'could be worse' category.",
-    ],
+
+def _load_commentary_templates() -> dict[str, list[str]]:
+    """Load commentary templates from the TOML file next to this script."""
+    import tomllib
+    toml_path = os.path.join(os.path.dirname(__file__), "commentary.toml")
+    with open(toml_path, "rb") as f:
+        data = tomllib.load(f)
+    return {key: section["templates"] for key, section in data.items()}
+
+COMMENTARY_TEMPLATES = _load_commentary_templates()
+
+# Map NLI topic labels to angry commentary categories
+_TOPIC_TO_ANGRY_CATEGORY = {
+    "queuing & security":   "angry_queuing",
+    "staff & service":      "angry_staff",
+    "cleanliness":          "angry_cleanliness",
+    "food & beverage":      "angry_food",
+    "wifi & connectivity":  "angry_wifi",
+    "wayfinding & signage": "angry_wayfinding",
+    "transport links":      "angry_transport",
+}
+
+# Map NLI topic labels to great commentary categories
+_TOPIC_TO_GREAT_CATEGORY = {
+    "staff & service":      "great_staff",
+    "cleanliness":          "great_cleanliness",
+    "food & beverage":      "great_food",
+    "wifi & connectivity":  "great_wifi",
+    "transport links":      "great_transport",
 }
 
 
 def _pick_commentary(airport: str, positive_pct: float, negative_pct: float,
                      top_negative_topic: str | None,
-                     prev_positive_pct: float | None) -> str:
+                     top_positive_topic: str | None,
+                     prev_positive_pct: float | None,
+                     review_count: int) -> str:
     """Pick a snarky commentary template based on sentiment patterns."""
-    # Check if sentiment is improving
-    if prev_positive_pct is not None and positive_pct > prev_positive_pct + 10:
+    # Not enough data
+    if review_count < 5:
+        category = "insufficient_data"
+    # Declining sentiment
+    elif prev_positive_pct is not None and positive_pct < prev_positive_pct - 10:
+        category = "declining"
+    # Improving sentiment
+    elif prev_positive_pct is not None and positive_pct > prev_positive_pct + 10:
         category = "improving"
+    # Great scores — try topic-specific first
     elif positive_pct >= 65:
-        category = "great"
+        topic_cat = _TOPIC_TO_GREAT_CATEGORY.get(top_positive_topic or "")
+        if topic_cat and topic_cat in COMMENTARY_TEMPLATES:
+            category = topic_cat
+        else:
+            category = "great"
+    # High negativity — try topic-specific first
     elif negative_pct >= 45:
-        # High negativity — pick topic-specific snark if available
-        if top_negative_topic == "queuing & security":
-            category = "angry_queuing"
-        elif top_negative_topic == "staff & service":
-            category = "angry_staff"
-        elif top_negative_topic == "cleanliness":
-            category = "angry_cleanliness"
+        topic_cat = _TOPIC_TO_ANGRY_CATEGORY.get(top_negative_topic or "")
+        if topic_cat and topic_cat in COMMENTARY_TEMPLATES:
+            category = topic_cat
         else:
             category = "general_negative"
     elif negative_pct >= 30:
@@ -148,7 +144,7 @@ def _pick_commentary(airport: str, positive_pct: float, negative_pct: float,
     else:
         category = "neutral_mixed"
 
-    templates = COMMENTARY_TEMPLATES[category]
+    templates = COMMENTARY_TEMPLATES.get(category, COMMENTARY_TEMPLATES["neutral_mixed"])
     template = random.choice(templates)
     return template.format(airport=airport)
 
@@ -160,7 +156,7 @@ def _pick_commentary(airport: str, positive_pct: float, negative_pct: float,
 def load_emotion_pipeline():
     """Load the GoEmotions RoBERTa pipeline."""
     logger.info("Loading emotion classification model…")
-    emotion_pipe = pipeline(
+    emotion_pipe = hf_pipeline(
         "text-classification",
         model="SamLowe/roberta-base-go_emotions",
         top_k=None,
@@ -173,8 +169,9 @@ def load_emotion_pipeline():
 
 def load_nli_model():
     """Load the cross-encoder NLI model for zero-shot topic classification."""
-    logger.info("Loading NLI cross-encoder model…")
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+    logger.info("Loading NLI cross-encoder model…")
     model_name = "cross-encoder/nli-distilroberta-base"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
@@ -330,17 +327,29 @@ def aggregate_snapshots(reviews_with_analysis: list[dict], airport: str) -> list
         negative_items = [r for r in items if r.get("sentiment") == "negative"]
         top_negative_topic = None
         if negative_items:
-            topic_sums: dict[str, float] = defaultdict(float)
+            neg_topic_sums: dict[str, float] = defaultdict(float)
             for r in negative_items:
                 for topic, score in r.get("topics", {}).items():
-                    topic_sums[topic] += score
-            if topic_sums:
-                top_negative_topic = max(topic_sums, key=topic_sums.get)
+                    neg_topic_sums[topic] += score
+            if neg_topic_sums:
+                top_negative_topic = max(neg_topic_sums, key=lambda k: neg_topic_sums[k])
+
+        # Find dominant positive topic for commentary
+        positive_items = [r for r in items if r.get("sentiment") == "positive"]
+        top_positive_topic = None
+        if positive_items:
+            pos_topic_sums: dict[str, float] = defaultdict(float)
+            for r in positive_items:
+                for topic, score in r.get("topics", {}).items():
+                    pos_topic_sums[topic] += score
+            if pos_topic_sums:
+                top_positive_topic = max(pos_topic_sums, key=lambda k: pos_topic_sums[k])
 
         # Generate snarky commentary
         commentary = _pick_commentary(
             airport, positive_pct, negative_pct,
-            top_negative_topic, prev_positive_pct,
+            top_negative_topic, top_positive_topic,
+            prev_positive_pct, review_count=n,
         )
         prev_positive_pct = positive_pct
 
@@ -381,71 +390,95 @@ def run_pipeline(airport: str, db_url: str, source: str | None = None):
     logger.info("Connecting to database…")
     try:
         conn = psycopg2.connect(db_url)
-    except Exception as exc:
+    except psycopg2.Error as exc:
         logger.error("Database connection failed: %s", exc)
         sys.exit(1)
 
-    # Fetch reviews
-    reviews = fetch_unprocessed_reviews(conn, airport, source=source)
-    if not reviews:
-        logger.info("No unprocessed reviews for %s. Nothing to do.", airport)
-        result = {"airport": airport, "source": source, "sentiment_snapshots": []}
-        json.dump(result, sys.stdout, indent=2)
-        sys.stdout.write("\n")
-        conn.close()
-        return
+    try:
+        # Fetch reviews
+        reviews = fetch_unprocessed_reviews(conn, airport, source=source)
+        if not reviews:
+            logger.info("No unprocessed reviews for %s. Nothing to do.", airport)
+            result = {"airport": airport, "source": source, "sentiment_snapshots": []}
+            json.dump(result, sys.stdout, indent=2)
+            sys.stdout.write("\n")
+            return
 
-    # Load models
-    emotion_pipe = load_emotion_pipeline()
-    nli_tokenizer, nli_model, nli_device = load_nli_model()
+        # Load models
+        emotion_pipe = load_emotion_pipeline()
+        nli_tokenizer, nli_model, nli_device = load_nli_model()
 
-    # Process each review
-    processed_ids = []
-    enriched_reviews = []
+        # Process each review
+        processed_ids = []
+        enriched_reviews = []
 
-    for i, review in enumerate(reviews):
-        review_text = review.get("review_text") or ""
-        if not review_text.strip():
-            logger.debug("Skipping review %s — empty text.", review.get("id"))
+        for i, review in enumerate(reviews):
+            review_text = review.get("review_text") or ""
+            rating = review.get("overall_rating")
+
+            if not review_text.strip():
+                # No text — derive sentiment from rating alone.
+                # Rating is on 1-10 scale (Google ratings were doubled on insert).
+                # 1-3: negative, 4-6: neutral, 7-10: positive
+                if rating is not None:
+                    if rating >= 7:
+                        sentiment = "positive"
+                    elif rating >= 4:
+                        sentiment = "neutral"
+                    else:
+                        sentiment = "negative"
+                else:
+                    sentiment = "neutral"
+
+                enriched = {
+                    **review,
+                    "review_date": (review["review_date"].strftime("%Y-%m-%d")
+                                    if hasattr(review.get("review_date"), "strftime")
+                                    else review.get("review_date")),
+                    "sentiment": sentiment,
+                    "topics": {},  # no text = no topic classification
+                }
+                enriched_reviews.append(enriched)
+                processed_ids.append(review["id"])
+                continue
+
+            logger.info("Processing review %d/%d (id=%s)…", i + 1, len(reviews), review.get("id"))
+
+            # Emotion classification
+            try:
+                emotions = emotion_pipe(review_text[:512])
+                if isinstance(emotions, list) and emotions and isinstance(emotions[0], list):
+                    emotions = emotions[0]
+                sentiment = classify_sentiment(emotions)
+            except Exception as exc:
+                logger.warning("Emotion classification failed for review %s: %s", review.get("id"), exc)
+                sentiment = "neutral"
+
+            # Topic classification
+            try:
+                topics = classify_topics(review_text, nli_tokenizer, nli_model, nli_device, TOPIC_LABELS)
+            except Exception as exc:
+                logger.warning("Topic classification failed for review %s: %s", review.get("id"), exc)
+                topics = {}
+
+            enriched = {
+                **review,
+                "review_date": (review["review_date"].strftime("%Y-%m-%d")
+                                if hasattr(review.get("review_date"), "strftime")
+                                else review.get("review_date")),
+                "sentiment": sentiment,
+                "topics": topics,
+            }
+            enriched_reviews.append(enriched)
             processed_ids.append(review["id"])
-            continue
 
-        logger.info("Processing review %d/%d (id=%s)…", i + 1, len(reviews), review.get("id"))
+        # Aggregate into quarterly snapshots
+        snapshots = aggregate_snapshots(enriched_reviews, airport)
 
-        # Emotion classification
-        try:
-            emotions = emotion_pipe(review_text[:512])
-            if isinstance(emotions, list) and emotions and isinstance(emotions[0], list):
-                emotions = emotions[0]
-            sentiment = classify_sentiment(emotions)
-        except Exception as exc:
-            logger.warning("Emotion classification failed for review %s: %s", review.get("id"), exc)
-            sentiment = "neutral"
-
-        # Topic classification
-        try:
-            topics = classify_topics(review_text, nli_tokenizer, nli_model, nli_device, TOPIC_LABELS)
-        except Exception as exc:
-            logger.warning("Topic classification failed for review %s: %s", review.get("id"), exc)
-            topics = {}
-
-        enriched = {
-            **review,
-            "review_date": (review["review_date"].strftime("%Y-%m-%d")
-                            if hasattr(review.get("review_date"), "strftime")
-                            else review.get("review_date")),
-            "sentiment": sentiment,
-            "topics": topics,
-        }
-        enriched_reviews.append(enriched)
-        processed_ids.append(review["id"])
-
-    # Aggregate into quarterly snapshots
-    snapshots = aggregate_snapshots(enriched_reviews, airport)
-
-    # Mark reviews as processed
-    mark_reviews_processed(conn, processed_ids)
-    conn.close()
+        # Mark reviews as processed
+        mark_reviews_processed(conn, processed_ids)
+    finally:
+        conn.close()
 
     # Output
     result = {

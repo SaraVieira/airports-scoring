@@ -2,8 +2,12 @@ import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "../db";
-import { airports, airportScores } from "../db/schema";
-import { eq, sql } from "drizzle-orm";
+import {
+  airports,
+  airportScores,
+  reviewsRaw,
+} from "../db/schema";
+import { eq, sql, and, ne, isNotNull, gt } from "drizzle-orm";
 import { aggregateOps, computeOpsTrend } from "~/utils/agregator";
 import {
   delaySnark,
@@ -61,7 +65,92 @@ const getAirport = createServerFn({ method: "GET" })
       throw new Error(`Airport ${iata} not found`);
     }
 
-    return airport;
+    // Query recent reviews (anonymous - no author)
+    const recentReviews = await db
+      .select({
+        reviewDate: reviewsRaw.reviewDate,
+        overallRating: reviewsRaw.overallRating,
+        reviewText: reviewsRaw.reviewText,
+        source: reviewsRaw.source,
+      })
+      .from(reviewsRaw)
+      .where(
+        and(
+          eq(reviewsRaw.airportId, airport.id),
+          isNotNull(reviewsRaw.reviewText),
+          ne(reviewsRaw.reviewText, ""),
+        ),
+      )
+      .orderBy(sql`review_date DESC`)
+      .limit(5);
+
+    // Query ranking
+    const thisScore = airport.scores?.[0]?.scoreTotal;
+    let ranking = { position: 0, total: 0 };
+    if (thisScore) {
+      const [rankResult] = await db
+        .select({
+          position: sql<number>`COUNT(*) + 1`.as("position"),
+        })
+        .from(airportScores)
+        .where(
+          and(
+            eq(airportScores.isLatest, true),
+            gt(airportScores.scoreTotal, thisScore),
+          ),
+        );
+      const [totalResult] = await db
+        .select({
+          total: sql<number>`COUNT(*)`.as("total"),
+        })
+        .from(airportScores)
+        .where(eq(airportScores.isLatest, true));
+      ranking = {
+        position: Number(rankResult?.position ?? 0),
+        total: Number(totalResult?.total ?? 0),
+      };
+    }
+
+    // Query Google aggregate rating (overall_rating is 1-10 for Skytrax, 1-5 for Google)
+    const [googleAgg] = await db
+      .select({
+        googleRating:
+          sql<number>`AVG(overall_rating::numeric)`.as("google_rating"),
+        googleCount: sql<number>`COUNT(*)`.as("google_count"),
+      })
+      .from(reviewsRaw)
+      .where(
+        and(
+          eq(reviewsRaw.airportId, airport.id),
+          eq(reviewsRaw.source, "google"),
+        ),
+      );
+
+    // Source breakdown from reviews_raw
+    const sourceBreakdown = await db
+      .select({
+        source: reviewsRaw.source,
+        count: sql<number>`COUNT(*)`.as("count"),
+      })
+      .from(reviewsRaw)
+      .where(eq(reviewsRaw.airportId, airport.id))
+      .groupBy(reviewsRaw.source);
+
+    return {
+      ...airport,
+      recentReviews,
+      ranking,
+      googleAgg: {
+        rating: googleAgg?.googleRating
+          ? Number(googleAgg.googleRating)
+          : null,
+        count: googleAgg?.googleCount ? Number(googleAgg.googleCount) : 0,
+      },
+      sourceBreakdown: sourceBreakdown.map((s) => ({
+        source: s.source,
+        count: Number(s.count),
+      })),
+    };
   });
 
 export const Route = createFileRoute("/airport/$iata")({
@@ -109,11 +198,94 @@ function TrendIndicator({
   );
 }
 
+// ── Score Explanations ───────────────────────────────────
+
+const SCORE_EXPLANATIONS: Record<string, { plain: string; technical: string }> =
+  {
+    Operational: {
+      plain: "Delays, cancellations, on-time performance",
+      technical: "Eurocontrol ATFM delay data, monthly aggregation",
+    },
+    Sentiment: {
+      plain: "What passengers actually think",
+      technical:
+        "RoBERTa + NLI sentiment analysis on Skytrax & Google reviews",
+    },
+    Infrastructure: {
+      plain: "Runways, age, facilities",
+      technical: "OurAirports data, Wikipedia infrastructure info",
+    },
+    "Sent. Velocity": {
+      plain: "Is sentiment getting better or worse?",
+      technical: "8-quarter rolling comparison of sentiment scores",
+    },
+    Connectivity: {
+      plain: "Route network breadth",
+      technical: "OPDI + FlightRadar24 route data, destination count",
+    },
+    Operator: {
+      plain: "Managing company track record",
+      technical: "Cross-airport operator performance average",
+    },
+  };
+
+// ── Review Card ──────────────────────────────────────────
+
+function ReviewCard({
+  review,
+}: {
+  review: {
+    reviewDate: string | null;
+    overallRating: number | null;
+    reviewText: string | null;
+    source: string;
+  };
+}) {
+  const rating = review.overallRating ?? 0;
+  const borderColor =
+    rating >= 7
+      ? "border-l-green-500"
+      : rating < 5
+        ? "border-l-red-500"
+        : "border-l-yellow-500";
+  const stars = Math.round(rating / 2);
+  const text = review.reviewText ?? "";
+  const truncated = text.length > 150 ? text.slice(0, 150).trim() + "..." : text;
+  const dateStr = review.reviewDate
+    ? new Date(review.reviewDate).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+      })
+    : null;
+
+  return (
+    <div
+      className={`shrink-0 w-[280px] border-l-2 ${borderColor} bg-[#111113] px-4 py-3 flex flex-col gap-2`}
+    >
+      <div className="flex items-center justify-between">
+        <span className="font-mono text-[11px] text-yellow-400">
+          {"★".repeat(stars)}
+          {"☆".repeat(5 - stars)}
+        </span>
+        <span className="font-mono text-[9px] text-zinc-600 uppercase">
+          {review.source}
+        </span>
+      </div>
+      {dateStr && (
+        <span className="font-mono text-[9px] text-zinc-600">{dateStr}</span>
+      )}
+      <p className="font-mono text-[10px] text-zinc-400 leading-relaxed">
+        {truncated}
+      </p>
+    </div>
+  );
+}
+
 function AirportDetail() {
   const airport = Route.useLoaderData();
   const score = airport.scores[0];
   const totalNum = score?.scoreTotal ? parseFloat(score.scoreTotal) : null;
-  // Find latest full year (skip current partial year — if latest year's pax is <50% of previous, it's likely partial)
+  // Find latest full year (skip current partial year)
   const currentYear = new Date().getFullYear();
   const paxData = airport.paxYearly;
   const latestPax =
@@ -122,9 +294,9 @@ function AirportDetail() {
     paxData[1]?.totalPax &&
     paxData[0].totalPax &&
     paxData[0].totalPax < paxData[1].totalPax * 0.5
-      ? paxData[1] // skip partial current year
+      ? paxData[1]
       : paxData[0];
-  // For YoY, compare against the year before latestPax, skipping 2020 (covid anomaly)
+  // For YoY, compare against the year before latestPax, skipping 2020
   const latestPaxIdx = paxData.indexOf(latestPax);
   const prevCandidates = paxData.slice(latestPaxIdx + 1);
   const prevPax =
@@ -163,6 +335,7 @@ function AirportDetail() {
     let shopSum = 0,
       shopN = 0;
     let skytraxStars = snaps[0].skytraxStars;
+    let latestNotes: string | null = null;
 
     for (const s of snaps) {
       if (s.avgRating != null) {
@@ -211,11 +384,14 @@ function AirportDetail() {
         shopN++;
       }
       if (s.skytraxStars != null) skytraxStars = s.skytraxStars;
+      if (latestNotes == null && s.notes) latestNotes = s.notes;
     }
 
     return {
       avgRating:
-        ratingCount > 0 ? String((totalRating / ratingCount).toFixed(2)) : null,
+        ratingCount > 0
+          ? String((totalRating / ratingCount).toFixed(2))
+          : null,
       reviewCount: totalReviews,
       positivePct:
         pctCount > 0 ? String((totalPositive / pctCount).toFixed(2)) : null,
@@ -235,11 +411,12 @@ function AirportDetail() {
       scoreShopping: shopN > 0 ? String((shopSum / shopN).toFixed(2)) : null,
       skytraxStars,
       snapshotCount: snaps.length,
+      notes: latestNotes,
     };
   }, [airport.sentimentSnapshots]);
 
   const wiki = airport.wikipediaSnapshots[0];
-  // Deduplicate routes by destination — keep the one with highest flights/mo
+  // Deduplicate routes by destination
   const routesWithFlights = useMemo(() => {
     const all = airport.routesOut.filter(
       (r) =>
@@ -287,17 +464,65 @@ function AirportDetail() {
       ? `Based on data from ${Math.min(...allYears)}–${Math.max(...allYears)}`
       : null;
 
-  // Pax sparkline data (reversed to show oldest first)
+  // Pax sparkline data
   const paxSparkData = [...airport.paxYearly]
     .reverse()
     .map((p) => ({ year: p.year!, pax: p.totalPax }))
-    .slice(-15); // Cap at last 15 years for readability
+    .slice(-15);
+
+  // Passenger growth narrative
+  const growthNarrative = useMemo(() => {
+    if (paxData.length < 3) return null;
+    const byYear = new Map(paxData.map((p) => [p.year, p.totalPax]));
+    const covid2020 = byYear.get(2020) ?? null;
+    const covid2021 = byYear.get(2021) ?? null;
+    let covidLow: { year: number; pax: number } | null = null;
+    if (covid2020 != null && covid2021 != null) {
+      covidLow =
+        covid2020 < covid2021
+          ? { year: 2020, pax: covid2020 }
+          : { year: 2021, pax: covid2021 };
+    } else if (covid2020 != null) {
+      covidLow = { year: 2020, pax: covid2020 };
+    } else if (covid2021 != null) {
+      covidLow = { year: 2021, pax: covid2021 };
+    }
+    if (!covidLow || !latestPax?.totalPax) return null;
+
+    const prePandemic = byYear.get(2019) ?? null;
+    const recoveryPct =
+      covidLow.pax > 0
+        ? ((latestPax.totalPax - covidLow.pax) / covidLow.pax) * 100
+        : null;
+    const vsPre =
+      prePandemic && prePandemic > 0
+        ? ((latestPax.totalPax - prePandemic) / prePandemic) * 100
+        : null;
+
+    const isRecord = vsPre != null && vsPre > 0;
+    return {
+      covidLow,
+      prePandemic,
+      recoveryPct,
+      vsPre,
+      isRecord,
+      latestYear: latestPax.year,
+      latestPaxVal: latestPax.totalPax,
+    };
+  }, [paxData, latestPax]);
+
+  // Source breakdown for sentiment
+  const googleCount =
+    airport.sourceBreakdown.find((s) => s.source === "google")?.count ?? 0;
+  const skytraxCount =
+    airport.sourceBreakdown.find((s) => s.source === "skytrax")?.count ?? 0;
 
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-zinc-100">
       <div className="max-w-5xl mx-auto px-16 pt-20 pb-12 flex flex-col gap-9">
         <Divider />
         <Header airport={airport} />
+
         {/* ── The Verdict ─────────────────────────── */}
         <section className="flex flex-col gap-1 py-6">
           <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[2px] uppercase">
@@ -319,6 +544,12 @@ function AirportDetail() {
           <p className="font-mono text-[11px] text-zinc-600 italic max-w-2xl mt-1 leading-relaxed">
             {totalCommentary(score)}
           </p>
+          {airport.ranking.position > 0 && airport.ranking.total > 0 && (
+            <span className="font-mono text-[11px] text-zinc-600 mt-1">
+              Ranked #{airport.ranking.position} of {airport.ranking.total}{" "}
+              airports
+            </span>
+          )}
           {dataRange && (
             <span className="font-mono text-[9px] text-zinc-700 mt-1">
               {dataRange}
@@ -332,284 +563,53 @@ function AirportDetail() {
             label="Operational"
             score={score?.scoreOperational}
             weight="25%"
+            explanation={SCORE_EXPLANATIONS["Operational"]}
           />
           <ScoreBar
             label="Sentiment"
             score={score?.scoreSentiment}
             weight="25%"
+            explanation={SCORE_EXPLANATIONS["Sentiment"]}
           />
           <ScoreBar
             label="Infrastructure"
             score={score?.scoreInfrastructure}
             weight="15%"
+            explanation={SCORE_EXPLANATIONS["Infrastructure"]}
           />
           <ScoreBar
             label="Sent. Velocity"
             score={score?.scoreSentimentVelocity}
             weight="15%"
+            explanation={SCORE_EXPLANATIONS["Sent. Velocity"]}
           />
           <ScoreBar
             label="Connectivity"
             score={score?.scoreConnectivity}
             weight="10%"
+            explanation={SCORE_EXPLANATIONS["Connectivity"]}
           />
           <ScoreBar
             label="Operator"
             score={score?.scoreOperator}
             weight="10%"
+            explanation={SCORE_EXPLANATIONS["Operator"]}
           />
         </div>
 
         <Divider />
 
-        {/* ── Exhibit A: The Numbers ──────────────── */}
-        <section className="flex flex-col gap-5">
-          <ExhibitHeader>The Numbers</ExhibitHeader>
-          <div className="flex gap-8">
-            <Stat
-              value={latestPax ? fmtM(latestPax.totalPax) : "—"}
-              label={`Passengers${latestPax ? ` (${latestPax.year})` : ""}`}
-            />
-            <Stat
-              value={
-                yoyGrowth != null
-                  ? `${yoyGrowth > 0 ? "+" : ""}${yoyGrowth.toFixed(1)}%`
-                  : "—"
-              }
-              label="YoY Growth"
-              color={
-                yoyGrowth != null
-                  ? yoyGrowth > 0
-                    ? "text-green-500"
-                    : "text-red-500"
-                  : "text-zinc-600"
-              }
-            />
-            {capacityNum && (
-              <Stat
-                value={fmtM(capacityNum)}
-                label="Annual Capacity"
-                color="text-zinc-600"
-              />
-            )}
-          </div>
-          {capacityNum && latestPaxNum && (
-            <p className="font-mono text-xs text-zinc-600 italic leading-relaxed">
-              {paxSnark(latestPaxNum, capacityNum)}
-            </p>
-          )}
-
-          {latestPax &&
-            (latestPax.internationalPax ||
-              latestPax.domesticPax ||
-              latestPax.aircraftMovements) && (
-              <div className="flex gap-8">
-                {latestPax.internationalPax && (
-                  <Stat
-                    value={fmtM(latestPax.internationalPax)}
-                    label={`International${latestPax.totalPax ? ` (${Math.round((latestPax.internationalPax / latestPax.totalPax) * 100)}%)` : ""}`}
-                    size="text-[28px]"
-                  />
-                )}
-                {latestPax.domesticPax && (
-                  <Stat
-                    value={fmtM(latestPax.domesticPax)}
-                    label={`Domestic${latestPax.totalPax ? ` (${Math.round((latestPax.domesticPax / latestPax.totalPax) * 100)}%)` : ""}`}
-                    size="text-[28px]"
-                    color="text-zinc-600"
-                  />
-                )}
-                {latestPax.aircraftMovements && (
-                  <Stat
-                    value={fmt(latestPax.aircraftMovements)}
-                    label="Aircraft Movements"
-                    size="text-[28px]"
-                    color="text-zinc-600"
-                  />
-                )}
-              </div>
-            )}
-
-          {/* Passenger History Sparkline */}
-          {paxSparkData.length > 2 && (
-            <>
-              <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[1.5px] uppercase">
-                Passenger History
-              </span>
-              <PaxSparkline data={paxSparkData} />
-            </>
-          )}
-
-          {/* Capacity utilization bar */}
-          {latestPaxNum && capacityNum && (
-            <div className="flex flex-col gap-1">
-              <div className="flex justify-between">
-                <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[1.5px] uppercase">
-                  Capacity Utilization
-                </span>
-                <span className="font-mono text-[11px] font-bold text-zinc-400 tabular-nums">
-                  {Math.round((latestPaxNum / capacityNum) * 100)}%
-                </span>
-              </div>
-              <div className="h-1.5 bg-zinc-900 relative">
-                <div
-                  className={`h-1.5 absolute left-0 top-0 ${
-                    latestPaxNum / capacityNum > 0.9
-                      ? "bg-red-500"
-                      : latestPaxNum / capacityNum > 0.7
-                        ? "bg-yellow-500"
-                        : "bg-green-500"
-                  }`}
-                  style={{
-                    width: `${Math.min((latestPaxNum / capacityNum) * 100, 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-          )}
-        </section>
-
-        <Divider />
-
-        {/* ── Exhibit B: Tardiness Report ─────────── */}
-        {opsAgg && (
-          <section className="flex flex-col gap-5">
-            <ExhibitHeader>Tardiness Report</ExhibitHeader>
-            {opsAgg.periodLabel && (
-              <span className="font-mono text-[10px] text-zinc-600 tracking-wider uppercase">
-                {opsAgg.periodLabel} · {fmt(opsAgg.totalFlights)} flights
-              </span>
-            )}
-            <div className="flex gap-8">
-              <Stat
-                value={
-                  opsAgg.delayPct != null
-                    ? `${opsAgg.delayPct.toFixed(1)}%`
-                    : "—"
-                }
-                label="Flights Delayed"
-                color={scoreColor(
-                  opsAgg.delayPct != null ? 100 - opsAgg.delayPct * 2.5 : null,
-                )}
-              />
-              <Stat
-                value={
-                  opsAgg.avgDelayMinutes != null
-                    ? `${opsAgg.avgDelayMinutes.toFixed(1)}min`
-                    : "—"
-                }
-                label="Avg Delay"
-                color={scoreColor(
-                  opsAgg.avgDelayMinutes != null
-                    ? 100 - opsAgg.avgDelayMinutes * 3
-                    : null,
-                )}
-              />
-              {opsAgg.cancellationPct != null && (
-                <Stat
-                  value={`${opsAgg.cancellationPct.toFixed(1)}%`}
-                  label="Cancelled"
-                  color={scoreColor(100 - opsAgg.cancellationPct * 10)}
-                />
-              )}
-            </div>
-            <p className="font-mono text-xs text-zinc-600 italic leading-relaxed">
-              {delaySnark(opsAgg.delayPct)}
-            </p>
-
-            {/* Year-over-year trend */}
-            {opsTrend && (
-              <div className="flex gap-6">
-                <TrendIndicator
-                  value={opsTrend.delayChange}
-                  suffix="pp"
-                  invert
-                />
-                {opsTrend.avgDelayChange != null && (
-                  <TrendIndicator
-                    value={opsTrend.avgDelayChange}
-                    suffix="min"
-                    invert
-                  />
-                )}
-              </div>
-            )}
-
-            {(opsAgg.delayWeatherPct != null ||
-              opsAgg.delayAtcPct != null ||
-              opsAgg.delayAirportPct != null) && (
-              <>
-                <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[1.5px] uppercase">
-                  Delay Causes (ATFM)
-                </span>
-
-                {/* Call out airport-caused delays when dominant */}
-                {opsAgg.delayAirportPct != null &&
-                  opsAgg.delayAirportPct > 50 && (
-                    <div className="flex items-center gap-3 py-2 px-3 bg-red-500/8 border border-red-500/20">
-                      <span className="font-grotesk text-[28px] font-bold text-red-500 tabular-nums">
-                        {opsAgg.delayAirportPct.toFixed(0)}%
-                      </span>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-grotesk text-[11px] font-bold text-red-500 tracking-wider uppercase">
-                          Airport-Caused
-                        </span>
-                        <span className="font-mono text-[10px] text-red-400/70 italic">
-                          The airport itself is the primary reason for delays.
-                          Not weather. Not ATC. Them.
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                <div className="flex gap-4">
-                  {[
-                    { label: "Weather", val: opsAgg.delayWeatherPct },
-                    { label: "Carrier", val: opsAgg.delayCarrierPct },
-                    { label: "ATC", val: opsAgg.delayAtcPct },
-                    { label: "Airport", val: opsAgg.delayAirportPct },
-                  ].map((c) => (
-                    <div key={c.label} className="flex-1 flex justify-between">
-                      <span className="font-mono text-[11px] text-zinc-500">
-                        {c.label}
-                      </span>
-                      <span
-                        className={`font-mono text-[11px] font-bold ${
-                          c.val != null && c.val > 50
-                            ? "text-red-500"
-                            : c.val != null && c.val > 25
-                              ? "text-red-500"
-                              : c.val != null && c.val > 15
-                                ? "text-orange-500"
-                                : "text-zinc-400"
-                        }`}
-                      >
-                        {c.val != null ? `${c.val.toFixed(0)}%` : "—"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {opsAgg.mishandledBagsPer1k != null && (
-              <div className="flex gap-2 items-center">
-                <span className="font-grotesk text-[10px] font-bold text-zinc-500 tracking-wider">
-                  MISHANDLED BAGS:
-                </span>
-                <span className="font-mono text-[11px] font-bold text-orange-500">
-                  {opsAgg.mishandledBagsPer1k.toFixed(1)} per 1,000 passengers
-                </span>
-              </div>
-            )}
-          </section>
-        )}
-
-        <Divider />
-
-        {/* ── Exhibit C: What People Think ─────────── */}
-        <section className="flex flex-col gap-5">
+        {/* ── Exhibit: What People Think (MOVED UP) ── */}
+        <section className="flex flex-col gap-5 bg-[#0d0d0f] -mx-16 px-16 py-8">
           <ExhibitHeader>What People Think</ExhibitHeader>
+
+          {/* Commentary from latest snapshot notes */}
+          {latestSentiment?.notes && (
+            <p className="font-mono text-[14px] text-zinc-400 italic leading-relaxed max-w-2xl">
+              {latestSentiment.notes}
+            </p>
+          )}
+
           {latestSentiment ? (
             <>
               <div className="flex gap-8">
@@ -626,14 +626,32 @@ function AirportDetail() {
                       : null,
                   )}
                 />
-                <Stat
-                  value={
-                    latestSentiment.reviewCount
-                      ? fmt(latestSentiment.reviewCount)
-                      : "—"
-                  }
-                  label="Reviews"
-                />
+                <div className="flex-1 flex flex-col gap-1">
+                  <span
+                    className={`font-grotesk text-[42px] font-bold text-zinc-100 tabular-nums`}
+                  >
+                    {googleCount + skytraxCount > 0
+                      ? fmt(googleCount + skytraxCount)
+                      : latestSentiment.reviewCount
+                        ? fmt(latestSentiment.reviewCount)
+                        : "—"}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[11px] text-zinc-500 tracking-wider uppercase">
+                      Reviews
+                    </span>
+                    {googleCount > 0 && (
+                      <span className="font-mono text-[10px] text-zinc-500 border border-zinc-700 px-1.5 py-0.5 rounded">
+                        Google {googleCount}
+                      </span>
+                    )}
+                    {skytraxCount > 0 && (
+                      <span className="font-mono text-[10px] text-zinc-500 border border-zinc-700 px-1.5 py-0.5 rounded">
+                        Skytrax {skytraxCount}
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <Stat
                   value={
                     latestSentiment.positivePct
@@ -650,15 +668,38 @@ function AirportDetail() {
                 />
               </div>
 
-              {latestSentiment.skytraxStars && (
-                <div className="flex gap-6 items-center">
-                  <span className="font-grotesk text-[10px] font-bold text-zinc-500 tracking-wider">
-                    SKYTRAX STARS:
-                  </span>
-                  <span className="font-mono text-sm font-bold text-yellow-400">
-                    {"★".repeat(latestSentiment.skytraxStars)}
-                    {"☆".repeat(5 - latestSentiment.skytraxStars)}
-                  </span>
+              {/* Skytrax stars + Google Maps rating on same row */}
+              <div className="flex gap-6 items-center flex-wrap">
+                {latestSentiment.skytraxStars && (
+                  <div className="flex gap-3 items-center">
+                    <span className="font-grotesk text-[10px] font-bold text-zinc-500 tracking-wider">
+                      SKYTRAX STARS:
+                    </span>
+                    <span className="font-mono text-sm font-bold text-yellow-400">
+                      {"★".repeat(latestSentiment.skytraxStars)}
+                      {"☆".repeat(5 - latestSentiment.skytraxStars)}
+                    </span>
+                  </div>
+                )}
+                {airport.googleAgg.rating != null &&
+                  airport.googleAgg.count > 0 && (
+                    <div className="flex gap-2 items-center">
+                      <span className="font-mono text-sm font-bold text-yellow-400">
+                        ★ {(airport.googleAgg.rating / 2).toFixed(1)}
+                      </span>
+                      <span className="font-mono text-[10px] text-zinc-500">
+                        on Google Maps ({fmt(airport.googleAgg.count)} reviews)
+                      </span>
+                    </div>
+                  )}
+              </div>
+
+              {/* Anonymous review excerpts */}
+              {airport.recentReviews.length > 0 && (
+                <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "thin" }}>
+                  {airport.recentReviews.map((r, i) => (
+                    <ReviewCard key={i} review={r} />
+                  ))}
                 </div>
               )}
 
@@ -749,6 +790,327 @@ function AirportDetail() {
 
         <Divider />
 
+        {/* ── Exhibit A: The Numbers ──────────────── */}
+        <section className="flex flex-col gap-5 bg-[#0a0d0a] -mx-16 px-16 py-8">
+          <ExhibitHeader>The Numbers</ExhibitHeader>
+          <div className="flex gap-8">
+            <Stat
+              value={latestPax ? fmtM(latestPax.totalPax) : "—"}
+              label={`Passengers${latestPax ? ` (${latestPax.year})` : ""}`}
+            />
+            <Stat
+              value={
+                yoyGrowth != null
+                  ? `${yoyGrowth > 0 ? "+" : ""}${yoyGrowth.toFixed(1)}%`
+                  : "—"
+              }
+              label="YoY Growth"
+              color={
+                yoyGrowth != null
+                  ? yoyGrowth > 0
+                    ? "text-green-500"
+                    : "text-red-500"
+                  : "text-zinc-600"
+              }
+            />
+            {capacityNum && (
+              <Stat
+                value={fmtM(capacityNum)}
+                label="Annual Capacity"
+                color="text-zinc-600"
+              />
+            )}
+          </div>
+
+          {/* Passenger growth narrative */}
+          {growthNarrative && (
+            <div className="border-l-2 border-green-500/50 bg-[#0d1a0d] px-4 py-3">
+              <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+                {growthNarrative.isRecord ? (
+                  <>
+                    <span className="text-green-400 font-bold">
+                      Record year!
+                    </span>{" "}
+                    {fmtM(growthNarrative.latestPaxVal)} passengers in{" "}
+                    {growthNarrative.latestYear}
+                    {growthNarrative.vsPre != null && (
+                      <>
+                        , up{" "}
+                        <span className="text-green-400 font-bold">
+                          {growthNarrative.vsPre.toFixed(0)}%
+                        </span>{" "}
+                        from pre-pandemic levels
+                      </>
+                    )}
+                    {growthNarrative.recoveryPct != null && (
+                      <>
+                        {" "}
+                        and a staggering{" "}
+                        <span className="text-green-400 font-bold">
+                          {growthNarrative.recoveryPct.toFixed(0)}%
+                        </span>{" "}
+                        rebound from the {growthNarrative.covidLow.year} COVID
+                        low
+                      </>
+                    )}
+                    .
+                  </>
+                ) : (
+                  <>
+                    {fmtM(growthNarrative.latestPaxVal)} passengers in{" "}
+                    {growthNarrative.latestYear}
+                    {growthNarrative.vsPre != null && (
+                      <>
+                        {" "}
+                        — still{" "}
+                        <span className="text-yellow-400 font-bold">
+                          {Math.abs(growthNarrative.vsPre).toFixed(0)}% below
+                        </span>{" "}
+                        the 2019 peak
+                      </>
+                    )}
+                    {growthNarrative.recoveryPct != null && (
+                      <>
+                        , though up{" "}
+                        {growthNarrative.recoveryPct.toFixed(0)}% from the{" "}
+                        {growthNarrative.covidLow.year} COVID crater
+                      </>
+                    )}
+                    .
+                  </>
+                )}
+              </p>
+            </div>
+          )}
+
+          {capacityNum && latestPaxNum && (
+            <p className="font-mono text-xs text-zinc-600 italic leading-relaxed">
+              {paxSnark(latestPaxNum, capacityNum)}
+            </p>
+          )}
+
+          {latestPax &&
+            (latestPax.internationalPax ||
+              latestPax.domesticPax ||
+              latestPax.aircraftMovements) && (
+              <div className="flex gap-8">
+                {latestPax.internationalPax && (
+                  <Stat
+                    value={fmtM(latestPax.internationalPax)}
+                    label={`International${latestPax.totalPax ? ` (${Math.round((latestPax.internationalPax / latestPax.totalPax) * 100)}%)` : ""}`}
+                    size="text-[28px]"
+                  />
+                )}
+                {latestPax.domesticPax && (
+                  <Stat
+                    value={fmtM(latestPax.domesticPax)}
+                    label={`Domestic${latestPax.totalPax ? ` (${Math.round((latestPax.domesticPax / latestPax.totalPax) * 100)}%)` : ""}`}
+                    size="text-[28px]"
+                    color="text-zinc-600"
+                  />
+                )}
+                {latestPax.aircraftMovements && (
+                  <Stat
+                    value={fmt(latestPax.aircraftMovements)}
+                    label="Aircraft Movements"
+                    size="text-[28px]"
+                    color="text-zinc-600"
+                  />
+                )}
+              </div>
+            )}
+
+          {/* Passenger History Sparkline */}
+          {paxSparkData.length > 2 && (
+            <>
+              <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[1.5px] uppercase">
+                Passenger History
+              </span>
+              <PaxSparkline data={paxSparkData} />
+            </>
+          )}
+
+          {/* Capacity utilization bar */}
+          {latestPaxNum && capacityNum && (
+            <div className="flex flex-col gap-1">
+              <div className="flex justify-between">
+                <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[1.5px] uppercase">
+                  Capacity Utilization
+                </span>
+                <span className="font-mono text-[11px] font-bold text-zinc-400 tabular-nums">
+                  {Math.round((latestPaxNum / capacityNum) * 100)}%
+                </span>
+              </div>
+              <div className="h-1.5 bg-zinc-900 relative">
+                <div
+                  className={`h-1.5 absolute left-0 top-0 ${
+                    latestPaxNum / capacityNum > 0.9
+                      ? "bg-red-500"
+                      : latestPaxNum / capacityNum > 0.7
+                        ? "bg-yellow-500"
+                        : "bg-green-500"
+                  }`}
+                  style={{
+                    width: `${Math.min((latestPaxNum / capacityNum) * 100, 100)}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </section>
+
+        <Divider />
+
+        {/* ── Exhibit B: Tardiness Report ─────────── */}
+        {opsAgg && (
+          <section className="flex flex-col gap-5 bg-[#0f0a0a] -mx-16 px-16 py-8">
+            <ExhibitHeader>Tardiness Report</ExhibitHeader>
+            {opsAgg.periodLabel && (
+              <span className="font-mono text-[10px] text-zinc-600 tracking-wider uppercase">
+                {opsAgg.periodLabel} · {fmt(opsAgg.totalFlights)} flights
+              </span>
+            )}
+            <div className="flex gap-8">
+              <div className="flex-1 flex flex-col gap-1">
+                <span
+                  className={`font-grotesk text-[42px] font-bold tabular-nums ${scoreColor(
+                    opsAgg.delayPct != null
+                      ? 100 - opsAgg.delayPct * 2.5
+                      : null,
+                  )}`}
+                >
+                  {opsAgg.delayPct != null
+                    ? `${opsAgg.delayPct.toFixed(1)}%`
+                    : "—"}
+                </span>
+                <span className="font-mono text-[11px] text-zinc-500 tracking-wider uppercase">
+                  Flights Delayed
+                </span>
+                {opsAgg.delayPct != null && opsAgg.totalFlights > 0 && (
+                  <span className="font-mono text-[10px] text-zinc-500">
+                    {fmt(
+                      Math.round(
+                        (opsAgg.delayPct / 100) * opsAgg.totalFlights,
+                      ),
+                    )}{" "}
+                    of {fmt(opsAgg.totalFlights)} flights
+                  </span>
+                )}
+              </div>
+              <Stat
+                value={
+                  opsAgg.avgDelayMinutes != null
+                    ? `${opsAgg.avgDelayMinutes.toFixed(1)}min`
+                    : "—"
+                }
+                label="Avg Delay"
+                color={scoreColor(
+                  opsAgg.avgDelayMinutes != null
+                    ? 100 - opsAgg.avgDelayMinutes * 3
+                    : null,
+                )}
+              />
+              {opsAgg.cancellationPct != null && (
+                <Stat
+                  value={`${opsAgg.cancellationPct.toFixed(1)}%`}
+                  label="Cancelled"
+                  color={scoreColor(100 - opsAgg.cancellationPct * 10)}
+                />
+              )}
+            </div>
+            <p className="font-mono text-xs text-zinc-600 italic leading-relaxed">
+              {delaySnark(opsAgg.delayPct)}
+            </p>
+
+            {/* Year-over-year trend */}
+            {opsTrend && (
+              <div className="flex gap-6">
+                <TrendIndicator
+                  value={opsTrend.delayChange}
+                  suffix="pp"
+                  invert
+                />
+                {opsTrend.avgDelayChange != null && (
+                  <TrendIndicator
+                    value={opsTrend.avgDelayChange}
+                    suffix="min"
+                    invert
+                  />
+                )}
+              </div>
+            )}
+
+            {(opsAgg.delayWeatherPct != null ||
+              opsAgg.delayAtcPct != null ||
+              opsAgg.delayAirportPct != null) && (
+              <>
+                <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[1.5px] uppercase">
+                  Delay Causes (ATFM)
+                </span>
+
+                {opsAgg.delayAirportPct != null &&
+                  opsAgg.delayAirportPct > 50 && (
+                    <div className="flex items-center gap-3 py-2 px-3 bg-red-500/8 border border-red-500/20">
+                      <span className="font-grotesk text-[28px] font-bold text-red-500 tabular-nums">
+                        {opsAgg.delayAirportPct.toFixed(0)}%
+                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-grotesk text-[11px] font-bold text-red-500 tracking-wider uppercase">
+                          Airport-Caused
+                        </span>
+                        <span className="font-mono text-[10px] text-red-400/70 italic">
+                          The airport itself is the primary reason for delays.
+                          Not weather. Not ATC. Them.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                <div className="flex gap-4">
+                  {[
+                    { label: "Weather", val: opsAgg.delayWeatherPct },
+                    { label: "Carrier", val: opsAgg.delayCarrierPct },
+                    { label: "ATC", val: opsAgg.delayAtcPct },
+                    { label: "Airport", val: opsAgg.delayAirportPct },
+                  ].map((c) => (
+                    <div key={c.label} className="flex-1 flex justify-between">
+                      <span className="font-mono text-[11px] text-zinc-500">
+                        {c.label}
+                      </span>
+                      <span
+                        className={`font-mono text-[11px] font-bold ${
+                          c.val != null && c.val > 50
+                            ? "text-red-500"
+                            : c.val != null && c.val > 25
+                              ? "text-red-500"
+                              : c.val != null && c.val > 15
+                                ? "text-orange-500"
+                                : "text-zinc-400"
+                        }`}
+                      >
+                        {c.val != null ? `${c.val.toFixed(0)}%` : "—"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {opsAgg.mishandledBagsPer1k != null && (
+              <div className="flex gap-2 items-center">
+                <span className="font-grotesk text-[10px] font-bold text-zinc-500 tracking-wider">
+                  MISHANDLED BAGS:
+                </span>
+                <span className="font-mono text-[11px] font-bold text-orange-500">
+                  {opsAgg.mishandledBagsPer1k.toFixed(1)} per 1,000 passengers
+                </span>
+              </div>
+            )}
+          </section>
+        )}
+
+        <Divider />
+
         {/* ── Exhibit D: Routes ───────────────────── */}
         <RouteSection routesWithFlights={routesWithFlights} />
 
@@ -795,10 +1157,8 @@ function AirportDetail() {
           <section className="flex flex-col gap-4">
             <ExhibitHeader>The Backstory</ExhibitHeader>
 
-            {/* Timeline of key events */}
             <BackstoryTimeline airport={airport} wiki={wiki} />
 
-            {/* ACI Awards */}
             <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[1.5px] uppercase mt-4">
               ACI Service Quality Awards
             </span>
@@ -913,7 +1273,7 @@ function TruncatedText({
       {expanded ? text : `${text.slice(0, maxLength).trim()}...`}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="font-grotesk text-[10px] font-bold text-yellow-400/70 hover:text-yellow-400 tracking-wider ml-2 transition-colors"
+        className="font-grotesk text-[10px] font-bold text-yellow-400/70 hover:text-yellow-400 hover:underline tracking-wider ml-2 transition-colors"
       >
         {expanded ? "LESS" : "MORE"}
       </button>

@@ -34,6 +34,12 @@ echo "Installing dependencies..."
 source .venv/bin/activate
 pip install -r requirements.txt
 
+# Disable MongoDB — we read reviews from the job API response, not Mongo
+if [ -f config.yaml ]; then
+  sed -i '' 's/use_mongodb: true/use_mongodb: false/' config.yaml
+  echo "Disabled MongoDB in config.yaml (not needed)"
+fi
+
 echo ""
 echo "Setup complete."
 echo "Start the scraper with: bash scripts/start-google-scraper.sh"

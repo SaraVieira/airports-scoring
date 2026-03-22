@@ -74,9 +74,9 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
     }
 
     let mut year_dirs: Vec<i16> = Vec::new();
-    for entry in std::fs::read_dir(caa_path)? {
-        let entry = entry?;
-        if entry.file_type()?.is_dir() {
+    let mut entries = tokio::fs::read_dir(caa_path).await?;
+    while let Some(entry) = entries.next_entry().await? {
+        if entry.file_type().await?.is_dir() {
             if let Some(name) = entry.file_name().to_str() {
                 if let Ok(year) = name.parse::<i16>() {
                     year_dirs.push(year);

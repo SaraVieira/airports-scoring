@@ -7,37 +7,11 @@ use tracing::info;
 
 use crate::models::{Airport, FetchResult};
 
+mod aggregation;
+use aggregation::{avg_decimal, min_decimal, max_decimal, MetarObs, DailySummary};
+
 /// Base URL for Iowa Environmental Mesonet ASOS data.
 const IEM_BASE: &str = "https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py";
-
-/// Raw METAR observation parsed from IEM CSV.
-#[derive(Debug)]
-#[allow(dead_code)]
-struct MetarObs {
-    date: NaiveDate,
-    temp_f: Option<f64>,
-    dewpoint_f: Option<f64>,
-    visibility_miles: Option<f64>,
-    wind_speed_kt: Option<f64>,
-    wind_gust_kt: Option<f64>,
-    precip_in: Option<f64>,
-    sky_level1_ft: Option<f64>,
-    weather_codes: String,
-}
-
-/// Aggregated daily METAR summary.
-#[derive(Debug, Default)]
-struct DailySummary {
-    temps_c: Vec<f64>,
-    visibilities_m: Vec<f64>,
-    wind_speeds_kt: Vec<f64>,
-    max_gust_kt: Option<f64>,
-    precipitation_flag: bool,
-    fog_flag: bool,
-    low_ceiling_flag: bool,
-    thunderstorm_flag: bool,
-    count: i32,
-}
 
 /// Fetch and aggregate METAR weather observations into daily summaries.
 pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Result<FetchResult> {
@@ -313,26 +287,4 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
         records_processed,
         last_record_date: latest_date,
     })
-}
-
-fn avg_decimal(vals: &[f64]) -> Option<Decimal> {
-    if vals.is_empty() {
-        return None;
-    }
-    let sum: f64 = vals.iter().sum();
-    Decimal::from_f64_retain(sum / vals.len() as f64)
-}
-
-fn min_decimal(vals: &[f64]) -> Option<Decimal> {
-    vals.iter()
-        .cloned()
-        .reduce(f64::min)
-        .and_then(Decimal::from_f64_retain)
-}
-
-fn max_decimal(vals: &[f64]) -> Option<Decimal> {
-    vals.iter()
-        .cloned()
-        .reduce(f64::max)
-        .and_then(Decimal::from_f64_retain)
 }

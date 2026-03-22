@@ -8,6 +8,7 @@ use crate::models::{Airport, FetchResult};
 
 #[derive(Debug, Deserialize)]
 struct ScraperOutput {
+    #[allow(dead_code)]
     airport: String,
     star_rating: Option<i16>,
     reviews: Vec<ScrapedReview>,

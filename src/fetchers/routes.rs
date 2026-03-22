@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-use rust_decimal::Decimal;
 use serde::Deserialize;
 use sqlx::PgPool;
 use std::collections::HashMap;
@@ -24,8 +23,6 @@ struct JontyRoute {
     iata: String,
     #[serde(default)]
     carriers: Vec<JontyCarrier>,
-    km: Option<i32>,
-    min: Option<i32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -122,6 +119,15 @@ async fn fetch_jonty(pool: &PgPool, airport: &Airport) -> Result<i32> {
         .filter_map(|(icao, _)| icao.clone())
         .collect();
 
+    // Batch-load IATA→ICAO mapping to avoid N+1 queries
+    let iata_icao_rows: Vec<(String, String)> = sqlx::query_as(
+        "SELECT iata, icao FROM all_airports WHERE iata IS NOT NULL",
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let iata_to_icao: HashMap<String, String> = iata_icao_rows.into_iter().collect();
+
     let mut inserted = 0i32;
 
     for route in &airport_data.routes {
@@ -135,15 +141,8 @@ async fn fetch_jonty(pool: &PgPool, airport: &Airport) -> Result<i32> {
             continue;
         }
 
-        // Look up ICAO from all_airports
-        let icao_row: Option<(String,)> = sqlx::query_as(
-            "SELECT icao FROM all_airports WHERE iata = $1 LIMIT 1",
-        )
-        .bind(&route.iata)
-        .fetch_optional(pool)
-        .await?;
-
-        let dest_icao = icao_row.map(|(icao,)| icao);
+        // Look up ICAO from pre-loaded mapping
+        let dest_icao = iata_to_icao.get(&route.iata).cloned();
 
         // Skip if we already have this ICAO from OPDI
         if let Some(ref icao) = dest_icao {

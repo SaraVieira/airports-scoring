@@ -1,0 +1,557 @@
+# ============================================================================
+# Airport sentiment commentary templates
+#
+# Each category maps to a list of templates. {airport} is replaced at runtime.
+# Add as many as you like — one is picked at random per quarterly snapshot.
+#
+# 40 airports × 4 quarters × ~10 years = ~1600 snapshots possible.
+# Target: 30+ templates per major category to avoid repetition.
+# ============================================================================
+
+# ── Queuing & security complaints ──────────────────────────────────────────
+
+[angry_queuing]
+templates = [
+    "Passengers would rather queue at the DMV than at {airport}'s security. At least the DMV has chairs.",
+    "{airport} security lines: where dreams of catching your flight go to die.",
+    "If {airport} charged by the minute spent queuing, they'd outperform most airlines.",
+    "{airport}'s security queue is a masterclass in standing still while your blood pressure rises.",
+    "The queue at {airport} has its own postcode at this point.",
+    "At {airport}, the security line is the real long-haul experience.",
+    "Rumour has it someone joined the queue at {airport} in 2019 and is still there.",
+    "{airport}: where your gate closes before security opens.",
+    "The only thing moving fast at {airport} security is the expiry date on your boarding pass.",
+    "If patience is a virtue, {airport} security is a seminary.",
+    "{airport} queues: the great equaliser. First class means nothing here.",
+    "Legend says the queue at {airport} was once mistaken for a protest march.",
+    "At {airport}, 'fast track' means you'll only miss half your connection.",
+    "{airport} security is proof that time is, in fact, not money — it's just gone.",
+    "Queueing at {airport} is the closest most people get to a pilgrimage.",
+    "At {airport}, the security queue has more plot twists than a Netflix series.",
+    "{airport}'s queue management strategy: there isn't one.",
+    "You could learn a new language in the time it takes to clear {airport} security.",
+    "{airport} security moves at the speed of continental drift.",
+    "The queue at {airport} is so long it qualifies as cardio.",
+    "At {airport}, you don't wait in line. The line waits for your spirit to break.",
+    "Bring a book to {airport} security. Actually, bring the whole series.",
+    "{airport} has turned queuing into a spectator sport. Nobody's entertained.",
+    "The security line at {airport} is where optimism goes to be gently euthanised.",
+    "At {airport}, even the queue has a queue.",
+    "If {airport}'s security line were a country, it'd have a GDP.",
+    "{airport}: where 'priority boarding' just means you get to stand slightly closer to despair.",
+    "The queue at {airport} has been carbon-dated to the Jurassic period.",
+    "{airport} security: the world's least fun escape room, and you can't leave.",
+    "At {airport}, the security line is longer than the runway. And slower.",
+]
+
+# ── Staff & service complaints ─────────────────────────────────────────────
+
+[angry_staff]
+templates = [
+    "{airport} staff have perfected the art of looking busy while doing absolutely nothing.",
+    "Customer service at {airport}? More like customer survival.",
+    "The information desk at {airport} is the last place you'll find information.",
+    "Staff at {airport} treat eye contact as a terminable offence.",
+    "{airport} employees have a talent for vanishing the moment you need them.",
+    "Asking for help at {airport} is like filing a missing persons report — for the staff.",
+    "At {airport}, the staff motto appears to be 'not my gate, not my problem.'",
+    "{airport} customer service has all the warmth of a departure lounge at 4am.",
+    "The only thing the staff at {airport} direct with confidence is blame.",
+    "{airport}: where 'how can I help you?' is a rhetorical question.",
+    "Staff at {airport} operate on a strict 'one helpful interaction per shift' policy.",
+    "If {airport} staff smiled any less, they'd be passport photos.",
+    "At {airport}, the customer is always wrong — and also lost, because nobody helped them.",
+    "{airport} staff energy: DMV employee on their last Friday before retirement.",
+    "The staff at {airport} have weaponised indifference.",
+    "At {airport}, the most helpful person is the cleaner. At least they acknowledge you exist.",
+    "{airport} staff communicate primarily through sighing and pointing vaguely.",
+    "Asking a question at {airport} is brave. Expecting an answer is delusional.",
+    "The staff at {airport} treat passengers the way cats treat their owners: with benign contempt.",
+    "{airport}'s customer service training appears to consist of a shrug and a lanyard.",
+    "At {airport}, staff breaks last longer than the help they provide.",
+    "The most animated thing at {airport} is the departure board. The staff are statues.",
+    "{airport} staff have mastered the art of the dismissive head tilt.",
+    "If you need help at {airport}, try prayer. It's faster than finding staff.",
+    "At {airport}, the staff-to-passenger ratio is technically sufficient. Emphasis on 'technically.'",
+    "{airport}: where the vending machines show more initiative than the employees.",
+    "Customer service at {airport} operates on a 'don't ask, won't tell' basis.",
+    "The staff at {airport} have a talent for being everywhere except where you need them.",
+    "At {airport}, helpfulness is rationed like wartime butter.",
+    "{airport} staff: present in body, absent in every other meaningful way.",
+]
+
+# ── Cleanliness complaints ─────────────────────────────────────────────────
+
+[angry_cleanliness]
+templates = [
+    "{airport}: where the floors are as sticky as the situation.",
+    "The cleanest thing at {airport} is the passengers' disappointment.",
+    "{airport} toilets have seen things. Terrible, unspeakable things.",
+    "The bins at {airport} are decorative at best.",
+    "{airport}: bringing 'terminal' back to its medical definition.",
+    "If cleanliness is next to godliness, {airport} is in purgatory.",
+    "The food court at {airport} doubles as a crime scene for hygiene inspectors.",
+    "{airport} carpets tell a story. It's a horror story, but still.",
+    "Someone at {airport} thinks wiping a table with a dry cloth counts as cleaning.",
+    "The restrooms at {airport} make motorway service stations look like spas.",
+    "{airport}: where hand sanitiser isn't a precaution, it's a coping mechanism.",
+    "You could culture a new antibiotic from {airport}'s seating areas.",
+    "At {airport}, the five-second rule has been extended to five minutes out of necessity.",
+    "{airport}'s cleaning schedule appears to be 'annually, if inspired.'",
+    "The ceiling tiles at {airport} have water stains that predate the terminal itself.",
+    "At {airport}, the phrase 'deep clean' is science fiction.",
+    "{airport}'s floors have more layers than a geological survey.",
+    "The toilets at {airport} should come with a liability waiver.",
+    "At {airport}, you don't sit down. You hover. Everyone hovers.",
+    "{airport}: where 'out of order' is the restroom's default state.",
+    "The cleaning crew at {airport} appear to be on a very long tea break. Since 2017.",
+    "{airport}'s terminal has the ambiance of a recently abandoned hospital.",
+    "At {airport}, the hand dryers work harder than the cleaning staff.",
+    "If {airport} were a kitchen, it would fail a health inspection in the car park.",
+    "The seating at {airport} comes pre-stained for your discomfort.",
+    "{airport}: where the only thing more neglected than the toilets is the passengers.",
+    "Someone at {airport} confused 'cleaning rotation' with 'cleaning optional.'",
+    "At {airport}, the floors are a forensic timeline of spilled coffee and broken dreams.",
+    "The bins at {airport} overflow with the same regularity as passenger complaints.",
+    "{airport}'s cleanliness rating: 'bring your own wipes. And hope.'",
+]
+
+# ── Food & beverage complaints ─────────────────────────────────────────────
+
+[angry_food]
+templates = [
+    "The food at {airport} costs more than your flight and tastes like the tray table.",
+    "{airport} dining: where a sad sandwich costs fourteen euros and comes with regret.",
+    "Eating at {airport} is a leap of faith. The food leaps too, eventually.",
+    "{airport}'s culinary offering: proof that captive audiences deserve better.",
+    "The coffee at {airport} is technically a liquid. That's the nicest thing anyone's said about it.",
+    "At {airport}, 'freshly made' means it was defrosted this morning.",
+    "{airport} food courts: the only place where a croissant is a luxury good.",
+    "The markup on water at {airport} suggests they think it's holy.",
+    "{airport}: where a limp panini and flat cola cost more than a Michelin star lunch downtown.",
+    "If {airport}'s food were a review, it'd be one star — and that's for the packaging.",
+    "The 'gourmet' options at {airport} are gourmet in the same way a bus is a limousine.",
+    "At {airport}, the best meal strategy is to eat before you arrive. And after you leave.",
+    "{airport} charges airport prices for bus station quality. Impressive, in a way.",
+    "The salads at {airport} look like they've been through security twice.",
+    "At {airport}, even the vending machines seem embarrassed by what they're charging.",
+    "{airport}'s food philosophy: if it's wrapped in cling film, it's premium.",
+    "The beer at {airport} costs more per litre than aviation fuel.",
+    "At {airport}, the only thing fresh is the audacity of the prices.",
+    "Eating at {airport} requires the same risk assessment as skydiving.",
+    "{airport}: where a bottle of water costs the same as a bottle of wine downtown.",
+    "The food at {airport} is a hate crime against cuisine.",
+    "At {airport}, 'meal deal' is an oxymoron.",
+    "{airport} dining options: overpriced, underwhelming, and occasionally lukewarm.",
+    "The coffee at {airport} tastes like it was brewed during the previous administration.",
+    "At {airport}, the food is so bad the pigeons outside eat better.",
+    "The restaurants at {airport} have the confidence of a Michelin star and the quality of a petrol station.",
+    "{airport}: where 'artisan' means they put a leaf on it and added six euros.",
+    "If {airport} food were a flight, it'd be delayed, diverted, and disappointing.",
+    "The only thing more inflated than {airport}'s food prices is their opinion of the food.",
+    "At {airport}, bring your own snacks. Your wallet and your stomach will thank you.",
+]
+
+# ── WiFi & connectivity complaints ─────────────────────────────────────────
+
+[angry_wifi]
+templates = [
+    "{airport}'s WiFi makes dial-up look nostalgic and 5G look like sorcery.",
+    "Free WiFi at {airport}: free like a free sample that gives you food poisoning.",
+    "At {airport}, the WiFi password is longer than the connection lasts.",
+    "{airport}'s internet speed is measured in prayers per second.",
+    "The WiFi at {airport} loads pages like it's reading them aloud, one word at a time.",
+    "At {airport}, 'connected' and 'working' are two very different things.",
+    "{airport} WiFi: technically exists, practically doesn't.",
+    "You'll finish your novel before a page loads on {airport}'s WiFi.",
+    "The carrier pigeons outside {airport} have better bandwidth than the WiFi inside.",
+    "{airport}: where 'free WiFi' is the most creative fiction in the terminal.",
+    "The WiFi at {airport} is like a mirage — you can see it, but it's not really there.",
+    "At {airport}, the WiFi connects just long enough to show you what you're missing.",
+    "{airport}'s WiFi speed: perfect for sending a fax. In 1994.",
+    "The WiFi at {airport} drops more often than luggage on a budget airline.",
+    "At {airport}, mobile data is not a backup plan — it's the only plan.",
+    "{airport} WiFi requires three logins, a blood sacrifice, and still doesn't work.",
+    "The WiFi at {airport} is free the way a broken umbrella is free.",
+    "At {airport}, streaming video requires the kind of patience usually reserved for monks.",
+    "{airport}: where the WiFi terms and conditions load faster than the WiFi itself.",
+    "The internet at {airport} moves like a glacier. A particularly lazy glacier.",
+    "At {airport}, the WiFi signal strength is best described as 'hypothetical.'",
+    "{airport}'s WiFi: connecting you to frustration at the speed of light.",
+    "The only reliable connection at {airport} is the one between you and disappointment.",
+    "At {airport}, the WiFi works beautifully if you stand in one specific corner of Gate 14. Sometimes.",
+    "Downloading an email at {airport} takes longer than the flight to Paris.",
+    "{airport} WiFi has two modes: 'not connected' and 'connected but lying about it.'",
+    "At {airport}, the WiFi login page is the only page that loads reliably.",
+    "{airport}: where 4G roaming is cheaper than trusting the free WiFi.",
+    "The WiFi at {airport} was last updated around the same time as the carpets.",
+    "At {airport}, 'high-speed internet' is a promise, not a description.",
+]
+
+# ── Wayfinding & signage complaints ────────────────────────────────────────
+
+[angry_wayfinding]
+templates = [
+    "Navigating {airport} without a map is an extreme sport.",
+    "{airport} signage: designed by someone who has never been lost, or possibly never been found.",
+    "At {airport}, 'follow the signs' is less instruction and more dare.",
+    "Getting lost at {airport} isn't a risk, it's a rite of passage.",
+    "{airport} gates are numbered by someone who failed maths and geography.",
+    "The signs at {airport} point in directions that exist only in theory.",
+    "{airport}'s terminal layout was designed by a minotaur.",
+    "You need a compass, a sherpa, and blind faith to find Gate B47 at {airport}.",
+    "At {airport}, asking for directions gets you three conflicting answers and a shrug.",
+    "{airport}: where every corridor looks the same and hope slowly fades.",
+    "The signage at {airport} is less wayfinding, more waylosing.",
+    "At {airport}, GPS gives up and suggests you call a taxi.",
+    "{airport}'s floor plan was clearly designed on a dare, by committee, while drunk.",
+    "Gate changes at {airport} should come with a fitness tracker bonus.",
+    "At {airport}, the journey from check-in to the gate is longer than most domestic flights.",
+    "{airport} has more dead ends than a murder mystery novel.",
+    "The terminal map at {airport} is decorative. Like a painting. Equally unhelpful.",
+    "At {airport}, gates A1 and A2 are a 20-minute walk apart. Architecturally bold.",
+    "If {airport} were a video game, the difficulty setting would be 'nightmare.'",
+    "{airport}: where your Fitbit congratulates you before you even board.",
+    "Navigating {airport} requires a PhD in spatial reasoning and a tolerance for despair.",
+    "At {airport}, the signs actively mislead you, like a passive-aggressive GPS.",
+    "{airport}'s layout suggests the architect was paid by the square metre of confusion.",
+    "You haven't truly experienced {airport} until you've walked 2km to the wrong terminal.",
+    "At {airport}, the most useful sign is 'EXIT.'",
+    "{airport}: where 'this way to gates' is the beginning of a 30-minute adventure.",
+    "The only people who know their way around {airport} are the staff. And even they look uncertain.",
+    "At {airport}, the moving walkways go in the wrong direction. Metaphorically and literally.",
+    "Navigating {airport} is like solving a maze designed by someone who hates you personally.",
+    "{airport}: where arrival and departure are separated by a small odyssey.",
+]
+
+# ── Transport links complaints ─────────────────────────────────────────────
+
+[angry_transport]
+templates = [
+    "Getting to {airport} by public transport is a test of character.",
+    "{airport}'s transport links: a bus, a prayer, and a very long walk.",
+    "The train to {airport} runs on a schedule best described as 'aspirational.'",
+    "At {airport}, the taxi rank is longer than the runway.",
+    "Public transport to {airport} exists the way unicorns exist — people talk about it but nobody's seen it.",
+    "{airport}: conveniently located nowhere near anything convenient.",
+    "The journey to {airport} is the real departure experience.",
+    "Getting to {airport} takes longer than most European flights.",
+    "{airport}'s connection to the city centre is a polite fiction.",
+    "At {airport}, 'well-connected' refers to the WiFi, not the transport. And even that's a stretch.",
+    "The bus to {airport} arrives with the reliability of a weather forecast.",
+    "{airport}: accessible by car, technically by train, and spiritually by hope.",
+    "At {airport}, the last mile is more like the last marathon.",
+    "The train to {airport} has a schedule. The train disagrees.",
+    "{airport}'s public transport makes you understand why people drive.",
+    "Getting to {airport} without a car requires planning normally reserved for expeditions.",
+    "At {airport}, the taxi fare costs more than the flight. Not a joke.",
+    "{airport}: where 'direct connection' means only two changes and a bus.",
+    "The shuttle bus to {airport} runs every 30 minutes. In theory.",
+    "At {airport}, ride-sharing is less a convenience and more a necessity for survival.",
+    "Google Maps says {airport} is 45 minutes away. Google Maps is an optimist.",
+    "{airport}'s transport infrastructure was cutting-edge. In 1987.",
+    "At {airport}, the parking costs more than some hotels in the city.",
+    "The train to {airport} is always delayed. It's the most reliable thing about it.",
+    "Getting to {airport} is a journey of self-discovery. Mostly discovering you should've left earlier.",
+    "{airport}: where the transport links are 'coming soon' since the terminal opened.",
+    "At {airport}, the best transport option is knowing someone with a car.",
+    "The road to {airport} has more traffic than the airport has flights.",
+    "{airport}'s connection to civilisation: theoretical, aspirational, and occasionally functional.",
+    "At {airport}, the journey there is the worst part. And then you arrive, and it gets worse.",
+]
+
+# ── Generally negative (no specific topic) ─────────────────────────────────
+
+[general_negative]
+templates = [
+    "{airport} makes a strong case for teleportation research funding.",
+    "{airport}: the airport equivalent of a participation trophy.",
+    "If airports had a Yelp, {airport} would be fighting for two stars.",
+    "{airport}: proof that buildings can have an attitude problem.",
+    "The best thing about {airport} is leaving it.",
+    "{airport} has all the charm of a hospital waiting room, minus the vending machines.",
+    "{airport}: where hope goes through security and never comes back.",
+    "Visiting {airport} is a character-building exercise nobody asked for.",
+    "{airport}: somehow worse than you remembered, every single time.",
+    "The highlight of {airport} is the moment your plane takes off.",
+    "{airport}: a masterclass in managed disappointment.",
+    "{airport} exists to make every other airport look good by comparison.",
+    "At {airport}, even the departure boards look tired.",
+    "You don't fly from {airport}. You escape it.",
+    "{airport}: the airport that makes you reconsider if you really need to travel.",
+    "If {airport} were a person, it'd be the one who peaks in the interview and then stops trying.",
+    "{airport} is what happens when nobody in charge has ever been a passenger.",
+    "The only five-star thing about {airport} is the reviews. On a scale of one to five.",
+    "{airport}: where every amenity is just good enough to disappoint you specifically.",
+    "The vibe at {airport} is 'underfunded municipal building with delusions of grandeur.'",
+    "At {airport}, the architecture says 'we tried' and the experience says 'did you though?'",
+    "{airport} has the energy of a Monday morning — every day of the week.",
+    "If {airport} were a sandwich, it'd be dry bread with a rumour of filling.",
+    "The most positive thing anyone's said about {airport} is 'I've had worse.' That's not a compliment.",
+    "{airport}: the reason noise-cancelling headphones were invented.",
+    "At {airport}, everything works. Badly, reluctantly, and with visible resentment.",
+    "{airport} is the airport equivalent of a participation trophy — everyone gets one, nobody's proud.",
+    "If disappointment were an airline, {airport} would be its hub.",
+    "{airport}: somehow both overcrowded and underloved.",
+    "The kindest thing you can say about {airport} is that it's technically operational.",
+]
+
+# ── Declining sentiment ────────────────────────────────────────────────────
+
+[declining]
+templates = [
+    "{airport} is on a downward trajectory that would impress a toboggan.",
+    "Things at {airport} are getting worse — and they weren't great to begin with.",
+    "{airport}: the reviews are sliding faster than the departure board updates.",
+    "Passengers at {airport} are increasingly choosing violence. Verbally, at least.",
+    "{airport}'s decline is the most consistent thing about it.",
+    "{airport}: somehow managing to lower a bar that was already on the ground.",
+    "If {airport} were a stock, you'd be shorting it.",
+    "The trajectory at {airport} suggests they're speedrunning 'how to lose passengers.'",
+    "{airport} is proof that things can, in fact, always get worse.",
+    "{airport}'s reviews are declining like a paper plane in a headwind.",
+    "At {airport}, the only thing trending is disappointment.",
+    "{airport} peaked. Nobody noticed, and it's been downhill since.",
+    "The sentiment at {airport} is falling faster than checked luggage off a conveyor belt.",
+    "{airport}: the reviews used to say 'could be worse.' Now they just say 'worse.'",
+    "Whatever {airport} changed recently, they should change it back.",
+    "{airport} is experiencing what economists call a 'vibe recession.'",
+    "Passengers are leaving {airport} angrier than when they arrived. That takes talent.",
+    "At {airport}, the year-on-year improvement chart looks like a ski slope.",
+    "{airport} is sliding downhill with the grace of a shopping trolley in a car park.",
+    "The only growth at {airport} is in the number of complaints.",
+    "{airport}: where 'new management' and 'things got worse' are suspiciously correlated.",
+    "At {airport}, satisfaction is dropping faster than the temperature in the unheated terminal.",
+    "{airport}'s decline is so steady you could set a watch by it.",
+    "If {airport}'s trajectory continues, it'll need to start paying passengers to visit.",
+    "The reviews at {airport} are on a downward spiral that would make a corkscrew jealous.",
+    "{airport}: proof that nostalgia can be for something that was never good.",
+    "At {airport}, every quarter is somehow worse than the last. Consistency, at least.",
+    "{airport} is in freefall. Not the fun kind.",
+    "Passengers at {airport} describe a decline so steady it almost feels intentional.",
+    "{airport}: where the only thing going up is the number of one-star reviews.",
+]
+
+# ── Improving sentiment ────────────────────────────────────────────────────
+
+[improving]
+templates = [
+    "{airport}: proof that rock bottom is a solid foundation.",
+    "{airport} is improving — like a student who discovered studying exists.",
+    "Things are looking up at {airport}. Admittedly, the bar was underground.",
+    "Credit where it's due: {airport} is on the mend. Slowly, but visibly.",
+    "{airport} is trending upward. The passengers seem cautiously surprised.",
+    "Something changed at {airport} and people are noticing. In a good way, for once.",
+    "{airport}: the comeback arc nobody expected but everyone needed.",
+    "Passengers at {airport} are beginning to smile. The staff are confused.",
+    "{airport} went from 'avoid at all costs' to 'actually not bad.' Progress.",
+    "{airport} is improving faster than anyone predicted, which says more about expectations than performance.",
+    "The reviews at {airport} are climbing. Someone clearly read the complaints.",
+    "{airport}: from cautionary tale to case study. Well done.",
+    "Whoever's running {airport} lately deserves a raise. Or at least a thank-you note.",
+    "{airport} is proof that airports can, in fact, learn from their mistakes.",
+    "The turnaround at {airport} is giving main character energy.",
+    "At {airport}, things are getting better. The passengers are suspicious but hopeful.",
+    "{airport}'s improvement is the feel-good story aviation needed.",
+    "Reviews for {airport} are trending upward like a departure on a clear day.",
+    "{airport}: the glow-up nobody saw coming.",
+    "At {airport}, the improvements are real. The shock on passengers' faces confirms it.",
+    "{airport} is rising from the ashes. Dramatic, but accurate.",
+    "The trajectory at {airport} suggests someone actually listens to feedback. Revolutionary.",
+    "{airport}: where last year's complaints are this year's solutions.",
+    "At {airport}, progress is visible. Like, physically visible. New paint and everything.",
+    "Passengers are returning to {airport} willingly. That's the highest compliment.",
+    "{airport} went from 'never again' to 'actually, maybe again.' Growth.",
+    "The staff at {airport} seem different lately. Happier. It's contagious.",
+    "{airport}'s improvement arc is better than most TV shows.",
+    "At {airport}, the sentiment curve is heading north. For the first time in years.",
+    "{airport}: finally giving passengers reasons to complain about something other than the airport.",
+]
+
+# ── Great scores ───────────────────────────────────────────────────────────
+
+[great]
+templates = [
+    "{airport} is so good it makes other airports look like bus stations.",
+    "{airport}: where even the delays feel civilised.",
+    "Passengers at {airport} are suspiciously happy. Someone check the water.",
+    "{airport} runs like clockwork. Swiss clockwork, not British Rail clockwork.",
+    "Landing at {airport} feels less like arriving and more like being welcomed.",
+    "{airport}: the airport other airports lie about being as good as.",
+    "Reviews for {airport} read like love letters. With good reason.",
+    "{airport} is the reason people say 'the journey is part of the experience' without irony.",
+    "At {airport}, even the toilets are pleasant. That's how you know it's good.",
+    "{airport}: so smooth that passengers forget they're in an airport.",
+    "The worst thing about {airport} is eventually having to leave.",
+    "{airport} has figured out what most airports haven't: people are humans, not cargo.",
+    "If every airport were like {airport}, nobody would complain about flying.",
+    "{airport}: genuinely lovely. No notes.",
+    "{airport} sets a standard that makes the rest of the industry slightly embarrassed.",
+    "At {airport}, the experience is so good it feels like a glitch in the matrix.",
+    "{airport} is proof that airports don't have to be miserable. Someone tell the others.",
+    "Passengers at {airport} leave reviews that sound like they're describing a spa.",
+    "{airport}: the airport equivalent of a warm hug and a freshly baked croissant.",
+    "At {airport}, everything works. On purpose. Consistently. What a concept.",
+    "{airport} makes flying feel like a privilege again. Almost.",
+    "If {airport} were a restaurant, it'd have a waiting list.",
+    "The attention to detail at {airport} is borderline obsessive. Passengers love it.",
+    "{airport}: where the biggest complaint is that other airports aren't this good.",
+    "At {airport}, the only thing to complain about is that your flight is leaving.",
+    "{airport} is the kind of airport that makes you arrive three hours early on purpose.",
+    "Reviews for {airport} are so positive they sound sarcastic. They're not.",
+    "At {airport}, passenger satisfaction isn't a metric — it's apparently a religion.",
+    "{airport}: making the rest of the continent's airports look like they're not even trying.",
+    "{airport} is what happens when people who actually fly design an airport.",
+]
+
+# ── Great staff specifically ───────────────────────────────────────────────
+
+[great_staff]
+templates = [
+    "The staff at {airport} are so helpful it's almost suspicious.",
+    "{airport} staff: proof that customer service doesn't have to be an oxymoron.",
+    "At {airport}, the staff actually smile. And mean it. Revolutionary.",
+    "The team at {airport} makes you feel like a guest, not a nuisance.",
+    "{airport} staff treat every passenger like they matter. Radical concept.",
+    "If {airport}'s staff ran the world, complaint departments wouldn't exist.",
+    "The people at {airport} are the airport's best feature. By a mile.",
+    "At {airport}, the staff go above and beyond. Other airports' staff go on break.",
+    "{airport} staff make you feel welcome in a building full of strangers. That's rare.",
+    "The customer service at {airport} is so good it feels like a different industry.",
+    "At {airport}, asking for help actually results in help. Imagine.",
+    "{airport} staff: friendly, efficient, and apparently not paid to be miserable.",
+    "The team at {airport} treats a delayed passenger like a VIP, not a problem.",
+    "At {airport}, the staff remember that airports are stressful and act accordingly.",
+    "If you've lost faith in humanity, spend five minutes with {airport}'s ground staff.",
+]
+
+# ── Great cleanliness specifically ─────────────────────────────────────────
+
+[great_cleanliness]
+templates = [
+    "{airport} is so clean you could eat off the floor. You won't, but you could.",
+    "The restrooms at {airport} are cleaner than most hotel bathrooms. Yes, really.",
+    "{airport}: where the cleaning crew are the unsung heroes of aviation.",
+    "You could perform surgery in {airport}'s terminals. Probably shouldn't, but you could.",
+    "{airport}'s cleanliness standards make other airports look feral.",
+    "At {airport}, even the bin areas are immaculate. That's attention to detail.",
+    "The floors at {airport} reflect the overhead lights. The floors. Reflect.",
+    "{airport}: where the cleaning crew deserves a standing ovation and probably a raise.",
+    "At {airport}, 'spotless' isn't an aspiration — it's the baseline.",
+    "The restrooms at {airport} have fresh flowers. Fresh. Flowers. In an airport toilet.",
+    "{airport}'s terminals are cleaner than most people's kitchens.",
+    "At {airport}, the cleaning is so thorough it feels like they're preparing for a royal visit. Daily.",
+    "If {airport}'s cleaning team ran a hotel, it'd have six stars.",
+    "{airport}: proof that a clean airport is a happy airport.",
+    "The hygiene standards at {airport} make hospital wards look casual.",
+]
+
+# ── Great food specifically ────────────────────────────────────────────────
+
+[great_food]
+templates = [
+    "The food at {airport} is good enough that you'd eat there voluntarily.",
+    "{airport} dining: actual restaurants with actual flavour. What a concept.",
+    "People arrive early at {airport} just for the food. That's the highest compliment.",
+    "{airport}: where the food court isn't a punishment, it's a destination.",
+    "The coffee at {airport} is genuinely good. This changes everything.",
+    "At {airport}, the food is priced like an airport but tastes like a restaurant. Fair trade.",
+    "{airport}'s dining options include places you'd actually recommend to friends.",
+    "The restaurants at {airport} have menus, not hostage situations.",
+    "At {airport}, you can get a meal that doesn't require an apology.",
+    "The food at {airport} is so good it almost justifies the markup. Almost.",
+    "{airport}: where the culinary options make the layover feel intentional.",
+    "At {airport}, the coffee is fresh, the food is hot, and the prices are... well, two out of three.",
+    "The bakery at {airport} makes croissants that could start an international incident. The good kind.",
+    "{airport}'s food scene is better than some city centres. No, really.",
+    "At {airport}, dining is part of the experience, not something you endure.",
+]
+
+# ── Great WiFi specifically ────────────────────────────────────────────────
+
+[great_wifi]
+templates = [
+    "The WiFi at {airport} is faster than most people's home broadband. Genuinely.",
+    "{airport} WiFi: free, fast, and functional. The holy trinity.",
+    "At {airport}, the WiFi works so well you forget you're not at home.",
+    "{airport}'s internet is fast enough to stream, download, and video-call. In an airport.",
+    "The WiFi at {airport} connects instantly and stays connected. Witchcraft.",
+    "At {airport}, the free WiFi is genuinely free and genuinely works. Rare.",
+    "{airport}: where the WiFi is the first thing passengers praise. That says a lot.",
+    "At {airport}, you can actually work remotely. The 'remote' part being the airport.",
+    "The internet at {airport} is so good passengers are upset when their flight boards.",
+    "{airport} WiFi: no login wall, no speed cap, no complaints. Perfection.",
+]
+
+# ── Great transport specifically ───────────────────────────────────────────
+
+[great_transport]
+templates = [
+    "Getting to {airport} is so easy it feels like cheating.",
+    "{airport}'s transport links are what every other airport pretends to have.",
+    "The train to {airport} runs on time, frequently, and directly. Revolutionary.",
+    "At {airport}, the journey there is almost as pleasant as the airport itself.",
+    "{airport}: connected to the city like it was designed by someone who uses public transport.",
+    "The transport to {airport} is so good it makes the flight feel like the inconvenient part.",
+    "At {airport}, you can go from city centre to gate in under an hour. With time for coffee.",
+    "{airport}'s metro connection is proof that airports and public transport can coexist beautifully.",
+    "Getting to {airport} is the most stress-free part of the journey. Which is saying something.",
+    "{airport}: where the last mile isn't a last mile — it's a pleasant commute.",
+]
+
+# ── Neutral / mixed sentiment ──────────────────────────────────────────────
+
+[neutral_mixed]
+templates = [
+    "{airport}: aggressively adequate. Not great, not terrible — the airport equivalent of a shrug.",
+    "{airport} is the airport equivalent of 'it's fine.'",
+    "{airport}: solidly in the 'could be worse' category.",
+    "{airport} exists. That's both the review and the vibe.",
+    "The consensus on {airport}: meh. Functional meh, but meh.",
+    "{airport}: not worth complaining about, not worth praising. Just... there.",
+    "Reviews for {airport} read like weather reports. Mild. Overcast. Unremarkable.",
+    "{airport} is the vanilla ice cream of airports. Nobody's first choice, nobody's last.",
+    "Passengers describe {airport} with a sigh that means 'it'll do.'",
+    "{airport}: the sound of one hand clapping, architecturally.",
+    "If {airport} were a movie rating, it'd be a solid 5/10. Watched, forgotten.",
+    "{airport}: neither a complaint nor a recommendation. Just a place planes go.",
+    "The most exciting thing about {airport} is that your flight leaves from it.",
+    "{airport} is fine. Not 'fine fine,' just... fine.",
+    "{airport}: the Volvo of airports. Safe, reliable, nobody's writing poetry about it.",
+    "At {airport}, nothing is wrong. Nothing is right either. It's a vibe.",
+    "{airport}: the beige of the aviation world.",
+    "Passengers at {airport} feel nothing. That's the review. They feel nothing.",
+    "{airport} is the airport equivalent of room temperature water. Functional, forgettable.",
+    "If {airport} were a spice, it'd be flour.",
+    "The reviews for {airport} average out to a collective 'sure, I guess.'",
+    "{airport}: perfectly mediocre in every measurable dimension.",
+    "At {airport}, the experience is neither memorable nor traumatic. Achievement unlocked.",
+    "{airport} doesn't inspire complaints or compliments. It inspires silence.",
+    "The vibe at {airport} is 'acceptable.' Not 'pleasantly acceptable.' Just 'acceptable.'",
+    "{airport}: the kind of place you forget you've been to while you're still there.",
+    "At {airport}, everything technically works. 'Technically' doing a lot of heavy lifting here.",
+    "{airport} is the human-sized equivalent of an elevator — you're in it, you wait, you leave.",
+    "Passengers at {airport} give reviews that read like weather forecasts for overcast days.",
+    "{airport}: where the highlight is the duty-free Toblerone.",
+]
+
+# ── Insufficient data ─────────────────────────────────────────────────────
+
+[insufficient_data]
+templates = [
+    "Not enough reviews to roast {airport} properly. Check back later.",
+    "{airport}: the jury is still out. Literally — there aren't enough reviews yet.",
+    "We'd say more about {airport}, but the data is thinner than airline coffee.",
+    "{airport} has fewer reviews than a ghost town has residents. Verdict pending.",
+    "The silence around {airport} says more than any review could. Or maybe people just forgot it exists.",
+    "{airport}: statistically insignificant, and possibly proud of it.",
+    "We need more reviews before we can properly judge {airport}. Consider this a warning shot.",
+    "{airport} has so few reviews it might be operating in stealth mode.",
+    "The data on {airport} is sparse. Like the legroom on a budget airline.",
+    "Not enough passengers have reviewed {airport} to form an opinion. Or they did and blocked the memory.",
+    "{airport}: too few reviews to roast, too few to praise. Schrodinger's airport.",
+    "We'd love to tell you about {airport}, but apparently nobody else has.",
+    "{airport}: either very new, very small, or very forgettable. Hard to tell with this little data.",
+    "The reviews for {airport} could fit on a Post-it note. With room to spare.",
+    "{airport}: pending review. Like everything else at {airport}, apparently.",
+]

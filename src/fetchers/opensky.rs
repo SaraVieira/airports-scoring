@@ -3,7 +3,7 @@ use chrono::{NaiveDate, Utc};
 use serde::Deserialize;
 use sqlx::PgPool;
 use std::collections::HashMap;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 use tracing::{info, warn};
 
 use crate::models::{Airport, FetchResult};
@@ -48,13 +48,13 @@ struct CachedToken {
     expires_at: i64,
 }
 
-static TOKEN_CACHE: Mutex<Option<CachedToken>> = Mutex::new(None);
+static TOKEN_CACHE: Mutex<Option<CachedToken>> = Mutex::const_new(None);
 
 /// Get a valid OAuth2 access token, refreshing if needed.
 async fn get_access_token(client: &reqwest::Client) -> Result<String> {
     // Check cache first.
     {
-        let cache = TOKEN_CACHE.lock().unwrap();
+        let cache = TOKEN_CACHE.lock().await;
         if let Some(ref cached) = *cache {
             // Refresh 60 seconds before expiry.
             if Utc::now().timestamp() < cached.expires_at - 60 {
@@ -99,7 +99,7 @@ async fn get_access_token(client: &reqwest::Client) -> Result<String> {
 
     let token = token_resp.access_token.clone();
     {
-        let mut cache = TOKEN_CACHE.lock().unwrap();
+        let mut cache = TOKEN_CACHE.lock().await;
         *cache = Some(CachedToken {
             token: token_resp.access_token,
             expires_at,
@@ -155,7 +155,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
 
     // Iterate in 2-day chunks, fetching both arrivals and departures
     let mut chunk_begin = start_ts;
-    while chunk_begin < end_ts {
+    'chunks: while chunk_begin < end_ts {
         let chunk_end = (chunk_begin + CHUNK_SECS).min(end_ts);
 
         // Get a fresh token (cached if still valid).
@@ -189,7 +189,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
             if resp.status() == reqwest::StatusCode::UNAUTHORIZED {
                 // Token expired mid-run — clear cache and retry next chunk.
                 warn!("OpenSky token expired, clearing cache");
-                let mut cache = TOKEN_CACHE.lock().unwrap();
+                let mut cache = TOKEN_CACHE.lock().await;
                 *cache = None;
                 break;
             }
@@ -205,8 +205,7 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
                 consecutive_failures += 1;
                 if consecutive_failures >= 10 {
                     info!(airport = icao, "10+ consecutive OpenSky failures, stopping early");
-                    chunk_begin = end_ts; // break outer loop
-                    break;
+                    break 'chunks;
                 }
                 continue;
             }
@@ -249,13 +248,9 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
 
                 let ts = flight.last_seen.or(flight.first_seen).unwrap_or(chunk_begin);
                 let flight_date = chrono::DateTime::from_timestamp(ts, 0)
+                    .or_else(|| chrono::DateTime::from_timestamp(chunk_begin, 0))
                     .map(|dt| dt.naive_utc().date())
-                    .unwrap_or_else(|| {
-                        chrono::DateTime::from_timestamp(chunk_begin, 0)
-                            .unwrap()
-                            .naive_utc()
-                            .date()
-                    });
+                    .expect("chunk_begin is always a valid timestamp");
 
                 let entry = route_counts
                     .entry(key)

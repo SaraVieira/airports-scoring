@@ -93,7 +93,7 @@ def submit_scrape_job(base_url: str, api_key: str, google_maps_url: str) -> str:
         },
         method="POST",
     )
-    with urllib.request.urlopen(req) as resp:
+    with urllib.request.urlopen(req, timeout=30) as resp:
         result = json.loads(resp.read())
     return result["job_id"]
 
@@ -114,7 +114,10 @@ def poll_job(base_url: str, api_key: str, job_id: str, timeout: int = 600) -> li
             headers={"X-API-Key": api_key},
             method="GET",
         )
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            if resp.status != 200:
+                logger.warning("Poll returned HTTP %d, retrying…", resp.status)
+                continue
             status = json.loads(resp.read())
 
         if status["status"] == "completed":
@@ -167,6 +170,7 @@ def upsert_reviews(conn, airport_id: int, iata: str, reviews: list[dict], limit:
             source_url = synthetic_source_url(iata, reviewer_name or "", date_iso or "", text or "")
 
             try:
+                cur.execute("SAVEPOINT upsert_row")
                 cur.execute(
                     """
                     INSERT INTO reviews_raw (
@@ -181,10 +185,11 @@ def upsert_reviews(conn, airport_id: int, iata: str, reviews: list[dict], limit:
                     """,
                     (airport_id, review_date, reviewer_name, overall_rating, text, source_url),
                 )
+                cur.execute("RELEASE SAVEPOINT upsert_row")
                 count += 1
-            except Exception as e:
+            except psycopg2.Error as e:
                 logger.warning("Failed to upsert review: %s", e)
-                conn.rollback()
+                cur.execute("ROLLBACK TO SAVEPOINT upsert_row")
                 continue
 
             if count % 100 == 0:
@@ -263,34 +268,35 @@ def main():
     # Connect to DB
     logger.info("Connecting to database...")
     conn = psycopg2.connect(db_url)
-    airport_id = get_airport_id(conn, iata)
+    try:
+        airport_id = get_airport_id(conn, iata)
 
-    # Submit scrape job
-    logger.info("Submitting scrape job for %s (%s)...", iata, google_maps_url)
-    job_id = submit_scrape_job(base_url, api_key, google_maps_url)
-    logger.info("Job submitted: %s", job_id)
+        # Submit scrape job
+        logger.info("Submitting scrape job for %s (%s)...", iata, google_maps_url)
+        job_id = submit_scrape_job(base_url, api_key, google_maps_url)
+        logger.info("Job submitted: %s", job_id)
 
-    # Poll for completion
-    logger.info("Polling for completion (timeout: %ds)...", args.timeout)
-    reviews = poll_job(base_url, api_key, job_id, timeout=args.timeout)
-    logger.info("Scrape completed: %d reviews returned", len(reviews))
+        # Poll for completion
+        logger.info("Polling for completion (timeout: %ds)...", args.timeout)
+        reviews = poll_job(base_url, api_key, job_id, timeout=args.timeout)
+        logger.info("Scrape completed: %d reviews returned", len(reviews))
 
-    # Insert reviews
-    count = upsert_reviews(conn, airport_id, iata, reviews, limit=args.limit)
-    logger.info("Upserted %d reviews for %s", count, iata)
+        # Insert reviews
+        count = upsert_reviews(conn, airport_id, iata, reviews, limit=args.limit)
+        logger.info("Upserted %d reviews for %s", count, iata)
 
-    # Find latest date for pipeline_runs
-    last_date = None
-    for review in reviews[:count] if args.limit else reviews:
-        d = review.get("date_iso", "")[:10] if review.get("date_iso") else None
-        if d and (last_date is None or d > last_date):
-            last_date = d
+        # Find latest date for pipeline_runs
+        last_date = None
+        for review in reviews[:count] if args.limit else reviews:
+            d = review.get("date_iso", "")[:10] if review.get("date_iso") else None
+            if d and (last_date is None or d > last_date):
+                last_date = d
 
-    # Record pipeline run
-    update_pipeline_run(conn, airport_id, count, last_date)
-    logger.info("Pipeline run recorded. Done.")
-
-    conn.close()
+        # Record pipeline run
+        update_pipeline_run(conn, airport_id, count, last_date)
+        logger.info("Pipeline run recorded. Done.")
+    finally:
+        conn.close()
 
 
 if __name__ == "__main__":

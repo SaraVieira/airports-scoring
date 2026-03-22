@@ -12,6 +12,7 @@ Usage:
 import argparse
 import csv
 import io
+import json
 import logging
 import os
 import re
@@ -273,7 +274,7 @@ def run_import(db_url: str):
     logger.info("Connecting to database…")
     try:
         conn = psycopg2.connect(db_url)
-    except Exception as exc:
+    except psycopg2.Error as exc:
         logger.error("Database connection failed: %s", exc)
         sys.exit(1)
 
@@ -281,48 +282,49 @@ def run_import(db_url: str):
     total_matched = 0
     total_inserted = 0
 
-    for csv_url in CSV_URLS:
-        try:
-            rows = download_csv(csv_url)
-        except Exception as exc:
-            logger.error("Failed to download %s: %s", csv_url, exc)
-            continue
-
-        total_downloaded += len(rows)
-
-        # Filter and map to our seed airports
-        matched_reviews = []
-        # Determine the airport name column
-        if rows:
-            sample_keys = {k.strip().lower().replace(" ", "_") for k in rows[0].keys()}
-            name_col = None
-            for candidate in ("airport_name", "airport", "name"):
-                if candidate in sample_keys:
-                    name_col = candidate
-                    break
-            if name_col is None:
-                logger.warning("Could not find airport name column in %s. Columns: %s",
-                               csv_url, list(rows[0].keys()))
+    try:
+        for csv_url in CSV_URLS:
+            try:
+                rows = download_csv(csv_url)
+            except requests.RequestException as exc:
+                logger.error("Failed to download %s: %s", csv_url, exc)
                 continue
 
-        for row in rows:
-            norm_keys = {k.strip().lower().replace(" ", "_"): k for k in row.keys()}
-            raw_name = row.get(norm_keys.get(name_col, ""), "")
-            iata = match_airport(raw_name)
-            if iata and iata in SEED_IATA_CODES:
-                review = map_row_to_review(row, iata)
-                matched_reviews.append(review)
+            total_downloaded += len(rows)
 
-        total_matched += len(matched_reviews)
-        logger.info("Matched %d reviews to seed airports from %s",
-                     len(matched_reviews), csv_url.split("/")[-1])
+            # Filter and map to our seed airports
+            matched_reviews = []
+            # Determine the airport name column
+            if rows:
+                sample_keys = {k.strip().lower().replace(" ", "_") for k in rows[0].keys()}
+                name_col = None
+                for candidate in ("airport_name", "airport", "name"):
+                    if candidate in sample_keys:
+                        name_col = candidate
+                        break
+                if name_col is None:
+                    logger.warning("Could not find airport name column in %s. Columns: %s",
+                                   csv_url, list(rows[0].keys()))
+                    continue
 
-        # Insert
-        inserted = insert_reviews(conn, matched_reviews)
-        total_inserted += inserted
-        logger.info("Inserted %d reviews from %s", inserted, csv_url.split("/")[-1])
+            for row in rows:
+                norm_keys = {k.strip().lower().replace(" ", "_"): k for k in row.keys()}
+                raw_name = row.get(norm_keys.get(name_col, ""), "")
+                iata = match_airport(raw_name)
+                if iata and iata in SEED_IATA_CODES:
+                    review = map_row_to_review(row, iata)
+                    matched_reviews.append(review)
 
-    conn.close()
+            total_matched += len(matched_reviews)
+            logger.info("Matched %d reviews to seed airports from %s",
+                         len(matched_reviews), csv_url.split("/")[-1])
+
+            # Insert
+            inserted = insert_reviews(conn, matched_reviews)
+            total_inserted += inserted
+            logger.info("Inserted %d reviews from %s", inserted, csv_url.split("/")[-1])
+    finally:
+        conn.close()
 
     # Summary to stderr
     logger.info(
@@ -331,7 +333,6 @@ def run_import(db_url: str):
     )
 
     # Output summary JSON to stdout
-    import json
     summary = {
         "status": "complete",
         "rows_downloaded": total_downloaded,

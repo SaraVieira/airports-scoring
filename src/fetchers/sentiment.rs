@@ -8,6 +8,7 @@ use crate::models::{Airport, FetchResult};
 
 #[derive(Debug, Deserialize)]
 struct PipelineOutput {
+    #[allow(dead_code)]
     airport: String,
     source: Option<String>,
     sentiment_snapshots: Vec<Snapshot>,
@@ -58,7 +59,6 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         "python3"
     };
 
-    let db_url = std::env::var("DATABASE_URL").unwrap_or_default();
     let mut total_records: i32 = 0;
 
     for &source in REVIEW_SOURCES {
@@ -90,8 +90,6 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
             .arg("python/sentiment_pipeline.py")
             .arg("--airport")
             .arg(iata)
-            .arg("--db-url")
-            .arg(&db_url)
             .arg("--source")
             .arg(source)
             .output()

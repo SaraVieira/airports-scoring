@@ -42,13 +42,35 @@ export function RouteSection({
     });
   }, [filtered]);
 
+  // Compute summary stats
+  const summary = useMemo(() => {
+    const regionSet = new Set<string>();
+    for (const r of routesWithFlights) {
+      regionSet.add(routeRegion(r));
+    }
+    const top = routesWithFlights[0];
+    const topName = top ? routeDisplayName(top) : null;
+    const topFlights = top?.flightsPerMonth ?? null;
+    return {
+      total: routesWithFlights.length,
+      regions: regionSet.size,
+      topName,
+      topFlights,
+    };
+  }, [routesWithFlights]);
+
   return (
     <section className="flex flex-col gap-4">
       <h3 className="font-grotesk text-[13px] font-bold text-yellow-400 tracking-[2px] uppercase">
         Where You Can Escape To
       </h3>
-      <span className="font-grotesk text-[11px] font-bold text-zinc-100 tracking-wider uppercase">
-        {routesWithFlights.length} Routes Served
+
+      {/* Route summary stats */}
+      <span className="font-mono text-[11px] text-zinc-400">
+        {summary.total} routes · {summary.regions} region{summary.regions !== 1 ? "s" : ""}
+        {summary.topName && summary.topFlights
+          ? ` · Top: ${summary.topName} (${summary.topFlights}/mo)`
+          : ""}
       </span>
 
       <input

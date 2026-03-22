@@ -4,6 +4,18 @@ use sqlx::postgres::{PgPool, PgPoolOptions};
 
 use crate::models::Airport;
 
+/// Column list for the airports table, shared across queries.
+const AIRPORT_COLUMNS: &str = r#"
+    id, iata_code, icao_code, ourairports_id,
+    name, short_name, city, country_code, region_code,
+    elevation_ft, timezone, airport_type, scheduled_service,
+    terminal_count, total_gates, opened_year, last_major_reno,
+    operator_id, owner_id, ownership_notes,
+    annual_capacity_m, annual_pax_2019_m, annual_pax_latest_m, latest_pax_year,
+    wikipedia_url, website_url, skytrax_url,
+    in_seed_set, created_at, updated_at
+"#;
+
 /// Create a connection pool from the DATABASE_URL environment variable.
 pub async fn get_pool() -> Result<PgPool> {
     let database_url =
@@ -11,6 +23,9 @@ pub async fn get_pool() -> Result<PgPool> {
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
+        .acquire_timeout(std::time::Duration::from_secs(30))
+        .idle_timeout(std::time::Duration::from_secs(600))
+        .max_lifetime(std::time::Duration::from_secs(1800))
         .connect(&database_url)
         .await
         .context("Failed to connect to Postgres")?;
@@ -20,20 +35,8 @@ pub async fn get_pool() -> Result<PgPool> {
 
 /// Look up a single airport by its IATA code.
 pub async fn get_airport_by_iata(pool: &PgPool, iata: &str) -> Result<Airport> {
-    let airport = sqlx::query_as::<_, Airport>(
-        r#"
-        SELECT id, iata_code, icao_code, ourairports_id,
-               name, short_name, city, country_code, region_code,
-               elevation_ft, timezone, airport_type, scheduled_service,
-               terminal_count, total_gates, opened_year, last_major_reno,
-               operator_id, owner_id, ownership_notes,
-               annual_capacity_m, annual_pax_2019_m, annual_pax_latest_m, latest_pax_year,
-               wikipedia_url, website_url, skytrax_url,
-               in_seed_set, created_at, updated_at
-        FROM airports
-        WHERE iata_code = $1
-        "#,
-    )
+    let query = format!("SELECT {} FROM airports WHERE iata_code = $1", AIRPORT_COLUMNS);
+    let airport = sqlx::query_as::<_, Airport>(&query)
     .bind(iata)
     .fetch_one(pool)
     .await
@@ -44,21 +47,11 @@ pub async fn get_airport_by_iata(pool: &PgPool, iata: &str) -> Result<Airport> {
 
 /// Return all airports that are part of the seed set.
 pub async fn get_seed_airports(pool: &PgPool) -> Result<Vec<Airport>> {
-    let airports = sqlx::query_as::<_, Airport>(
-        r#"
-        SELECT id, iata_code, icao_code, ourairports_id,
-               name, short_name, city, country_code, region_code,
-               elevation_ft, timezone, airport_type, scheduled_service,
-               terminal_count, total_gates, opened_year, last_major_reno,
-               operator_id, owner_id, ownership_notes,
-               annual_capacity_m, annual_pax_2019_m, annual_pax_latest_m, latest_pax_year,
-               wikipedia_url, website_url, skytrax_url,
-               in_seed_set, created_at, updated_at
-        FROM airports
-        WHERE in_seed_set = TRUE
-        ORDER BY iata_code
-        "#,
-    )
+    let query = format!(
+        "SELECT {} FROM airports WHERE in_seed_set = TRUE ORDER BY iata_code",
+        AIRPORT_COLUMNS
+    );
+    let airports = sqlx::query_as::<_, Airport>(&query)
     .fetch_all(pool)
     .await
     .context("Failed to fetch seed airports")?;

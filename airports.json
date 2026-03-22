@@ -5,7 +5,7 @@
     "name": "London Heathrow",
     "skytrax_review_slug": "london-heathrow-airport",
     "skytrax_rating_slug": "london-heathrow-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/o2vB1du9UYYTRAsd6"
   },
   {
     "iata": "LGW",
@@ -13,7 +13,7 @@
     "name": "London Gatwick",
     "skytrax_review_slug": "london-gatwick-airport",
     "skytrax_rating_slug": "london-gatwick-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/WdNU9vBeMXenzgTm9"
   },
   {
     "iata": "LTN",
@@ -21,7 +21,7 @@
     "name": "London Luton",
     "skytrax_review_slug": "luton-airport",
     "skytrax_rating_slug": "london-luton-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/eAAroWfsNfMZuqFp6"
   },
   {
     "iata": "OPO",
@@ -37,7 +37,7 @@
     "name": "Madrid Barajas",
     "skytrax_review_slug": "madrid-barajas-airport",
     "skytrax_rating_slug": "madrid-barajas-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/wPSnnJAQkBomwsGz9"
   },
   {
     "iata": "BCN",
@@ -45,7 +45,7 @@
     "name": "Barcelona El Prat",
     "skytrax_review_slug": "barcelona-airport",
     "skytrax_rating_slug": "barcelona-el-prat-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/iBMM6NR2K9RoUM5E6"
   },
   {
     "iata": "BER",
@@ -53,15 +53,15 @@
     "name": "Berlin Brandenburg",
     "skytrax_review_slug": "berlin-brandenburg-airport",
     "skytrax_rating_slug": "berlin-brandenburg-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/RQF3nFTesreLbbYa6"
   },
   {
     "iata": "MUC",
     "country": "DE",
-    "name": "Munich",
+    "name": "Munich International Airport",
     "skytrax_review_slug": "munich-airport",
     "skytrax_rating_slug": "munich-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/hzRw1okNJwXnTzCW6"
   },
   {
     "iata": "CDG",
@@ -69,7 +69,7 @@
     "name": "Paris Charles de Gaulle",
     "skytrax_review_slug": "paris-cdg-airport",
     "skytrax_rating_slug": "paris-cdg-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/jwJa6f7EUQLz2wxj8"
   },
   {
     "iata": "NCE",
@@ -77,7 +77,7 @@
     "name": "Nice Côte d'Azur",
     "skytrax_review_slug": "nice-cote-dazur-airport",
     "skytrax_rating_slug": "nice-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/SRNL8GvAKh29GPQv5"
   },
   {
     "iata": "AMS",
@@ -85,7 +85,7 @@
     "name": "Amsterdam Schiphol",
     "skytrax_review_slug": "amsterdam-schiphol-airport",
     "skytrax_rating_slug": "amsterdam-airport-schiphol",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/SKMc7G5zAtzW5BZ7A"
   },
   {
     "iata": "CPH",
@@ -93,15 +93,15 @@
     "name": "Copenhagen",
     "skytrax_review_slug": "copenhagen-airport",
     "skytrax_rating_slug": "copenhagen-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/eFtdvWo4NAQh4bx28"
   },
   {
     "iata": "FCO",
     "country": "IT",
-    "name": "Rome Fiumicino",
+    "name": "Leonardo da Vinci International Airport",
     "skytrax_review_slug": "rome-fiumicino-airport",
     "skytrax_rating_slug": "rome-fiumicino-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/wasVuojVgYiKbJb19"
   },
   {
     "iata": "WAW",
@@ -109,7 +109,7 @@
     "name": "Warsaw Chopin",
     "skytrax_review_slug": "warsaw-chopin-airport",
     "skytrax_rating_slug": "warsaw-chopin-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/9f5dBWiQt6nzWzDi6"
   },
   {
     "iata": "BUD",
@@ -117,7 +117,7 @@
     "name": "Budapest",
     "skytrax_review_slug": "budapest-ferihegy-airport",
     "skytrax_rating_slug": "budapest-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/USbiekSoPj1PqENT8"
   },
   {
     "iata": "CLJ",
@@ -133,7 +133,7 @@
     "name": "Humberto Delgado Airport",
     "skytrax_review_slug": "lisbon-airport-rating",
     "skytrax_rating_slug": "lisbon-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/NXsmM2vmGbZkBGmz5"
   },
   {
     "iata": "FAO",
@@ -141,7 +141,7 @@
     "name": "Faro International Airport",
     "skytrax_review_slug": "faro-airport-rating",
     "skytrax_rating_slug": "faro-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/tQrMZZ1JYGjq71ca9"
   },
   {
     "iata": "AGP",
@@ -149,7 +149,7 @@
     "name": "Malaga-Costa del Sol Airport",
     "skytrax_review_slug": "malaga-airport",
     "skytrax_rating_slug": "malaga-costa-del-sol-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/suYy6zV1s9pB2KTFA"
   },
   {
     "iata": "ALC",
@@ -157,15 +157,15 @@
     "name": "Alicante-Elche Airport",
     "skytrax_review_slug": "alicante-airport",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/WLHuinE5bYwh93CC9"
   },
   {
     "iata": "PMI",
     "country": "ES",
     "name": "Palma de Mallorca Airport",
-    "skytrax_review_slug": "",
+    "skytrax_review_slug": "palma-de-mallorca-airport-rating",
     "skytrax_rating_slug": "palma-de-mallorca-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/AY1EQLKexPzJLXeN8"
   },
   {
     "iata": "IBZ",
@@ -173,7 +173,7 @@
     "name": "Ibiza Airport",
     "skytrax_review_slug": "ibiza-airport",
     "skytrax_rating_slug": "ibiza-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/FMus12YFMwQikPsMA"
   },
   {
     "iata": "BIO",
@@ -181,7 +181,7 @@
     "name": "Bilbao Airport",
     "skytrax_review_slug": "bilbao-airport",
     "skytrax_rating_slug": "bilbao-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/sG1QpE1RXmiyazxC7"
   },
   {
     "iata": "VLC",
@@ -189,7 +189,7 @@
     "name": "Valencia Airport",
     "skytrax_review_slug": "valencia-airport",
     "skytrax_rating_slug": "valencia-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/RnQEydTDRu4XNF64A"
   },
   {
     "iata": "SVQ",
@@ -197,7 +197,7 @@
     "name": "Seville Airport",
     "skytrax_review_slug": "seville-airport",
     "skytrax_rating_slug": "seville-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/Kh1XrpzDVj1JDKgf6"
   },
   {
     "iata": "LPA",
@@ -205,7 +205,7 @@
     "name": "Gran Canaria Airport",
     "skytrax_review_slug": "gran-canaria-airport",
     "skytrax_rating_slug": "gran-canaria-airport",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/MkujbD8f1WN3gqSbA"
   },
   {
     "iata": "TFS",
@@ -213,7 +213,7 @@
     "name": "Tenerife South Airport",
     "skytrax_review_slug": "tenerife-airport",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/N5Kbgz2eFkgHPRmF8"
   },
   {
     "iata": "TFN",
@@ -221,15 +221,15 @@
     "name": "Tenerife North Airport",
     "skytrax_review_slug": "",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/BJddyi1ZVS1TZsf87"
   },
   {
     "iata": "ACE",
     "country": "ES",
     "name": "Lanzarote Airport",
-    "skytrax_review_slug": "",
+    "skytrax_review_slug": "lanzarote-arrecife-airport",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/udmhsAYhh8PHiGDC9"
   },
   {
     "iata": "FUE",
@@ -237,7 +237,7 @@
     "name": "Fuerteventura Airport",
     "skytrax_review_slug": "fuerteventura-airport",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/CVj6CU42tvZAD7oU7"
   },
   {
     "iata": "MAH",
@@ -245,15 +245,15 @@
     "name": "Menorca Airport",
     "skytrax_review_slug": "mahon-airport",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/V3FRBmgjszPQFfc18"
   },
   {
     "iata": "SCQ",
     "country": "ES",
     "name": "Santiago de Compostela Airport",
-    "skytrax_review_slug": "",
+    "skytrax_review_slug": "santiago-de-compostela",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/wf4Kjsrnnqvqjx8S8"
   },
   {
     "iata": "OVD",
@@ -261,7 +261,7 @@
     "name": "Asturias Airport",
     "skytrax_review_slug": "asturias-airport",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/gUipFCHDpviSA7eT6"
   },
   {
     "iata": "LCG",
@@ -269,7 +269,7 @@
     "name": "A Coruna Airport",
     "skytrax_review_slug": "",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/o13KF4hKFWKEA2ei6"
   },
   {
     "iata": "GRX",
@@ -277,23 +277,23 @@
     "name": "Granada-Jaen Airport",
     "skytrax_review_slug": "granada-airport",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/9Mhw3FBsgmeBFNGG8"
   },
   {
     "iata": "SDR",
     "country": "ES",
     "name": "Santander Airport",
-    "skytrax_review_slug": "",
+    "skytrax_review_slug": "santander-airport",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/BqqRwU697ixzNgo26"
   },
   {
     "iata": "EAS",
     "country": "ES",
     "name": "San Sebastian Airport",
-    "skytrax_review_slug": "",
+    "skytrax_review_slug": "san-sebastian-airport",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/j9mkst2ov1rSkyjJ6"
   },
   {
     "iata": "VGO",
@@ -301,23 +301,23 @@
     "name": "Vigo Airport",
     "skytrax_review_slug": "",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/LW8whxWWacmvoAwA6"
   },
   {
     "iata": "RMU",
     "country": "ES",
     "name": "Murcia Airport",
     "skytrax_review_slug": "",
-    "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "skytrax_rating_slug": "murcia-san-javier-airport",
+    "google_maps_url": "https://maps.app.goo.gl/tFd8bGQQvWLPYhjDA"
   },
   {
     "iata": "GRO",
     "country": "ES",
     "name": "Girona Airport",
-    "skytrax_review_slug": "",
+    "skytrax_review_slug": "girona-airport",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/x5JJ8F6UN9MkfhPo8"
   },
   {
     "iata": "PNA",
@@ -325,6 +325,6 @@
     "name": "Pamplona Airport",
     "skytrax_review_slug": "",
     "skytrax_rating_slug": "",
-    "google_maps_url": null
+    "google_maps_url": "https://maps.app.goo.gl/Eezn5yXbTGhho4f36"
   }
 ]

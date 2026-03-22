@@ -1,3 +1,11 @@
+import {
+  BarChart,
+  Bar,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+
 type SentimentSnap =
   (typeof import("../../../db/schema"))["sentimentSnapshots"]["$inferSelect"];
 
@@ -22,17 +30,27 @@ export function SentimentTimeline({
       avg: data.ratings.reduce((a, b) => a + b, 0) / data.ratings.length,
       reviews: data.reviews,
     }))
-    .filter((y) => y.reviews >= 5) // Filter out noise from low-count years
+    .filter((y) => y.reviews >= 5)
     .sort((a, b) => a.year - b.year);
 
   if (years.length < 2) return null;
 
-  const maxRating = 5;
-  // Use first/last year with meaningful review count (>10) for "Then vs Now"
   const meaningful = years.filter((y) => y.reviews >= 10);
   const first = meaningful[0] ?? years[0];
   const last = meaningful[meaningful.length - 1] ?? years[years.length - 1];
   const delta = last.avg - first.avg;
+
+  const chartData = years.map((y) => ({
+    name: String(y.year),
+    value: y.avg,
+    reviews: y.reviews,
+    fill:
+      y.avg >= 3.5
+        ? "#22c55e"
+        : y.avg >= 2.5
+          ? "#eab308"
+          : "#ef4444",
+  }));
 
   return (
     <div className="flex flex-col gap-3">
@@ -47,36 +65,37 @@ export function SentimentTimeline({
           {delta.toFixed(2)} over {years.length} years
         </span>
       </div>
-      <div className="flex items-end gap-0.5 h-20">
-        {years.map((y) => {
-          const h = Math.max((y.avg / maxRating) * 100, 8);
-          const color =
-            y.avg >= 3.5
-              ? "bg-green-500/70"
-              : y.avg >= 2.5
-                ? "bg-yellow-500/70"
-                : "bg-red-500/70";
-          return (
-            <div
-              key={y.year}
-              className="flex flex-col items-center gap-1 flex-1"
-              title={`${y.year}: ${y.avg.toFixed(2)} (${y.reviews} reviews)`}
-            >
-              <span className="font-mono text-[9px] text-zinc-600 tabular-nums">
-                {y.avg.toFixed(1)}
-              </span>
-              <div className="w-full flex justify-center h-14">
-                <div
-                  className={`w-full max-w-7 ${color}`}
-                  style={{ height: `${h}%`, alignSelf: "flex-end" }}
-                />
-              </div>
-              <span className="font-mono text-[9px] text-zinc-600 tabular-nums">
-                {String(y.year).slice(2)}
-              </span>
-            </div>
-          );
-        })}
+      <div style={{ width: "100%", height: 80 }}>
+        <ResponsiveContainer>
+          <BarChart data={chartData} margin={{ top: 5, right: 0, bottom: 0, left: 0 }}>
+            <Tooltip
+              cursor={false}
+              content={({ active, payload }) => {
+                if (!active || !payload?.[0]) return null;
+                const d = payload[0].payload;
+                return (
+                  <div style={{
+                    backgroundColor: "#18181b",
+                    border: "1px solid #27272a",
+                    borderRadius: 4,
+                    padding: "6px 10px",
+                    fontSize: 11,
+                    fontFamily: "monospace",
+                    color: "#d4d4d8",
+                  }}>
+                    <div style={{ color: "#a1a1aa", marginBottom: 2 }}>{d.name}</div>
+                    <div>{Number(d.value).toFixed(1)}/5 ({Number(d.reviews).toLocaleString()} reviews)</div>
+                  </div>
+                );
+              }}
+            />
+            <Bar dataKey="value" radius={[2, 2, 0, 0]} maxBarSize={28}>
+              {chartData.map((entry, index) => (
+                <Cell key={index} fill={entry.fill} fillOpacity={0.7} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
       <div className="flex justify-between">
         <span className="font-mono text-[10px] text-zinc-600">
@@ -85,7 +104,7 @@ export function SentimentTimeline({
         <span
           className={`font-mono text-[10px] font-bold ${last.avg > first.avg ? "text-green-500" : "text-red-500"}`}
         >
-          Now: {last.avg.toFixed(1)}/5 ({last.reviews} reviews)
+          <span className={last.avg > first.avg ? "text-green-500 font-bold" : "text-red-500 font-bold"}>Now</span>: {last.avg.toFixed(1)}/5 ({last.reviews} reviews)
         </span>
       </div>
     </div>

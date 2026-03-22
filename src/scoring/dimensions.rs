@@ -1,0 +1,176 @@
+use super::data::ScoringData;
+
+/// Infrastructure score (weight: 15%)
+///
+/// runway_score     = LEAST(runway_count / 3.0, 1.0) * 100
+/// length_score     = LEAST(longest_runway_ft / 13000.0, 1.0) * 100
+/// age_score        = renovation-aware aging formula
+/// capacity_score   = LEAST((annual_pax_latest / capacity) * 100, 100)
+///
+/// score = runway_score * 0.35 + length_score * 0.25 + age_score * 0.25 + capacity_score * 0.15
+pub(crate) fn score_infrastructure(data: &ScoringData, reference_year: i16) -> f64 {
+    let runway_score = (data.runway_count as f64 / 3.0).min(1.0) * 100.0;
+
+    let length_score = data
+        .max_runway_length_ft
+        .map(|len| (len as f64 / 13000.0).min(1.0) * 100.0)
+        .unwrap_or(0.0);
+
+    let age_score = if let Some(reno) = data.last_major_reno {
+        // Recently renovated: penalty based on years since renovation
+        (100.0 - (reference_year as f64 - reno as f64) * 3.0).max(0.0)
+    } else if let Some(opened) = data.opened_year {
+        // No renovation: slower penalty based on age since opening
+        (100.0 - (reference_year as f64 - opened as f64) * 1.5).max(0.0)
+    } else {
+        50.0 // no data = neutral
+    };
+
+    let capacity_score = match (data.annual_pax_latest_m, data.annual_capacity_m) {
+        (Some(pax), Some(cap)) if cap > 0.0 => ((pax / cap) * 100.0).min(100.0),
+        _ => 50.0,
+    };
+
+    let score = runway_score * 0.35 + length_score * 0.25 + age_score * 0.25 + capacity_score * 0.15;
+    score.clamp(0.0, 100.0)
+}
+
+/// Operational score (weight: 25%)
+///
+/// delay_score        = GREATEST(0, 100 - (delay_pct * 2.5))
+/// avg_delay_score    = GREATEST(0, 100 - (avg_delay_minutes * 3))
+/// cancellation_score = GREATEST(0, 100 - (cancellation_pct * 10))
+/// taxi_score         = GREATEST(0, 100 - (taxi_out_additional_min * 10))
+///
+/// attribution_modifier = 1.0 - (airport_delay_pct * 0.003)
+///
+/// score = (delay * 0.35 + avg_delay * 0.25 + cancel * 0.20 + taxi * 0.20) * modifier
+pub(crate) fn score_operational(data: &ScoringData) -> f64 {
+    let delay_score = data
+        .avg_delay_pct
+        .map(|d| (100.0 - d * 2.5).max(0.0))
+        .unwrap_or(70.0); // no data = slightly below neutral
+
+    let avg_delay_score = data
+        .avg_delay_minutes
+        .map(|d| (100.0 - d * 3.0).max(0.0))
+        .unwrap_or(70.0);
+
+    let cancellation_score = data
+        .avg_cancellation_pct
+        .map(|d| (100.0 - d * 10.0).max(0.0))
+        .unwrap_or(80.0);
+
+    let taxi_score = data
+        .taxi_out_additional_min
+        .map(|d| (100.0 - d * 10.0).max(0.0))
+        .unwrap_or(70.0);
+
+    let attribution_modifier = data
+        .delay_airport_pct
+        .map(|d| 1.0 - d * 0.003)
+        .unwrap_or(1.0);
+
+    let raw = delay_score * 0.35
+        + avg_delay_score * 0.25
+        + cancellation_score * 0.20
+        + taxi_score * 0.20;
+
+    (raw * attribution_modifier).clamp(0.0, 100.0)
+}
+
+/// Sentiment score (weight: 25%)
+///
+/// rating_score    = ((avg_rating - 1) / 9.0) * 100   -- normalise 1-10 to 0-100
+/// sub_score_avg   = ((sum_of_non_null_sub_scores - count) / (count * 4.0)) * 100
+/// confidence      = LEAST(review_count / 500.0, 1.0)
+///
+/// score = (rating_score * 0.6 + sub_score_avg * 0.4) * confidence
+///       + rating_score * (1 - confidence) * 0.6
+pub(crate) fn score_sentiment(data: &ScoringData) -> f64 {
+    match data.weighted_avg_rating {
+        Some(rating) => {
+            // avg_rating from sentiment_snapshots is already on 1-10 scale
+            // (Skytrax uses 1-10 natively, Google reviews are stored as rating * 2)
+            let rating_score = ((rating - 1.0) / 9.0) * 100.0;
+
+            let sub_score_avg = if data.sub_score_count > 0 {
+                // Sub-scores are 0-5 scale. Normalise: (sum - count) / (count * 4) * 100
+                let count = data.sub_score_count as f64;
+                ((data.sub_score_sum - count) / (count * 4.0)) * 100.0
+            } else {
+                rating_score // fallback to rating if no sub-scores
+            };
+
+            let confidence = data
+                .total_review_count
+                .map(|c| (c as f64 / 500.0).min(1.0))
+                .unwrap_or(0.0);
+
+            let score = (rating_score * 0.6 + sub_score_avg * 0.4) * confidence
+                + rating_score * (1.0 - confidence) * 0.6;
+
+            score.clamp(0.0, 100.0)
+        }
+        None => 50.0,
+    }
+}
+
+/// Sentiment velocity score (weight: 15%)
+///
+/// Compares last 2 years (8 quarters) vs prior 2 years (8 quarters).
+/// This captures longer improvement arcs (e.g., Luton's renovation journey).
+///
+/// delta = avg_rating_last_8q - avg_rating_prior_8q  (on 0-5 scale)
+/// score = LEAST(100, GREATEST(0, 50 + (delta * 20)))
+///
+/// 50 = flat, 70 = +1.0 rating improvement, 30 = -1.0 decline
+pub(crate) fn score_sentiment_velocity(data: &ScoringData) -> f64 {
+    match (data.avg_rating_last_8q, data.avg_rating_prior_8q) {
+        (Some(last), Some(prior)) => {
+            let delta = last - prior;
+            (50.0 + delta * 20.0).clamp(0.0, 100.0)
+        }
+        _ => 50.0, // no trend data = flat
+    }
+}
+
+/// Connectivity score (weight: 10%)
+///
+/// destination_score = LEAST(unique_destination_count / 100.0, 1.0) * 100
+/// airline_score     = LEAST(airline_count / 30.0, 1.0) * 100
+/// intl_ratio_score  = (international_pax / total_pax) * 100
+///
+/// score = destination_score * 0.4 + airline_score * 0.3 + intl_ratio_score * 0.3
+pub(crate) fn score_connectivity(data: &ScoringData) -> f64 {
+    let destination_score = (data.destination_count as f64 / 100.0).min(1.0) * 100.0;
+    let airline_score = (data.airline_count as f64 / 30.0).min(1.0) * 100.0;
+
+    let intl_ratio_score = match (data.international_pax, data.total_pax) {
+        (Some(intl), Some(total)) if total > 0 => (intl as f64 / total as f64) * 100.0,
+        _ => 50.0, // no data = assume half international
+    };
+
+    let score = destination_score * 0.4 + airline_score * 0.3 + intl_ratio_score * 0.3;
+    score.clamp(0.0, 100.0)
+}
+
+/// Operator score (weight: 10%)
+///
+/// Average of sentiment + operational scores across all airports
+/// the same operator manages in the dataset.
+/// If only 1 airport for this operator, weight 50% with neutral baseline of 50.
+pub(crate) fn score_operator(data: &ScoringData) -> f64 {
+    match (data.operator_avg_sentiment, data.operator_avg_operational) {
+        (Some(sentiment), Some(operational)) => {
+            let portfolio_avg = (sentiment + operational) / 2.0;
+            if data.operator_airport_count <= 1 {
+                // Single airport: blend 50/50 with neutral baseline
+                (portfolio_avg * 0.5) + (50.0 * 0.5)
+            } else {
+                portfolio_avg
+            }
+        }
+        _ => 50.0,
+    }
+}
