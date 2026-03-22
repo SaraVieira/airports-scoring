@@ -38,7 +38,7 @@ export const TopStats = ({
       label="YoY Growth"
       color={getYoyGrowthColor(yoyGrowth)}
     />
-    {capacityNum && (
+    {capacityNum != null && capacityNum > 0 && (
       <Stat
         value={fmtM(capacityNum)}
         label="Annual Capacity"
@@ -192,7 +192,7 @@ export const PaxBreakdown = ({ latestPax }: PaxBreakdownProps) => {
 
   return (
     <div className="flex gap-8">
-      {latestPax.internationalPax && (
+      {latestPax.internationalPax != null && latestPax.internationalPax > 0 && (
         <Stat
           value={fmtM(latestPax.internationalPax)}
           label={`International${
@@ -203,7 +203,7 @@ export const PaxBreakdown = ({ latestPax }: PaxBreakdownProps) => {
           size="text-[28px]"
         />
       )}
-      {latestPax.domesticPax && (
+      {latestPax.domesticPax != null && latestPax.domesticPax > 0 && (
         <Stat
           value={fmtM(latestPax.domesticPax)}
           label={`Domestic${
@@ -215,7 +215,7 @@ export const PaxBreakdown = ({ latestPax }: PaxBreakdownProps) => {
           color="text-zinc-600"
         />
       )}
-      {latestPax.aircraftMovements && (
+      {latestPax.aircraftMovements != null && latestPax.aircraftMovements > 0 && (
         <Stat
           value={fmt(latestPax.aircraftMovements)}
           label="Aircraft Movements"

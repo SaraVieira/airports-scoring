@@ -18,197 +18,49 @@ export function routeCountry(r: RouteRow): string {
   return r.destinationAirport?.country ?? "Unknown";
 }
 
-// Simple continent mapping by country code prefix
+// Module-level Record for O(1) country-to-region lookups
+const countryToRegion: Record<string, string> = {};
+
+for (const code of [
+  "AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT",
+  "LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES","SE","GB","NO","CH",
+  "IS","AL","BA","ME","MK","RS","XK","UA","MD","BY",
+]) {
+  countryToRegion[code] = "Europe";
+}
+
+for (const code of [
+  "DZ","AO","BJ","BW","BF","BI","CV","CM","CF","TD","KM","CD","CG","CI","DJ",
+  "EG","GQ","ER","SZ","ET","GA","GM","GH","GN","GW","KE","LS","LR","LY","MG",
+  "MW","ML","MR","MU","MA","MZ","NA","NE","NG","RW","ST","SN","SC","SL","SO",
+  "ZA","SS","SD","TZ","TG","TN","UG","ZM","ZW",
+]) {
+  countryToRegion[code] = "Africa";
+}
+
+for (const code of [
+  "AE","BH","IL","IQ","IR","JO","KW","LB","OM","PS","QA","SA","SY","TR","YE",
+]) {
+  countryToRegion[code] = "Middle East";
+}
+
+for (const code of [
+  "AF","AM","AZ","BD","BT","BN","KH","CN","GE","IN","ID","JP","KZ","KG","LA",
+  "MY","MV","MN","MM","NP","KP","PK","PH","RU","SG","KR","LK","TW","TJ","TH",
+  "TL","TM","UZ","VN",
+]) {
+  countryToRegion[code] = "Asia";
+}
+
+for (const code of [
+  "US","CA","MX","BR","AR","CL","CO","PE","VE","EC","BO","PY","UY","GY","SR",
+  "CR","PA","CU","DO","HT","JM","TT","BS","BB","GT","HN","SV","NI","BZ","PR",
+]) {
+  countryToRegion[code] = "Americas";
+}
+
+// Simple continent mapping by country code
 export function routeRegion(r: RouteRow): string {
   const country = routeCountry(r);
-  // European countries
-  const europe = [
-    "AT",
-    "BE",
-    "BG",
-    "HR",
-    "CY",
-    "CZ",
-    "DK",
-    "EE",
-    "FI",
-    "FR",
-    "DE",
-    "GR",
-    "HU",
-    "IE",
-    "IT",
-    "LV",
-    "LT",
-    "LU",
-    "MT",
-    "NL",
-    "PL",
-    "PT",
-    "RO",
-    "SK",
-    "SI",
-    "ES",
-    "SE",
-    "GB",
-    "NO",
-    "CH",
-    "IS",
-    "AL",
-    "BA",
-    "ME",
-    "MK",
-    "RS",
-    "XK",
-    "UA",
-    "MD",
-    "BY",
-  ];
-  if (europe.includes(country)) return "Europe";
-  const africa = [
-    "DZ",
-    "AO",
-    "BJ",
-    "BW",
-    "BF",
-    "BI",
-    "CV",
-    "CM",
-    "CF",
-    "TD",
-    "KM",
-    "CD",
-    "CG",
-    "CI",
-    "DJ",
-    "EG",
-    "GQ",
-    "ER",
-    "SZ",
-    "ET",
-    "GA",
-    "GM",
-    "GH",
-    "GN",
-    "GW",
-    "KE",
-    "LS",
-    "LR",
-    "LY",
-    "MG",
-    "MW",
-    "ML",
-    "MR",
-    "MU",
-    "MA",
-    "MZ",
-    "NA",
-    "NE",
-    "NG",
-    "RW",
-    "ST",
-    "SN",
-    "SC",
-    "SL",
-    "SO",
-    "ZA",
-    "SS",
-    "SD",
-    "TZ",
-    "TG",
-    "TN",
-    "UG",
-    "ZM",
-    "ZW",
-  ];
-  if (africa.includes(country)) return "Africa";
-  const middleEast = [
-    "AE",
-    "BH",
-    "IL",
-    "IQ",
-    "IR",
-    "JO",
-    "KW",
-    "LB",
-    "OM",
-    "PS",
-    "QA",
-    "SA",
-    "SY",
-    "TR",
-    "YE",
-  ];
-  if (middleEast.includes(country)) return "Middle East";
-  const asia = [
-    "AF",
-    "AM",
-    "AZ",
-    "BD",
-    "BT",
-    "BN",
-    "KH",
-    "CN",
-    "GE",
-    "IN",
-    "ID",
-    "JP",
-    "KZ",
-    "KG",
-    "LA",
-    "MY",
-    "MV",
-    "MN",
-    "MM",
-    "NP",
-    "KP",
-    "PK",
-    "PH",
-    "RU",
-    "SG",
-    "KR",
-    "LK",
-    "TW",
-    "TJ",
-    "TH",
-    "TL",
-    "TM",
-    "UZ",
-    "VN",
-  ];
-  if (asia.includes(country)) return "Asia";
-  const americas = [
-    "US",
-    "CA",
-    "MX",
-    "BR",
-    "AR",
-    "CL",
-    "CO",
-    "PE",
-    "VE",
-    "EC",
-    "BO",
-    "PY",
-    "UY",
-    "GY",
-    "SR",
-    "CR",
-    "PA",
-    "CU",
-    "DO",
-    "HT",
-    "JM",
-    "TT",
-    "BS",
-    "BB",
-    "GT",
-    "HN",
-    "SV",
-    "NI",
-    "BZ",
-    "PR",
-  ];
-  if (americas.includes(country)) return "Americas";
-  return "Other";
+  return countryToRegion[country] ?? "Other";
 }

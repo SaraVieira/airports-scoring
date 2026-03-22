@@ -34,31 +34,18 @@ export const Route = createFileRoute("/")({
 function Home() {
   const ranked = Route.useLoaderData();
 
-  const mostImproved = useMemo(
-    () =>
-      [...ranked]
-        .filter((a) => a.scoreSentimentVelocity != null)
-        .sort(
-          (a, b) =>
-            parseFloat(b.scoreSentimentVelocity!) -
-            parseFloat(a.scoreSentimentVelocity!),
-        )
-        .slice(0, 3),
-    [ranked],
-  );
-
-  const wallOfShame = useMemo(
-    () =>
-      [...ranked]
-        .filter((a) => a.scoreSentimentVelocity != null)
-        .sort(
-          (a, b) =>
-            parseFloat(a.scoreSentimentVelocity!) -
-            parseFloat(b.scoreSentimentVelocity!),
-        )
-        .slice(0, 3),
-    [ranked],
-  );
+  const { mostImproved, wallOfShame } = useMemo(() => {
+    const filtered = ranked.filter((a) => a.scoreSentimentVelocity != null);
+    filtered.sort(
+      (a, b) =>
+        parseFloat(b.scoreSentimentVelocity!) -
+        parseFloat(a.scoreSentimentVelocity!),
+    );
+    return {
+      mostImproved: filtered.slice(0, 3),
+      wallOfShame: filtered.slice(-3).reverse(),
+    };
+  }, [ranked]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-zinc-100">
