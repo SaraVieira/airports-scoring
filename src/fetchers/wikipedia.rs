@@ -117,11 +117,19 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
 
     let wikitext = fetch_wikitext(&client, title).await?;
 
-    let opened_year = parse_infobox_field(&wikitext, "opened")
+    // Extract opened year from the RAW infobox value so that templates like
+    // {{Start date|2020|10|31|df=y}} are not stripped before we can grab the year.
+    let opened_year = parse_infobox_field_raw(&wikitext, "opened")
         .and_then(|s| extract_year(&s));
-    let operator_raw = parse_infobox_field(&wikitext, "operator");
-    let owner_raw = parse_infobox_field(&wikitext, "owner");
+    let operator_raw = parse_infobox_field(&wikitext, "operator")
+        .or_else(|| parse_infobox_field(&wikitext, "owner-oper"))
+        .or_else(|| parse_infobox_field(&wikitext, "owner_oper"));
+    let owner_raw = parse_infobox_field(&wikitext, "owner")
+        .or_else(|| parse_infobox_field(&wikitext, "owner-oper"))
+        .or_else(|| parse_infobox_field(&wikitext, "owner_oper"));
     let terminal_count = parse_infobox_field(&wikitext, "terminals")
+        .or_else(|| parse_infobox_field(&wikitext, "terminal_count"))
+        .or_else(|| parse_infobox_field(&wikitext, "num_terminals"))
         .and_then(|s| s.trim().parse::<i16>().ok());
 
     let pax_rows = parse_passenger_table(&wikitext);
@@ -149,12 +157,25 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
     let milestone_notes = extract_section_text(&wikitext, &["history", "milestone", "timeline"]);
     let skytrax_history = extract_skytrax_history(&wikitext);
 
+    // Fetch ACI ASQ awards from the dedicated Wikipedia article.
+    // Search by airport name, city, and short name for better matching.
+    let search_name = format!(
+        "{} {} {}",
+        airport.name,
+        airport.city,
+        airport.short_name.as_deref().unwrap_or("")
+    );
+    let aci_awards = fetch_aci_awards(&client, &search_name).await;
+    if aci_awards.is_some() {
+        info!(airport = iata, "Extracted ACI ASQ awards");
+    }
+
     sqlx::query(
         "INSERT INTO wikipedia_snapshots
          (airport_id, opened_year, operator_raw, owner_raw, terminal_count,
           renovation_notes, ownership_notes, milestone_notes,
-          skytrax_history, wikipedia_url, article_revision_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
+          skytrax_history, aci_awards, wikipedia_url, article_revision_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
     )
     .bind(airport.id)
     .bind(opened_year)
@@ -165,11 +186,64 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
     .bind(ownership_notes.as_deref())
     .bind(milestone_notes.as_deref())
     .bind(skytrax_history.as_ref().and_then(|v| serde_json::to_value(v).ok()))
+    .bind(aci_awards.as_ref().and_then(|v| serde_json::to_value(v).ok()))
     .bind(wiki_url)
     .bind(revision_id)
     .execute(pool)
     .await
     .context("Failed to insert wikipedia_snapshot")?;
+
+    // Backfill airports table with parsed Wikipedia data
+    sqlx::query(
+        r#"
+        UPDATE airports
+        SET opened_year    = COALESCE($2, airports.opened_year),
+            terminal_count = COALESCE($3, airports.terminal_count)
+        WHERE id = $1
+        "#,
+    )
+    .bind(airport.id)
+    .bind(opened_year)
+    .bind(terminal_count)
+    .execute(pool)
+    .await
+    .context("Failed to update airports with Wikipedia data")?;
+
+    // Try to match operator_raw against organisations and set operator_id
+    if let Some(ref op) = operator_raw {
+        let org_id: Option<(i32,)> = sqlx::query_as(
+            "SELECT id FROM organisations WHERE name ILIKE $1 OR short_name ILIKE $1 LIMIT 1",
+        )
+        .bind(op)
+        .fetch_optional(pool)
+        .await?;
+
+        if let Some((oid,)) = org_id {
+            sqlx::query("UPDATE airports SET operator_id = $1 WHERE id = $2 AND operator_id IS NULL")
+                .bind(oid)
+                .bind(airport.id)
+                .execute(pool)
+                .await?;
+        }
+    }
+
+    // Try to match owner_raw against organisations and set owner_id
+    if let Some(ref ow) = owner_raw {
+        let org_id: Option<(i32,)> = sqlx::query_as(
+            "SELECT id FROM organisations WHERE name ILIKE $1 OR short_name ILIKE $1 LIMIT 1",
+        )
+        .bind(ow)
+        .fetch_optional(pool)
+        .await?;
+
+        if let Some((oid,)) = org_id {
+            sqlx::query("UPDATE airports SET owner_id = $1 WHERE id = $2 AND owner_id IS NULL")
+                .bind(oid)
+                .bind(airport.id)
+                .execute(pool)
+                .await?;
+        }
+    }
 
     let total = pax_count + 1;
     info!(
@@ -223,13 +297,48 @@ async fn fetch_wikitext(client: &reqwest::Client, title: &str) -> Result<String>
         .context("No wikitext returned from Wikipedia API")
 }
 
-fn parse_infobox_field(wikitext: &str, field: &str) -> Option<String> {
-    // Dynamic regex per field name — can't be static.
+/// Extract the raw (unstripped) value of an infobox field.
+/// This scans only inside the first `{{Infobox airport` block to avoid
+/// false-positive matches from other templates or article body text.
+fn parse_infobox_field_raw(wikitext: &str, field: &str) -> Option<String> {
+    let infobox = extract_infobox_block(wikitext)?;
     let pattern = format!(r"(?mi)^\|\s*{}\s*=\s*(.+)$", regex::escape(field));
     let re = Regex::new(&pattern).ok()?;
-    re.captures(wikitext)
+    re.captures(&infobox)
         .and_then(|c| c.get(1))
-        .map(|m| strip_wiki_markup(m.as_str().trim()))
+        .map(|m| m.as_str().trim().to_string())
+}
+
+fn parse_infobox_field(wikitext: &str, field: &str) -> Option<String> {
+    let raw = parse_infobox_field_raw(wikitext, field)?;
+    let stripped = strip_wiki_markup(&raw);
+    if stripped.is_empty() { None } else { Some(stripped) }
+}
+
+/// Extract the `{{Infobox airport ... }}` block from wikitext.
+/// Handles nested `{{ }}` pairs so we find the correct closing `}}`.
+fn extract_infobox_block(wikitext: &str) -> Option<String> {
+    let lower = wikitext.to_lowercase();
+    let start = lower.find("{{infobox airport")?;
+    let bytes = wikitext.as_bytes();
+    let mut depth = 0u32;
+    let mut i = start;
+    while i < bytes.len() - 1 {
+        if bytes[i] == b'{' && bytes[i + 1] == b'{' {
+            depth += 1;
+            i += 2;
+        } else if bytes[i] == b'}' && bytes[i + 1] == b'}' {
+            depth -= 1;
+            if depth == 0 {
+                return Some(wikitext[start..i + 2].to_string());
+            }
+            i += 2;
+        } else {
+            i += 1;
+        }
+    }
+    // If we never closed, return everything from start (best effort).
+    Some(wikitext[start..].to_string())
 }
 
 fn extract_year(s: &str) -> Option<i16> {
@@ -381,6 +490,124 @@ fn extract_skytrax_history(wikitext: &str) -> Option<serde_json::Map<String, Val
     }
 }
 
+/// Fetch ACI ASQ awards from the Wikipedia article
+/// "List_of_Airport_Service_Quality_Award_winners".
+///
+/// Returns a JSONB-compatible map like:
+/// {"2019": {"1st": "Best Airport Europe >20M"}, "2007": {"3rd": "Best Airport Europe >20M"}}
+async fn fetch_aci_awards(
+    client: &reqwest::Client,
+    airport_name: &str,
+) -> Option<serde_json::Map<String, Value>> {
+    let url =
+        "https://en.wikipedia.org/w/api.php?action=parse&page=List_of_Airport_Service_Quality_Award_winners&prop=wikitext&format=json";
+
+    let resp: WikiParseResponse = client.get(url).send().await.ok()?.json().await.ok()?;
+    let wikitext = resp.parse?.wikitext?.content?;
+
+    // Build search terms from the combined airport name + city + short_name string.
+    let name_lower = airport_name.to_lowercase();
+    let search_terms: Vec<String> = {
+        let mut terms = Vec::new();
+        // Split by space and add each significant word (>3 chars)
+        for word in name_lower.split_whitespace() {
+            let w = word.trim();
+            if w.len() > 3 && w != "airport" && w != "international" && w != "de" && w != "the" {
+                if !terms.contains(&w.to_string()) {
+                    terms.push(w.to_string());
+                }
+            }
+        }
+        // Also add multi-word combinations like "porto airport", "munich airport"
+        if let Some(stripped) = name_lower.strip_suffix(" airport") {
+            terms.push(stripped.to_string());
+        }
+        terms
+    };
+
+    let mut awards: serde_json::Map<String, Value> = serde_json::Map::new();
+    let mut current_section = String::new();
+
+    for line in wikitext.lines() {
+        let trimmed = line.trim();
+
+        // Track section headers for category context
+        if trimmed.starts_with("==") {
+            current_section = strip_wiki_markup(trimmed)
+                .trim_matches('=')
+                .trim()
+                .to_string();
+            continue;
+        }
+
+        // Skip non-table rows
+        if !trimmed.starts_with('|') && !trimmed.starts_with("||") {
+            continue;
+        }
+
+        let line_lower = trimmed.to_lowercase();
+        let line_clean = strip_wiki_markup(trimmed);
+
+        // Check if this line mentions our airport
+        let matches = search_terms.iter().any(|term| line_lower.contains(term));
+        if !matches {
+            continue;
+        }
+
+        // Extract year from this line or nearby context
+        if let Some(year_cap) = RE_YEAR.captures(&line_clean) {
+            let year = year_cap[1].parse::<i16>().ok()?;
+            if !(2000..=2030).contains(&year) {
+                continue;
+            }
+
+            // Determine placement: check column position in the table row.
+            // Wiki tables use || to separate columns. Our airport's position
+            // relative to the year tells us 1st/2nd/3rd.
+            let cells: Vec<&str> = trimmed.split("||").collect();
+            let mut placement = "winner";
+
+            for (i, cell) in cells.iter().enumerate() {
+                let cell_lower = cell.to_lowercase();
+                if search_terms.iter().any(|t| cell_lower.contains(t)) {
+                    placement = match i {
+                        0 => "1st", // First data column after year
+                        1 => "1st",
+                        2 => "2nd",
+                        3 => "3rd",
+                        _ => "winner",
+                    };
+                    break;
+                }
+            }
+
+            let year_str = year.to_string();
+            let category = if current_section.is_empty() {
+                "ASQ Award".to_string()
+            } else {
+                current_section.clone()
+            };
+
+            let entry = awards
+                .entry(year_str)
+                .or_insert_with(|| Value::Object(serde_json::Map::new()));
+
+            if let Value::Object(ref mut map) = entry {
+                map.insert(
+                    placement.to_string(),
+                    Value::String(category),
+                );
+            }
+        }
+    }
+
+    if awards.is_empty() {
+        None
+    } else {
+        Some(awards)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -412,10 +639,39 @@ mod tests {
 
     #[test]
     fn parse_infobox_field_basic() {
-        let wikitext = "| name = London Heathrow\n| opened = 1946\n| operator = [[Heathrow Airport Holdings]]";
+        let wikitext = "{{Infobox airport\n| name = London Heathrow\n| opened = 1946\n| operator = [[Heathrow Airport Holdings]]\n}}";
         assert_eq!(parse_infobox_field(wikitext, "opened"), Some("1946".to_string()));
         assert_eq!(parse_infobox_field(wikitext, "operator"), Some("Heathrow Airport Holdings".to_string()));
         assert_eq!(parse_infobox_field(wikitext, "missing"), None);
+    }
+
+    #[test]
+    fn parse_infobox_start_date_template() {
+        let wikitext = "{{Infobox airport\n| name = Berlin Brandenburg Airport\n| opened = {{Start date|2020|10|31|df=y}}\n| operator = [[Flughafen Berlin Brandenburg|Flughafen Berlin Brandenburg GmbH]]\n| owner = States of [[Berlin]] and [[Brandenburg]], and the [[German government]]\n| terminals = 2\n}}\n== History ==\nSome text here.";
+        // opened_year should extract 2020 from the Start date template
+        let raw = parse_infobox_field_raw(wikitext, "opened");
+        assert!(raw.is_some());
+        assert_eq!(extract_year(&raw.unwrap()), Some(2020));
+        // operator should strip the piped wikilink
+        assert_eq!(parse_infobox_field(wikitext, "operator"), Some("Flughafen Berlin Brandenburg GmbH".to_string()));
+        // owner should strip multiple wikilinks
+        let owner = parse_infobox_field(wikitext, "owner").unwrap();
+        assert!(owner.contains("Berlin"));
+        assert!(owner.contains("Brandenburg"));
+        assert!(!owner.contains("[["));
+        // terminals
+        let terminals = parse_infobox_field(wikitext, "terminals")
+            .and_then(|s| s.trim().parse::<i16>().ok());
+        assert_eq!(terminals, Some(2));
+    }
+
+    #[test]
+    fn extract_infobox_block_nested_templates() {
+        let wikitext = "Some preamble\n{{Infobox airport\n| name = Test\n| opened = {{Start date|2020|10|31}}\n}}\n== History ==\nText";
+        let block = extract_infobox_block(wikitext).unwrap();
+        assert!(block.starts_with("{{Infobox airport"));
+        assert!(block.ends_with("}}"));
+        assert!(block.contains("Start date"));
     }
 
     #[test]
