@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 function cleanCity(city: string): string {
   const parts = city.split(", ");
   if (parts.length === 2 && parts[0] === parts[1]) return parts[0];
@@ -42,9 +44,10 @@ export function WallColumn({
           const val = airport[field];
           const num = val != null ? parseFloat(String(val)) : null;
           return (
-            <a
+            <Link
               key={airport.iataCode}
-              href={`/airport/${airport.iataCode}`}
+              to="/airport/$iata"
+              params={{ iata: airport.iataCode! }}
               className="flex items-center justify-between py-3 border-b border-white/5 last:border-0 hover:bg-white/3 transition-colors -mx-2 px-2"
             >
               <div className="flex items-center gap-3">
@@ -73,7 +76,7 @@ export function WallColumn({
                   {num != null ? Math.round(num) : "—"}
                 </span>
               </div>
-            </a>
+            </Link>
           );
         })}
       </div>

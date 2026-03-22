@@ -34,7 +34,7 @@ export function SentimentBar({
         {explanation && (
           <Popover.Root>
             <Popover.Trigger asChild>
-              <button className="text-zinc-600 hover:text-zinc-400 transition-colors cursor-pointer text-[9px]">
+              <button aria-label={`Info about ${label}`} className="text-zinc-600 hover:text-zinc-400 transition-colors cursor-pointer text-[9px]">
                 ⓘ
               </button>
             </Popover.Trigger>

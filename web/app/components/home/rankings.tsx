@@ -1,4 +1,5 @@
 import { scoreColor } from "~/utils/scoring";
+import { Link } from "@tanstack/react-router";
 
 export const Rankings = ({
   ranked,
@@ -47,9 +48,10 @@ export const Rankings = ({
           const barWidth = score != null ? Math.min(score, 100) : 0;
 
           return (
-            <a
+            <Link
               key={airport.iataCode}
-              href={`/airport/${airport.iataCode}`}
+              to="/airport/$iata"
+              params={{ iata: airport.iataCode! }}
               className={`group flex items-center gap-2 border-b transition-colors ${
                 isTop3
                   ? "py-3.5 border-white/6 hover:bg-white/4"
@@ -105,7 +107,7 @@ export const Rankings = ({
                   {score != null ? Math.round(score) : "—"}
                 </span>
               </span>
-            </a>
+            </Link>
           );
         })}
       </div>

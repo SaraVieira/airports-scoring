@@ -1,5 +1,5 @@
 export type Airport = Awaited<
-  ReturnType<(typeof import("../routes/airport.$iata"))["getAirport"]>
+  ReturnType<(typeof import("../server/get-airport"))["getAirport"]>
 >;
 
 export type RouteRow =

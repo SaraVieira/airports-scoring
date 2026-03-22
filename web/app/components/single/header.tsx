@@ -1,12 +1,10 @@
 import { fmt } from "~/utils/format";
+import { Airport } from "~/utils/types";
 
 export const Header = ({
   airport,
 }: {
-  airport: (typeof import("../../db/schema"))["airports"]["$inferSelect"] & {
-    country?: { name: string } | null;
-    operator?: { name: string } | null;
-  };
+  airport: Airport;
 }) => {
   return (
     <header className="flex flex-col gap-1">

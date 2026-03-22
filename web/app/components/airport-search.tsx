@@ -89,7 +89,7 @@ export function AirportSearch({ compact = false }: { compact?: boolean }) {
                 <Command.Item
                   key={airport.iataCode}
                   value={airport.iataCode ?? ""}
-                  onSelect={() => handleSelect(airport.iataCode!)}
+                  onSelect={() => airport.iataCode && handleSelect(airport.iataCode)}
                   className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-white/[0.04] data-[selected=true]:bg-white/[0.04]"
                 >
                   <span className="font-grotesk text-[13px] font-bold text-[#f5f5f0] tracking-wider w-10 shrink-0">

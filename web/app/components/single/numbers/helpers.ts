@@ -1,6 +1,5 @@
-import { getAirport } from "~/routes/airport.$iata";
+import { Airport } from "~/utils/types";
 
-type Airport = Awaited<ReturnType<typeof getAirport>>;
 export type PaxYearly = Airport["paxYearly"][0];
 
 export const isCurrentYearPartial = (

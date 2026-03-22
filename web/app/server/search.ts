@@ -8,7 +8,8 @@ export const searchAirports = createServerFn({ method: "GET" })
   .handler(async ({ data: query }) => {
     if (!query || query.length < 1) return [];
 
-    const pattern = `%${query}%`;
+    const escaped = query.replace(/[%_]/g, '\\$&');
+    const pattern = `%${escaped}%`;
     const results = await db
       .select({
         iataCode: airports.iataCode,

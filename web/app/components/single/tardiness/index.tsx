@@ -17,6 +17,11 @@ export const Tardiness = ({ airport }: { airport: Airport }) => {
     { label: "ATC", val: opsAgg.delayAtcPct },
     { label: "Airport", val: opsAgg.delayAirportPct },
   ];
+
+  const hasDelayReason =
+    opsAgg.delayWeatherPct != null ||
+    opsAgg.delayAtcPct != null ||
+    opsAgg.delayAirportPct != null;
   return (
     <section className="flex flex-col gap-5 bg-[#0f0a0a] -mx-16 px-16 py-8">
       <HeaderText>Tardiness Report</HeaderText>
@@ -82,9 +87,7 @@ export const Tardiness = ({ airport }: { airport: Airport }) => {
         </div>
       )}
 
-      {(opsAgg.delayWeatherPct != null ||
-        opsAgg.delayAtcPct != null ||
-        opsAgg.delayAirportPct != null) && (
+      {hasDelayReason && (
         <>
           <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[1.5px] uppercase">
             Delay Causes (ATFM)
