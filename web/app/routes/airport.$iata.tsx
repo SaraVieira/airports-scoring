@@ -348,7 +348,59 @@ function AirportDetail() {
   // Aggregate last 12 months of operational stats for meaningful averages
   const recentOps = airport.operationalStats.slice(0, 12);
   const opsAgg = recentOps.length > 0 ? aggregateOps(recentOps) : null;
-  const latestSentiment = airport.sentimentSnapshots[0];
+  // Aggregate ALL sentiment snapshots for a complete picture
+  const latestSentiment = (() => {
+    const snaps = airport.sentimentSnapshots;
+    if (snaps.length === 0) return null;
+
+    let totalRating = 0, ratingCount = 0;
+    let totalReviews = 0;
+    let totalPositive = 0, totalNegative = 0, totalNeutral = 0, pctCount = 0;
+    let queueSum = 0, queueN = 0;
+    let cleanSum = 0, cleanN = 0;
+    let staffSum = 0, staffN = 0;
+    let foodSum = 0, foodN = 0;
+    let wifiSum = 0, wifiN = 0;
+    let waySum = 0, wayN = 0;
+    let transSum = 0, transN = 0;
+    let shopSum = 0, shopN = 0;
+    let skytraxStars = snaps[0].skytraxStars; // latest star rating
+
+    for (const s of snaps) {
+      if (s.avgRating != null) { totalRating += parseFloat(String(s.avgRating)); ratingCount++; }
+      if (s.reviewCount != null) totalReviews += s.reviewCount;
+      if (s.positivePct != null) { totalPositive += parseFloat(String(s.positivePct)); pctCount++; }
+      if (s.negativePct != null) totalNegative += parseFloat(String(s.negativePct));
+      if (s.neutralPct != null) totalNeutral += parseFloat(String(s.neutralPct));
+      if (s.scoreQueuing != null) { queueSum += parseFloat(String(s.scoreQueuing)); queueN++; }
+      if (s.scoreCleanliness != null) { cleanSum += parseFloat(String(s.scoreCleanliness)); cleanN++; }
+      if (s.scoreStaff != null) { staffSum += parseFloat(String(s.scoreStaff)); staffN++; }
+      if (s.scoreFoodBev != null) { foodSum += parseFloat(String(s.scoreFoodBev)); foodN++; }
+      if (s.scoreWifi != null) { wifiSum += parseFloat(String(s.scoreWifi)); wifiN++; }
+      if (s.scoreWayfinding != null) { waySum += parseFloat(String(s.scoreWayfinding)); wayN++; }
+      if (s.scoreTransport != null) { transSum += parseFloat(String(s.scoreTransport)); transN++; }
+      if (s.scoreShopping != null) { shopSum += parseFloat(String(s.scoreShopping)); shopN++; }
+      if (s.skytraxStars != null) skytraxStars = s.skytraxStars;
+    }
+
+    return {
+      avgRating: ratingCount > 0 ? String((totalRating / ratingCount).toFixed(2)) : null,
+      reviewCount: totalReviews,
+      positivePct: pctCount > 0 ? String((totalPositive / pctCount).toFixed(2)) : null,
+      negativePct: pctCount > 0 ? String((totalNegative / pctCount).toFixed(2)) : null,
+      neutralPct: pctCount > 0 ? String((totalNeutral / pctCount).toFixed(2)) : null,
+      scoreQueuing: queueN > 0 ? String((queueSum / queueN).toFixed(2)) : null,
+      scoreCleanliness: cleanN > 0 ? String((cleanSum / cleanN).toFixed(2)) : null,
+      scoreStaff: staffN > 0 ? String((staffSum / staffN).toFixed(2)) : null,
+      scoreFoodBev: foodN > 0 ? String((foodSum / foodN).toFixed(2)) : null,
+      scoreWifi: wifiN > 0 ? String((wifiSum / wifiN).toFixed(2)) : null,
+      scoreWayfinding: wayN > 0 ? String((waySum / wayN).toFixed(2)) : null,
+      scoreTransport: transN > 0 ? String((transSum / transN).toFixed(2)) : null,
+      scoreShopping: shopN > 0 ? String((shopSum / shopN).toFixed(2)) : null,
+      skytraxStars,
+      snapshotCount: snaps.length,
+    };
+  })();
   const wiki = airport.wikipediaSnapshots[0];
   const routesWithFlights = airport.routesOut.filter((r) => r.flightsPerMonth != null && r.flightsPerMonth > 0);
   const topRoute = routesWithFlights[0];
