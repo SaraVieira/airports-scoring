@@ -210,12 +210,13 @@ def extract_lounge_data(soup: BeautifulSoup, url: str) -> dict | None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Priority Pass lounge scraper")
     parser.add_argument("--airport", required=True, help="IATA airport code (e.g. LHR)")
+    parser.add_argument("--country", required=False, help="ISO country code (e.g. GB)")
     args = parser.parse_args()
 
     iata = args.airport.upper()
 
-    # Look up country code
-    country_code = load_country_code(iata)
+    # Use --country arg if provided, otherwise fall back to airports.json
+    country_code = args.country.upper() if args.country else load_country_code(iata)
     if not country_code:
         print(f"ERROR: Could not determine country code for {iata}", file=sys.stderr)
         sys.exit(1)

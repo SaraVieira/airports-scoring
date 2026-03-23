@@ -36,6 +36,8 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         .arg("python/priority_pass_scraper.py")
         .arg("--airport")
         .arg(iata)
+        .arg("--country")
+        .arg(&airport.country_code)
         .output()
         .await
         .context("Failed to run priority_pass_scraper.py")?;

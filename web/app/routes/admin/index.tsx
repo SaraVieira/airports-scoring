@@ -195,7 +195,7 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-zinc-100">
-      <div className="max-w-5xl mx-auto px-16 py-8">
+      <div className="max-w-5xl mx-auto px-16 pt-20 pb-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="font-grotesk text-xl font-bold">Admin Dashboard</h1>

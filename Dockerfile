@@ -13,7 +13,7 @@ FROM debian:bookworm-slim
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates libssl3 libpq5 postgresql-client \
+    ca-certificates libssl3 libpq5 postgresql-client-17 postgresql-common \
     python3 python3-pip python3-venv curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -22,9 +22,10 @@ WORKDIR /app
 # Copy Rust binary
 COPY --from=builder /app/target/release/airport-fetch .
 
-# Copy Python sentiment pipeline
+# Copy Python sentiment pipeline + static data
 COPY python/ python/
 COPY migrations/ migrations/
+COPY data/ data/
 
 # Install Python dependencies in a venv
 RUN python3 -m venv /app/venv
