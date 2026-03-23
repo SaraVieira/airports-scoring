@@ -4,6 +4,7 @@ use serde::Deserialize;
 use sqlx::PgPool;
 use tracing::{info, warn};
 
+use crate::config::SeedAirport;
 use crate::models::{Airport, FetchResult};
 
 #[derive(Debug, Deserialize)]
@@ -37,7 +38,7 @@ struct ScrapedReview {
 
 /// Fetch Skytrax reviews by calling the Python Playwright scraper as a subprocess.
 /// Reads JSON from stdout and upserts reviews into reviews_raw.
-pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Result<FetchResult> {
+pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool, seed_airports: &[SeedAirport]) -> Result<FetchResult> {
     let iata = airport
         .iata_code
         .as_deref()
@@ -74,15 +75,25 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
     // Default to 50 pages (~500 reviews at 10/page). Use --full-refresh for more.
     let max_pages = if full_refresh { "200" } else { "50" };
 
-    let output = tokio::process::Command::new(python)
-        .arg("python/skytrax_scraper.py")
+    // Look up Skytrax slugs from seed config
+    let seed = seed_airports.iter().find(|s| s.iata == iata);
+    let mut cmd = tokio::process::Command::new(python);
+    cmd.arg("python/skytrax_scraper.py")
         .arg("--airport")
         .arg(iata)
         .arg("--since")
         .arg(&since)
         .arg("--max-pages")
-        .arg(max_pages)
-        .output()
+        .arg(max_pages);
+
+    if let Some(slug) = seed.and_then(|s| s.skytrax_review_slug.as_deref()) {
+        cmd.arg("--review-slug").arg(slug);
+    }
+    if let Some(slug) = seed.and_then(|s| s.skytrax_rating_slug.as_deref()) {
+        cmd.arg("--rating-slug").arg(slug);
+    }
+
+    let output = cmd.output()
         .await
         .context("Failed to run skytrax_scraper.py")?;
 

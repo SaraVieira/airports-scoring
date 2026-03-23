@@ -37,13 +37,12 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 def _load_slugs() -> tuple[dict[str, str], dict[str, str]]:
-    """Load Skytrax slugs from airports.json."""
+    """Load Skytrax slugs from airports.json (fallback if --review-slug/--rating-slug not provided)."""
     airports_path = Path(__file__).parent.parent / "airports.json"
     try:
         with open(airports_path) as f:
             airports = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError) as exc:
-        logger.error("Failed to load airports.json: %s", exc)
+    except (FileNotFoundError, json.JSONDecodeError):
         return {}, {}
     review_slugs = {}
     rating_slugs = {}
@@ -383,7 +382,22 @@ def main():
         "--max-pages", type=int, default=50,
         help="Maximum number of review pages to scrape (default: 50, ~500 reviews at 10/page)"
     )
+    parser.add_argument(
+        "--review-slug", required=False,
+        help="Skytrax review slug (e.g. london-heathrow-airport). Overrides airports.json lookup."
+    )
+    parser.add_argument(
+        "--rating-slug", required=False,
+        help="Skytrax rating slug (e.g. london-heathrow-airport). Overrides airports.json lookup."
+    )
     args = parser.parse_args()
+
+    # Override global slug dicts if CLI args provided
+    iata = args.airport.upper()
+    if args.review_slug:
+        AIRPORT_SLUGS[iata] = args.review_slug
+    if args.rating_slug:
+        RATING_SLUGS[iata] = args.rating_slug
 
     try:
         since_date = datetime.strptime(args.since, "%Y-%m-%d")

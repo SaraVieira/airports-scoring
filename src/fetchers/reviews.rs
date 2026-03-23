@@ -23,7 +23,7 @@ pub async fn fetch(
 
     // 1. Skytrax reviews
     info!(airport = iata, "Running Skytrax reviews...");
-    match super::skytrax::fetch(pool, airport, full_refresh).await {
+    match super::skytrax::fetch(pool, airport, full_refresh, seed_airports).await {
         Ok(result) => {
             info!(
                 airport = iata,

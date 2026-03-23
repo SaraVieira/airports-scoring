@@ -64,7 +64,7 @@ pub(crate) async fn dispatch_fetcher(
         // Unified reviews: runs Skytrax + Google in sequence
         "reviews" => fetchers::reviews::fetch(pool, airport, full_refresh, seed_airports).await,
         // Individual review sources (for targeted runs)
-        "skytrax" => fetchers::skytrax::fetch(pool, airport, full_refresh).await,
+        "skytrax" => fetchers::skytrax::fetch(pool, airport, full_refresh, seed_airports).await,
         "google_reviews" => fetchers::google_reviews::fetch(pool, airport, full_refresh, seed_airports).await,
         "sentiment" => fetchers::sentiment::fetch(pool, airport, full_refresh).await,
         "carbon_accreditation" => fetchers::carbon_accreditation::fetch(pool, airport, full_refresh).await,
