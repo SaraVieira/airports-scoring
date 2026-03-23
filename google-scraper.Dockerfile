@@ -29,6 +29,12 @@ COPY google-reviews-scraper-pro/ .
 # Create config.yaml with our defaults
 RUN echo "use_mongodb: false" > config.yaml
 
+# Force English locale so Google doesn't show EU consent pages in local language
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+ENV GOOGLE_CHROME_ARGS="--lang=en-US"
+
 EXPOSE 8000
 
 CMD ["uvicorn", "api_server:app", "--host", "0.0.0.0", "--port", "8000"]
