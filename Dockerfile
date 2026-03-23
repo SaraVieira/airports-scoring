@@ -13,7 +13,7 @@ FROM debian:bookworm-slim
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates libssl3 libpq5 postgresql-client-17 postgresql-common \
+    ca-certificates libssl3 libpq5 postgresql-client \
     python3 python3-pip python3-venv curl \
     && rm -rf /var/lib/apt/lists/*
 
