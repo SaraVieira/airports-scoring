@@ -17,6 +17,10 @@ import {
   wikipediaSnapshots,
   navaids,
   airportSlugs,
+  carbonAccreditation,
+  groundTransport,
+  lounges,
+  hubStatus,
 } from "./schema";
 
 // ============================================================
@@ -55,6 +59,10 @@ export const airportsRelations = relations(airports, ({ one, many }) => ({
   wikipediaSnapshots: many(wikipediaSnapshots),
   navaids: many(navaids),
   slugs: many(airportSlugs),
+  carbonAccreditation: many(carbonAccreditation),
+  groundTransport: many(groundTransport),
+  lounges: many(lounges),
+  hubStatus: many(hubStatus),
 }));
 
 // ============================================================
@@ -180,6 +188,40 @@ export const navaidsRelations = relations(navaids, ({ one }) => ({
 export const airportSlugsRelations = relations(airportSlugs, ({ one }) => ({
   airport: one(airports, {
     fields: [airportSlugs.airportId],
+    references: [airports.id],
+  }),
+}));
+
+export const carbonAccreditationRelations = relations(
+  carbonAccreditation,
+  ({ one }) => ({
+    airport: one(airports, {
+      fields: [carbonAccreditation.airportId],
+      references: [airports.id],
+    }),
+  })
+);
+
+export const groundTransportRelations = relations(
+  groundTransport,
+  ({ one }) => ({
+    airport: one(airports, {
+      fields: [groundTransport.airportId],
+      references: [airports.id],
+    }),
+  })
+);
+
+export const loungesRelations = relations(lounges, ({ one }) => ({
+  airport: one(airports, {
+    fields: [lounges.airportId],
+    references: [airports.id],
+  }),
+}));
+
+export const hubStatusRelations = relations(hubStatus, ({ one }) => ({
+  airport: one(airports, {
+    fields: [hubStatus.airportId],
     references: [airports.id],
   }),
 }));

@@ -38,6 +38,17 @@ pub(crate) struct ScoringData {
     pub operator_avg_sentiment: Option<f64>,
     pub operator_avg_operational: Option<f64>,
     pub operator_airport_count: i64,
+    // Ground transport
+    pub transport_modes_count: i16,
+    pub has_direct_rail: bool,
+    // Hub status
+    pub hub_airline_count: i64,
+    pub focus_city_count: i64,
+    pub operating_base_count: i64,
+    // Lounges
+    pub lounge_count: i64,
+    // Carbon accreditation
+    pub carbon_level: Option<i16>, // 1-7 or None
 }
 
 /// Year-based recency weight: recent years count more.
@@ -178,6 +189,45 @@ pub(crate) async fn gather_scoring_data(
     .fetch_optional(pool)
     .await?;
 
+    // Ground transport
+    let transport: Option<(i16, bool)> = sqlx::query_as(
+        "SELECT transport_modes_count, has_direct_rail \
+         FROM ground_transport WHERE airport_id = $1 \
+         ORDER BY fetched_at DESC LIMIT 1"
+    )
+    .bind(airport.id)
+    .fetch_optional(pool)
+    .await?;
+
+    // Hub status counts
+    let hub_counts: (i64, i64, i64) = sqlx::query_as(
+        "SELECT \
+             COUNT(*) FILTER (WHERE status_type = 'hub'), \
+             COUNT(*) FILTER (WHERE status_type = 'focus_city'), \
+             COUNT(*) FILTER (WHERE status_type = 'operating_base') \
+         FROM hub_status WHERE airport_id = $1"
+    )
+    .bind(airport.id)
+    .fetch_one(pool)
+    .await?;
+
+    // Lounge count
+    let lounge_count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM lounges WHERE airport_id = $1"
+    )
+    .bind(airport.id)
+    .fetch_one(pool)
+    .await?;
+
+    // Carbon accreditation
+    let carbon: Option<(i16,)> = sqlx::query_as(
+        "SELECT level FROM carbon_accreditation WHERE airport_id = $1 \
+         ORDER BY report_year DESC LIMIT 1"
+    )
+    .bind(airport.id)
+    .fetch_optional(pool)
+    .await?;
+
     Ok(ScoringData {
         runway_count: runway_stats.0,
         max_runway_length_ft: runway_stats.1,
@@ -218,6 +268,13 @@ pub(crate) async fn gather_scoring_data(
             .as_ref()
             .map(|o| o.2)
             .unwrap_or(0),
+        transport_modes_count: transport.as_ref().map(|t| t.0).unwrap_or(0),
+        has_direct_rail: transport.as_ref().map(|t| t.1).unwrap_or(false),
+        hub_airline_count: hub_counts.0,
+        focus_city_count: hub_counts.1,
+        operating_base_count: hub_counts.2,
+        lounge_count: lounge_count.0,
+        carbon_level: carbon.map(|c| c.0),
     })
 }
 

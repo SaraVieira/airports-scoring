@@ -6,8 +6,11 @@ use super::data::ScoringData;
 /// length_score     = LEAST(longest_runway_ft / 13000.0, 1.0) * 100
 /// age_score        = renovation-aware aging formula
 /// capacity_score   = LEAST((annual_pax_latest / capacity) * 100, 100)
+/// lounge_score     = LEAST(lounge_count / 8.0, 1.0) * 100
+/// carbon_score     = (carbon_level / 7.0) * 100  (0 if no accreditation)
 ///
-/// score = runway_score * 0.35 + length_score * 0.25 + age_score * 0.25 + capacity_score * 0.15
+/// score = runway_score * 0.25 + length_score * 0.20 + age_score * 0.20
+///       + capacity_score * 0.15 + lounge_score * 0.10 + carbon_score * 0.10
 pub(crate) fn score_infrastructure(data: &ScoringData, reference_year: i16) -> f64 {
     let runway_score = (data.runway_count as f64 / 3.0).min(1.0) * 100.0;
 
@@ -17,13 +20,11 @@ pub(crate) fn score_infrastructure(data: &ScoringData, reference_year: i16) -> f
         .unwrap_or(0.0);
 
     let age_score = if let Some(reno) = data.last_major_reno {
-        // Recently renovated: penalty based on years since renovation
         (100.0 - (reference_year as f64 - reno as f64) * 3.0).max(0.0)
     } else if let Some(opened) = data.opened_year {
-        // No renovation: slower penalty based on age since opening
         (100.0 - (reference_year as f64 - opened as f64) * 1.5).max(0.0)
     } else {
-        50.0 // no data = neutral
+        50.0
     };
 
     let capacity_score = match (data.annual_pax_latest_m, data.annual_capacity_m) {
@@ -31,7 +32,19 @@ pub(crate) fn score_infrastructure(data: &ScoringData, reference_year: i16) -> f
         _ => 50.0,
     };
 
-    let score = runway_score * 0.35 + length_score * 0.25 + age_score * 0.25 + capacity_score * 0.15;
+    let lounge_score = (data.lounge_count as f64 / 8.0).min(1.0) * 100.0;
+
+    let carbon_score = data.carbon_level
+        .map(|level| (level as f64 / 7.0) * 100.0)
+        .unwrap_or(0.0);
+
+    let score = runway_score * 0.25
+        + length_score * 0.20
+        + age_score * 0.20
+        + capacity_score * 0.15
+        + lounge_score * 0.10
+        + carbon_score * 0.10;
+
     score.clamp(0.0, 100.0)
 }
 
@@ -140,18 +153,36 @@ pub(crate) fn score_sentiment_velocity(data: &ScoringData) -> f64 {
 /// destination_score = LEAST(unique_destination_count / 100.0, 1.0) * 100
 /// airline_score     = LEAST(airline_count / 30.0, 1.0) * 100
 /// intl_ratio_score  = (international_pax / total_pax) * 100
+/// transport_score   = LEAST(transport_modes_count / 4.0, 1.0) * 100, +20% if direct rail
+/// hub_score         = LEAST((hub * 3 + focus_city * 1.5 + operating_base) / 10.0, 1.0) * 100
 ///
-/// score = destination_score * 0.4 + airline_score * 0.3 + intl_ratio_score * 0.3
+/// score = destination_score * 0.30 + airline_score * 0.20 + intl_ratio_score * 0.20
+///       + transport_score * 0.15 + hub_score * 0.15
 pub(crate) fn score_connectivity(data: &ScoringData) -> f64 {
     let destination_score = (data.destination_count as f64 / 100.0).min(1.0) * 100.0;
     let airline_score = (data.airline_count as f64 / 30.0).min(1.0) * 100.0;
 
     let intl_ratio_score = match (data.international_pax, data.total_pax) {
         (Some(intl), Some(total)) if total > 0 => (intl as f64 / total as f64) * 100.0,
-        _ => 50.0, // no data = assume half international
+        _ => 50.0,
     };
 
-    let score = destination_score * 0.4 + airline_score * 0.3 + intl_ratio_score * 0.3;
+    let mut transport_score = (data.transport_modes_count as f64 / 4.0).min(1.0) * 100.0;
+    if data.has_direct_rail {
+        transport_score = (transport_score * 1.2).min(100.0);
+    }
+
+    let hub_value = data.hub_airline_count as f64 * 3.0
+        + data.focus_city_count as f64 * 1.5
+        + data.operating_base_count as f64;
+    let hub_score = (hub_value / 10.0).min(1.0) * 100.0;
+
+    let score = destination_score * 0.30
+        + airline_score * 0.20
+        + intl_ratio_score * 0.20
+        + transport_score * 0.15
+        + hub_score * 0.15;
+
     score.clamp(0.0, 100.0)
 }
 

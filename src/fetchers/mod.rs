@@ -1,5 +1,6 @@
 pub mod aena;
 pub mod caa;
+pub mod carbon_accreditation;
 pub mod eurocontrol;
 pub mod eurostat;
 pub mod google_reviews;
@@ -8,6 +9,7 @@ pub mod openflights;
 pub mod opensky;
 pub mod opdi;
 pub mod ourairports;
+pub mod priority_pass;
 pub mod reviews;
 pub mod routes;
 pub mod sentiment;
