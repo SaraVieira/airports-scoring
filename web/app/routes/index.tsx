@@ -7,6 +7,11 @@ import { Rankings } from "~/components/home/rankings";
 import { WallColumn } from "~/components/home/wall-column";
 
 const getHomepageData = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    return await api.getRankings();
+  } catch (error) {
+    console.error("Error fetching rankings:", error);
+  }
   return api.listAirports();
 });
 
@@ -21,7 +26,8 @@ function Home() {
   const { mostImproved, wallOfShame } = useMemo(() => {
     const filtered = ranked.filter((a) => a.scoreSentimentVelocity != null);
     filtered.sort(
-      (a, b) => (b.scoreSentimentVelocity ?? 0) - (a.scoreSentimentVelocity ?? 0),
+      (a, b) =>
+        (b.scoreSentimentVelocity ?? 0) - (a.scoreSentimentVelocity ?? 0),
     );
     return {
       mostImproved: filtered.slice(0, 3),

@@ -4,7 +4,7 @@ mod routes;
 
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use axum::{middleware, routing::{get, patch, post}, Json, Router};
 use sqlx::PgPool;
 use tower_http::cors::CorsLayer;
@@ -64,6 +64,15 @@ async fn openapi_spec() -> Json<utoipa::openapi::OpenApi> {
 /// Start the API server on the given port.
 pub async fn run(port: u16) -> Result<()> {
     let pool = crate::db::get_pool().await?;
+
+    // Run SQL migrations on startup.
+    info!("Running database migrations...");
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .context("Failed to run database migrations")?;
+    info!("Migrations complete");
+
     let jobs = Arc::new(JobManager::new(pool.clone(), 3));
     let state = AppState { pool, jobs };
 
