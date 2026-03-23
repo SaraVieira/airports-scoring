@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+reviews.db*
+google_reviews.json
+google_reviews.ids
+downloaded_files/
+review_images/
+logs/
+config.yaml
+.env

@@ -31,6 +31,9 @@ COPY data/ data/
 RUN python3 -m venv /app/venv
 RUN /app/venv/bin/pip install --no-cache-dir -r python/requirements.txt
 
+# Install Playwright browsers (needed by Skytrax scraper)
+RUN /app/venv/bin/playwright install --with-deps chromium
+
 ENV PATH="/app/venv/bin:$PATH"
 EXPOSE 8080
 
