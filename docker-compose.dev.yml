@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    volumes:
+      - pg_dev_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: airports
+      POSTGRES_USER: airports
+      POSTGRES_PASSWORD: airports
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airports"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  google-scraper:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: google-scraper.Dockerfile
+    environment:
+      USE_MONGODB: "false"
+      MAX_REVIEWS: "5000"
+      DOWNLOAD_IMAGES: "false"
+    ports:
+      - "8000:8000"
+
+volumes:
+  pg_dev_data:

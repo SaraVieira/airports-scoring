@@ -22,25 +22,9 @@ Frontend (:3000)    Google Scraper (:8000)
 - **Python** 3.10+ (for sentiment pipeline)
 - **PostgreSQL** with PostGIS extension
 
-## Environment
+## Environment Variables
 
-Create a `.env` file in the repo root:
-
-```
-DATABASE_URL=postgres://user:pass@localhost:5432/airports
-HF_TOKEN=hf_your_huggingface_token
-OPENSKY_ID=your_opensky_client_id
-OPENSKY_SECRET=your_opensky_client_secret
-GOOGLE_SCRAPER_URL=http://localhost:8000
-```
-
-Frontend env (in `.env` or set when running):
-
-```
-VITE_API_URL=http://localhost:3001
-VITE_API_KEY=
-```
-
+- **DATABASE_URL**: Points to the Docker Postgres on port 5433
 - **HF_TOKEN**: Get from https://huggingface.co/settings/tokens (free, needed for sentiment pipeline)
 - **OPENSKY_ID / OPENSKY_SECRET**: Optional. Register at https://opensky-network.org/
 - **GOOGLE_SCRAPER_URL**: Optional. URL of the google-reviews-scraper-pro REST API
@@ -49,46 +33,61 @@ VITE_API_KEY=
 
 ## Quick Start
 
-### 1. Database
-
-Make sure PostgreSQL is running with PostGIS enabled. Create the database:
+### 1. Docker Services (Postgres + Google Scraper)
 
 ```bash
-createdb airports
-psql -d airports -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+docker compose -f docker-compose.dev.yml up -d
 ```
 
-### 2. Rust API
+This starts:
+- **PostgreSQL + PostGIS** on `localhost:5433`
+- **Google Reviews Scraper** on `localhost:8000`
+
+### 2. Seed Database (first time only)
+
+Option A — Restore from production backup:
 
 ```bash
-# Install dependencies and build
-cargo build
+pg_dump "$PRODUCTION_DATABASE_URL" --no-owner --no-acl | \
+  docker exec -i airports-scoring-postgres-1 psql -U airports -d airports
+```
 
-# Run database migrations
-sqlx migrate run --source migrations/
+Option B — Bootstrap from scratch:
 
-# Start the API server on port 3001
+```bash
+cargo run -- fetch --all --source ourairports
+cargo run -- fetch --all --source wikipedia --full-refresh
+cd web && pnpm install && pnpm db:seed-airports && cd ..
+```
+
+### 3. Environment
+
+Create a `.env` file in the repo root:
+
+```
+DATABASE_URL=postgres://airports:airports@localhost:5433/airports
+HF_TOKEN=hf_your_huggingface_token
+GOOGLE_SCRAPER_URL=http://localhost:8000
+OPENSKY_ID=your_opensky_client_id
+OPENSKY_SECRET=your_opensky_client_secret
+```
+
+### 4. Rust API
+
+```bash
 cargo run -- serve --port 3001
 ```
 
 Verify: `curl http://localhost:3001/health` should return `{"status":"ok"}`
 
-### 3. Seed Data (first time only)
-
-The API needs base data. Run the pipeline to bootstrap:
+For auto-reload during development, use [cargo-watch](https://github.com/watchexec/cargo-watch):
 
 ```bash
-# Bootstrap airport records from OurAirports
-cargo run -- fetch --all --source ourairports
-
-# Fetch Wikipedia data (pax stats, metadata)
-cargo run -- fetch --all --source wikipedia --full-refresh
-
-# Seed the 29K global airports for route lookups
-cd web && pnpm install && pnpm db:seed-airports && cd ..
+cargo install cargo-watch
+cargo watch -x 'run -- serve --port 3001'
 ```
 
-### 4. Frontend
+### 5. Frontend
 
 ```bash
 cd web
@@ -108,15 +107,14 @@ cd web
 pnpm generate-types
 ```
 
-## Google Reviews Scraper (optional)
+## Google Reviews Scraper
 
-The scraper is optional — the pipeline skips Google reviews gracefully if it's not running.
+The scraper runs in Docker via `docker-compose.dev.yml` on port 8000. It's optional — the pipeline skips Google reviews gracefully if it's not running.
+
+To run it outside Docker instead:
 
 ```bash
-# One-time setup
 bash scripts/setup-google-scraper.sh
-
-# Start the scraper (runs on http://localhost:8000)
 bash scripts/start-google-scraper.sh
 ```
 

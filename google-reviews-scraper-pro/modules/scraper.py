@@ -420,7 +420,7 @@ class GoogleReviewsScraper:
 
             log.info(f"Trying search-based navigation: {search_url}")
             driver.get(search_url)
-            time.sleep(5)
+            time.sleep(3)
 
             # Check if we landed on a place page with full content (tabs visible)
             tabs = driver.find_elements(By.CSS_SELECTOR, '[role="tab"]')
@@ -619,7 +619,7 @@ class GoogleReviewsScraper:
                     for i, click_method in enumerate(click_methods):
                         try:
                             click_method()
-                            time.sleep(1.5)  # Wait for click to take effect
+                            time.sleep(0.5)  # Wait for click to take effect
 
                             # Verify if click worked (check for new content)
                             if self.verify_reviews_tab_clicked(driver):
@@ -1336,7 +1336,7 @@ class GoogleReviewsScraper:
 
             # Extra wait after clicking reviews tab to ensure page loads
             log.info("Waiting for reviews page to fully load...")
-            time.sleep(3)
+            time.sleep(1.5)
 
             # Wait for page to be fully interactive
             try:
@@ -1368,7 +1368,7 @@ class GoogleReviewsScraper:
 
             # Add a longer wait after setting sort to allow results to load
             log.info("Waiting for reviews to render...")
-            time.sleep(3)
+            time.sleep(1.5)
 
             # Use try-except to handle cases where the pane is not found
             # Try multiple selectors for the reviews pane
@@ -1547,9 +1547,9 @@ class GoogleReviewsScraper:
                         try:
                             # Try multiple scroll methods
                             driver.execute_script(scroll_script)
-                            time.sleep(0.5)
+                            time.sleep(0.3)
                             driver.execute_script("window.scrollBy(0, 500);")  # Extra scroll
-                            time.sleep(0.5)
+                            time.sleep(0.3)
                         except Exception as e:
                             log.warning(f"Error scrolling: {e}")
                     else:
@@ -1587,11 +1587,11 @@ class GoogleReviewsScraper:
 
                     # Dynamic sleep: sleep less when processing many reviews, more when finding none
                     if len(fresh_cards) > 5:
-                        sleep_time = 0.7
+                        sleep_time = 0.3
                     elif len(fresh_cards) == 0:
-                        sleep_time = 2.0  # Wait longer when finding nothing (let page load)
+                        sleep_time = 1.0  # Wait longer when finding nothing (let page load)
                     else:
-                        sleep_time = 1.0
+                        sleep_time = 0.5
                     time.sleep(sleep_time)
 
                 except StaleElementReferenceException:

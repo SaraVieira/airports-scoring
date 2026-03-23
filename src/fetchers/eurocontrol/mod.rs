@@ -14,7 +14,6 @@ use csv_parser::{process_csv, compute_cause_pct};
 
 /// Eurocontrol Performance data download base URL.
 const BASE_URL: &str = "https://www.eurocontrol.int/performance/data/download/csv";
-
 /// Remote datasets to fetch (ones that aren't behind antibot).
 const REMOTE_DATASETS: &[&str] = &[
     "airport_traffic",           // daily IFR traffic counts per airport
