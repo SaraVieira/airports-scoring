@@ -41,7 +41,7 @@ pub const ALL_SOURCES: &[&str] = &[
 const SOURCE_ALIASES: &[&str] = &["skytrax", "google_reviews"];
 
 /// Dispatch to the correct fetcher for a given source name.
-async fn dispatch_fetcher(
+pub(crate) async fn dispatch_fetcher(
     pool: &PgPool,
     airport: &Airport,
     source: &str,

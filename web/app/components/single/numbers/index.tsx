@@ -19,7 +19,7 @@ export const Numbers = ({ airport }: { airport: Airport }) => {
     latestPax ?? null,
   );
 
-  const capacityNum = calculateCapacityNum(airport.annualCapacityM);
+  const capacityNum = calculateCapacityNum(airport.annualCapacityM != null ? String(airport.annualCapacityM) : null);
   const latestPaxNum = latestPax?.totalPax ?? null;
   const paxSparkData = createPaxSparkData(airport.paxYearly);
 

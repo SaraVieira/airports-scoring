@@ -10,7 +10,8 @@
     "db:seed": "pnpm tsx seed.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed-airports": "pnpm tsx seed-global-airports.ts",
-    "db:setup": "npm run db:push && npm run db:seed"
+    "db:setup": "npm run db:push && npm run db:seed",
+    "generate-types": "openapi-typescript http://localhost:3001/openapi.json -o app/api/types.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -33,6 +34,7 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
     "drizzle-kit": "^0.31.10",
+    "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^8.0.1"

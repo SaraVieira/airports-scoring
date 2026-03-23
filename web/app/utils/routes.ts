@@ -2,8 +2,7 @@ import { RouteRow } from "./types";
 
 export function routeDisplayName(r: RouteRow): string {
   return (
-    r.destinationAirport?.name ??
-    (r.destination as { name?: string } | null)?.name ??
+    r.destination?.name ??
     r.destinationIata ??
     r.destinationIcao ??
     "Unknown"
@@ -11,11 +10,11 @@ export function routeDisplayName(r: RouteRow): string {
 }
 
 export function routeIata(r: RouteRow): string | null {
-  return r.destinationAirport?.iata ?? r.destinationIata ?? null;
+  return r.destinationIata ?? null;
 }
 
 export function routeCountry(r: RouteRow): string {
-  return r.destinationAirport?.country ?? "Unknown";
+  return r.destination?.countryCode ?? "Unknown";
 }
 
 // Module-level Record for O(1) country-to-region lookups

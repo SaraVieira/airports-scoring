@@ -17,9 +17,7 @@ export const Runways = ({ airport }: { airport: Airport }) => {
             className="flex-1 flex flex-col gap-2 p-5 bg-[#111113] border border-zinc-800"
           >
             <span className="font-grotesk text-lg font-bold text-zinc-100 tracking-wider">
-              {rw.leIdent && rw.heIdent
-                ? `${rw.leIdent}/${rw.heIdent}`
-                : (rw.ident ?? `Runway ${rw.id}`)}
+              {rw.ident ?? `Runway ${rw.id}`}
             </span>
             <span className="font-mono text-[11px] text-zinc-500">
               {[

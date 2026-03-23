@@ -8,11 +8,11 @@ export function AirportSearch({ compact = false }: { compact?: boolean }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<
     {
-      iataCode: string | null;
+      iataCode: string;
       name: string;
       city: string;
       countryCode: string;
-      scoreTotal: string | null;
+      scoreTotal?: number | null;
     }[]
   >([]);
   const [open, setOpen] = useState(false);
@@ -82,9 +82,7 @@ export function AirportSearch({ compact = false }: { compact?: boolean }) {
         {open && results.length > 0 && (
           <Command.List className="absolute top-full left-0 right-0 z-50 mt-1 bg-[#111113] border border-white/[0.08] py-1 max-h-[320px] overflow-y-auto">
             {results.map((airport) => {
-              const score = airport.scoreTotal
-                ? parseFloat(airport.scoreTotal)
-                : null;
+              const score = airport.scoreTotal ?? null;
               return (
                 <Command.Item
                   key={airport.iataCode}

@@ -5,44 +5,59 @@ mod fetchers;
 mod models;
 mod pipeline;
 mod scoring;
+mod server;
 
 use anyhow::{bail, Result};
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-/// Airport Intelligence Platform — data fetch orchestrator.
-///
-/// Fetches data from multiple sources (OurAirports, Eurocontrol, METAR,
-/// OpenSky, OPDI, Eurostat, CAA, Reviews, Sentiment) and upserts into
-/// Postgres.
+/// Airport Intelligence Platform — data pipeline and API server.
 #[derive(Parser, Debug)]
 #[command(name = "airport-fetch", version, about)]
 struct Cli {
-    /// IATA codes of airports to process (e.g. LHR CDG AMS).
-    /// Ignored when --all is set.
-    #[arg(value_name = "AIRPORTS")]
-    airports: Vec<String>,
+    #[command(subcommand)]
+    command: Command,
+}
 
-    /// Process all airports in the seed set.
-    #[arg(long)]
-    all: bool,
+#[derive(Subcommand, Debug)]
+enum Command {
+    /// Fetch data from external sources and upsert into Postgres.
+    ///
+    /// Fetches from OurAirports, Eurocontrol, METAR, OpenSky, OPDI,
+    /// Eurostat, CAA, Reviews, Sentiment, and more.
+    Fetch {
+        /// IATA codes of airports to process (e.g. LHR CDG AMS).
+        /// Ignored when --all is set.
+        #[arg(value_name = "AIRPORTS")]
+        airports: Vec<String>,
 
-    /// Only fetch from this source.
-    /// Valid sources: reviews (Skytrax + Google), skytrax (Skytrax only),
-    /// google_reviews (Google only), eurocontrol, metar, opensky, routes,
-    /// eurostat, caa, aena, wikipedia, sentiment.
-    #[arg(long, value_name = "SOURCE")]
-    source: Option<String>,
+        /// Process all airports in the seed set.
+        #[arg(long)]
+        all: bool,
 
-    /// Ignore incremental state and do a full refresh.
-    #[arg(long)]
-    full_refresh: bool,
+        /// Only fetch from this source.
+        /// Valid sources: reviews (Skytrax + Google), skytrax (Skytrax only),
+        /// google_reviews (Google only), eurocontrol, metar, opensky, routes,
+        /// eurostat, caa, aena, wikipedia, sentiment.
+        #[arg(long, value_name = "SOURCE")]
+        source: Option<String>,
 
-    /// Compute all-time airport scores after fetching data.
-    #[arg(long)]
-    score: bool,
+        /// Ignore incremental state and do a full refresh.
+        #[arg(long)]
+        full_refresh: bool,
 
+        /// Compute all-time airport scores after fetching data.
+        #[arg(long)]
+        score: bool,
+    },
+
+    /// Start the HTTP API server.
+    Serve {
+        /// Port to listen on.
+        #[arg(long, default_value_t = 3001)]
+        port: u16,
+    },
 }
 
 #[tokio::main]
@@ -59,13 +74,38 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
 
+    match cli.command {
+        Command::Fetch {
+            airports,
+            all,
+            source,
+            full_refresh,
+            score,
+        } => {
+            run_fetch(airports, all, source, full_refresh, score).await?;
+        }
+        Command::Serve { port } => {
+            server::run(port).await?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn run_fetch(
+    airports: Vec<String>,
+    all: bool,
+    source: Option<String>,
+    full_refresh: bool,
+    score: bool,
+) -> Result<()> {
     // Load airport config from airports.json.
     let seed_config = config::load_seed_airports(None)?;
     let seed_iata_codes = config::seed_iata_codes(&seed_config);
     info!(count = seed_iata_codes.len(), "Loaded seed airports from airports.json");
 
     // Validate: need either airport codes or --all.
-    if cli.airports.is_empty() && !cli.all {
+    if airports.is_empty() && !all {
         bail!("Provide at least one IATA code, or use --all for all seed airports.");
     }
 
@@ -75,9 +115,9 @@ async fn main() -> Result<()> {
 
     // Bootstrap: OurAirports populates the airports table.
     // Only run if explicitly requested or if the DB is empty.
-    if cli.source.as_deref() == Some("ourairports") {
+    if source.as_deref() == Some("ourairports") {
         info!("Running OurAirports fetch (explicitly requested)");
-        let result = fetchers::ourairports::fetch_all(&pool, cli.full_refresh, &seed_iata_codes).await?;
+        let result = fetchers::ourairports::fetch_all(&pool, full_refresh, &seed_iata_codes).await?;
         info!(records = result.records_processed, "OurAirports fetch complete");
         info!("Pipeline complete");
         return Ok(());
@@ -87,36 +127,36 @@ async fn main() -> Result<()> {
     let existing = db::get_seed_airports(&pool).await.unwrap_or_default();
     if existing.is_empty() {
         info!("No airports in DB — running OurAirports bootstrap");
-        let result = fetchers::ourairports::fetch_all(&pool, cli.full_refresh, &seed_iata_codes).await?;
+        let result = fetchers::ourairports::fetch_all(&pool, full_refresh, &seed_iata_codes).await?;
         info!(records = result.records_processed, "OurAirports bootstrap complete");
     }
 
     // Resolve the list of airports.
-    let airports = if cli.all {
+    let resolved_airports = if all {
         info!("Fetching all seed airports");
         db::get_seed_airports(&pool).await?
     } else {
-        let mut list = Vec::with_capacity(cli.airports.len());
-        for code in &cli.airports {
+        let mut list = Vec::with_capacity(airports.len());
+        for code in &airports {
             let airport = db::get_airport_by_iata(&pool, code).await?;
             list.push(airport);
         }
         list
     };
 
-    if airports.is_empty() {
+    if resolved_airports.is_empty() {
         bail!("No airports matched the criteria.");
     }
 
-    info!(count = airports.len(), "Airports to process");
+    info!(count = resolved_airports.len(), "Airports to process");
 
     // Run the pipeline.
     pipeline::run_pipeline(
         &pool,
-        &airports,
-        cli.source.as_deref(),
-        cli.full_refresh,
-        cli.score,
+        &resolved_airports,
+        source.as_deref(),
+        full_refresh,
+        score,
         &seed_iata_codes,
         &seed_config,
     )

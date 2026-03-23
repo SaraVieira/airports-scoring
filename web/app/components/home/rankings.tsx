@@ -5,12 +5,12 @@ export const Rankings = ({
   ranked,
 }: {
   ranked: {
-    iataCode: string | null;
+    iataCode: string;
     name: string;
     city: string;
     countryCode: string;
-    scoreTotal: string | null;
-    scoreSentimentVelocity: string | null;
+    scoreTotal?: number | null;
+    scoreSentimentVelocity?: number | null;
   }[];
 }) => {
   return (
@@ -40,9 +40,7 @@ export const Rankings = ({
         <div className="h-px bg-zinc-800" />
 
         {ranked.map((airport, i) => {
-          const score = airport.scoreTotal
-            ? parseFloat(airport.scoreTotal)
-            : null;
+          const score = airport.scoreTotal ?? null;
           const isTop3 = i < 3;
           const isBottom3 = i >= ranked.length - 3;
           const barWidth = score != null ? Math.min(score, 100) : 0;

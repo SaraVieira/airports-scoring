@@ -48,11 +48,11 @@ export function totalVerdict(score: number | null | undefined): string {
 export function totalCommentary(
   score:
     | {
-        scoreInfrastructure?: string | null;
-        scoreOperational?: string | null;
-        scoreSentiment?: string | null;
-        scoreConnectivity?: string | null;
-        scoreSentimentVelocity?: string | null;
+        scoreInfrastructure?: number | string | null;
+        scoreOperational?: number | string | null;
+        scoreSentiment?: number | string | null;
+        scoreConnectivity?: number | string | null;
+        scoreSentimentVelocity?: number | string | null;
         commentary?: string | null;
       }
     | undefined,
@@ -60,10 +60,10 @@ export function totalCommentary(
   if (!score) return "";
   if (score.commentary) return score.commentary;
 
-  const infra = parseFloat(score.scoreInfrastructure ?? "0");
-  const ops = parseFloat(score.scoreOperational ?? "0");
-  const sent = parseFloat(score.scoreSentiment ?? "0");
-  const conn = parseFloat(score.scoreConnectivity ?? "0");
+  const infra = Number(score.scoreInfrastructure ?? 0);
+  const ops = Number(score.scoreOperational ?? 0);
+  const sent = Number(score.scoreSentiment ?? 0);
+  const conn = Number(score.scoreConnectivity ?? 0);
 
   const parts: string[] = [];
   if (conn >= 70 && ops < 50)
@@ -72,7 +72,7 @@ export function totalCommentary(
   if (sent < 40)
     parts.push("Passengers have noticed — and they're not happy about it.");
 
-  const vel = parseFloat(score.scoreSentimentVelocity ?? "50");
+  const vel = Number(score.scoreSentimentVelocity ?? 50);
   if (vel > 60) parts.push("At least the trend is improving.");
   else if (vel < 40) parts.push("And it's getting worse.");
   else parts.push("The trajectory is flat — no improvement in sight.");

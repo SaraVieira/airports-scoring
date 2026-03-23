@@ -16,9 +16,9 @@ export function SentimentTimeline({
   const byYear = new Map<number, { ratings: number[]; reviews: number }>();
   for (const s of snapshots) {
     if (s.avgRating == null) continue;
-    const year = s.snapshotYear;
+    const year = s.snapshotYear!;
     const entry = byYear.get(year) ?? { ratings: [], reviews: 0 };
-    entry.ratings.push(parseFloat(String(s.avgRating)));
+    entry.ratings.push(Number(s.avgRating));
     entry.reviews += s.reviewCount ?? 0;
     byYear.set(year, entry);
   }

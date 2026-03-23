@@ -11,44 +11,38 @@ export function aggregateOps(rows: OpsRow[]) {
   let airportMin = 0;
   let totalAtfmMin = 0;
   let cancelledFlights = 0;
-  let mishandledSum = 0;
-  let mishandledCount = 0;
+
 
   for (const r of rows) {
     const flights = r.totalFlights ?? 0;
     totalFlights += flights;
 
     if (r.delayPct != null && flights > 0) {
-      delayedFlights += Math.round((parseFloat(r.delayPct) / 100) * flights);
+      delayedFlights += Math.round((r.delayPct / 100) * flights);
     }
 
     if (r.avgDelayMinutes != null) {
-      totalDelayMin += parseFloat(r.avgDelayMinutes) * flights;
+      totalDelayMin += r.avgDelayMinutes * flights;
       delayMinCount += flights;
     }
 
     if (r.cancellationPct != null && flights > 0) {
       cancelledFlights += Math.round(
-        (parseFloat(r.cancellationPct) / 100) * flights,
+        (r.cancellationPct / 100) * flights,
       );
     }
 
     const monthAtfm =
-      r.delayPct != null ? (parseFloat(r.delayPct) / 100) * flights : 0;
+      r.delayPct != null ? (r.delayPct / 100) * flights : 0;
     if (r.delayWeatherPct != null)
-      weatherMin += (parseFloat(r.delayWeatherPct) / 100) * monthAtfm;
+      weatherMin += (r.delayWeatherPct / 100) * monthAtfm;
     if (r.delayCarrierPct != null)
-      carrierMin += (parseFloat(r.delayCarrierPct) / 100) * monthAtfm;
+      carrierMin += (r.delayCarrierPct / 100) * monthAtfm;
     if (r.delayAtcPct != null)
-      atcMin += (parseFloat(r.delayAtcPct) / 100) * monthAtfm;
+      atcMin += (r.delayAtcPct / 100) * monthAtfm;
     if (r.delayAirportPct != null)
-      airportMin += (parseFloat(r.delayAirportPct) / 100) * monthAtfm;
+      airportMin += (r.delayAirportPct / 100) * monthAtfm;
     if (monthAtfm > 0) totalAtfmMin += monthAtfm;
-
-    if (r.mishandledBagsPer1k != null) {
-      mishandledSum += parseFloat(r.mishandledBagsPer1k);
-      mishandledCount++;
-    }
   }
 
   const delayPct =
@@ -70,8 +64,6 @@ export function aggregateOps(rows: OpsRow[]) {
     delayAtcPct: totalAtfmMin > 0 ? (atcMin / totalAtfmMin) * 100 : null,
     delayAirportPct:
       totalAtfmMin > 0 ? (airportMin / totalAtfmMin) * 100 : null,
-    mishandledBagsPer1k:
-      mishandledCount > 0 ? mishandledSum / mishandledCount : null,
     periodLabel:
       rows.length > 1
         ? `${rows[rows.length - 1].periodYear}/${String(rows[rows.length - 1].periodMonth).padStart(2, "0")}–${rows[0].periodYear}/${String(rows[0].periodMonth).padStart(2, "0")}`

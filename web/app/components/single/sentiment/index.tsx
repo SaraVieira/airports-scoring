@@ -18,11 +18,11 @@ export const Sentiment = ({ airport }: { airport: Airport }) => {
       l: "Positive",
       v: latestSentiment?.positivePct,
       c:
-        latestSentiment?.positivePct &&
-        parseFloat(latestSentiment?.positivePct) >= 50
+        latestSentiment?.positivePct != null &&
+        parseFloat(latestSentiment.positivePct) >= 50
           ? "text-green-500"
-          : latestSentiment?.positivePct &&
-              parseFloat(latestSentiment?.positivePct) >= 30
+          : latestSentiment?.positivePct != null &&
+              parseFloat(latestSentiment.positivePct) >= 30
             ? "text-yellow-500"
             : "text-red-500",
     },
@@ -54,13 +54,13 @@ export const Sentiment = ({ airport }: { airport: Airport }) => {
           <div className="flex gap-8">
             <Stat
               value={
-                latestSentiment.avgRating
+                latestSentiment.avgRating != null
                   ? parseFloat(latestSentiment.avgRating).toFixed(1)
                   : "—"
               }
               label="Avg Rating / 10"
               color={scoreColor(
-                latestSentiment.avgRating
+                latestSentiment.avgRating != null
                   ? parseFloat(latestSentiment.avgRating) * 10
                   : null,
               )}
@@ -93,13 +93,13 @@ export const Sentiment = ({ airport }: { airport: Airport }) => {
             </div>
             <Stat
               value={
-                latestSentiment.positivePct
+                latestSentiment.positivePct != null
                   ? `${parseFloat(latestSentiment.positivePct).toFixed(0)}%`
                   : "—"
               }
               label="Positive"
               color={
-                latestSentiment.positivePct &&
+                latestSentiment.positivePct != null &&
                 parseFloat(latestSentiment.positivePct) < 30
                   ? "text-red-500"
                   : "text-zinc-100"
@@ -120,7 +120,9 @@ export const Sentiment = ({ airport }: { airport: Airport }) => {
                 </span>
               </div>
             )}
-            {airport.googleAgg.rating != null &&
+            {airport.googleAgg != null &&
+              airport.googleAgg.rating != null &&
+              airport.googleAgg.count != null &&
               airport.googleAgg.count > 0 && (
                 <div className="flex gap-2 items-center">
                   <span className="font-mono text-sm font-bold text-yellow-400">
@@ -153,7 +155,7 @@ export const Sentiment = ({ airport }: { airport: Airport }) => {
                   {s.l}
                 </span>
                 <span className={`font-mono text-xs font-bold ${s.c}`}>
-                  {s.v ? `${parseFloat(s.v).toFixed(0)}%` : "—"}
+                  {s.v != null ? `${parseFloat(s.v).toFixed(0)}%` : "—"}
                 </span>
               </div>
             ))}

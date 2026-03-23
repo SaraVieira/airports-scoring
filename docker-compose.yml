@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: airports
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      google-scraper:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/airports
+      API_KEY: ${API_KEY}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      GOOGLE_SCRAPER_URL: http://google-scraper:8000
+      HF_TOKEN: ${HF_TOKEN}
+      OPENSKY_ID: ${OPENSKY_ID:-}
+      OPENSKY_SECRET: ${OPENSKY_SECRET:-}
+    ports:
+      - "8080:8080"
+
+  google-scraper:
+    build:
+      context: .
+      dockerfile: google-scraper.Dockerfile
+    environment:
+      USE_MONGODB: "false"
+      MAX_REVIEWS: "5000"
+      DOWNLOAD_IMAGES: "false"
+    # No exposed ports — internal only
+
+volumes:
+  pg_data:

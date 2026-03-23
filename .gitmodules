@@ -1,0 +1,3 @@
+[submodule "google-reviews-scraper-pro"]
+	path = google-reviews-scraper-pro
+	url = https://github.com/georgekhananaev/google-reviews-scraper-pro.git

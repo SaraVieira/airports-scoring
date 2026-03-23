@@ -10,11 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AirportIataRouteImport } from './routes/airport.$iata'
+import { Route as AdminJobsRouteImport } from './routes/admin/jobs'
+import { Route as AdminAirportsRouteImport } from './routes/admin/airports'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AirportIataRoute = AirportIataRouteImport.update({
@@ -22,31 +30,64 @@ const AirportIataRoute = AirportIataRouteImport.update({
   path: '/airport/$iata',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminJobsRoute = AdminJobsRouteImport.update({
+  id: '/admin/jobs',
+  path: '/admin/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAirportsRoute = AdminAirportsRouteImport.update({
+  id: '/admin/airports',
+  path: '/admin/airports',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin/airports': typeof AdminAirportsRoute
+  '/admin/jobs': typeof AdminJobsRoute
   '/airport/$iata': typeof AirportIataRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/airports': typeof AdminAirportsRoute
+  '/admin/jobs': typeof AdminJobsRoute
   '/airport/$iata': typeof AirportIataRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin/airports': typeof AdminAirportsRoute
+  '/admin/jobs': typeof AdminJobsRoute
   '/airport/$iata': typeof AirportIataRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/airport/$iata'
+  fullPaths:
+    | '/'
+    | '/admin/airports'
+    | '/admin/jobs'
+    | '/airport/$iata'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/airport/$iata'
-  id: '__root__' | '/' | '/airport/$iata'
+  to: '/' | '/admin/airports' | '/admin/jobs' | '/airport/$iata' | '/admin'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin/airports'
+    | '/admin/jobs'
+    | '/airport/$iata'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminAirportsRoute: typeof AdminAirportsRoute
+  AdminJobsRoute: typeof AdminJobsRoute
   AirportIataRoute: typeof AirportIataRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +99,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/airport/$iata': {
       id: '/airport/$iata'
       path: '/airport/$iata'
@@ -65,12 +113,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AirportIataRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/jobs': {
+      id: '/admin/jobs'
+      path: '/admin/jobs'
+      fullPath: '/admin/jobs'
+      preLoaderRoute: typeof AdminJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/airports': {
+      id: '/admin/airports'
+      path: '/admin/airports'
+      fullPath: '/admin/airports'
+      preLoaderRoute: typeof AdminAirportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminAirportsRoute: AdminAirportsRoute,
+  AdminJobsRoute: AdminJobsRoute,
   AirportIataRoute: AirportIataRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

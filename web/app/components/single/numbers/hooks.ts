@@ -25,7 +25,7 @@ export const useGrowthNarrative = (
   return useMemo(() => {
     if (paxData.length < 3 || !latestPax?.totalPax) return null;
 
-    const paxByYear = new Map(paxData.map((p) => [p.year, p.totalPax]));
+    const paxByYear = new Map(paxData.map((p) => [p.year ?? null, p.totalPax ?? null] as [number | null, number | null]));
     const covidLow = findCovidLow(paxByYear);
 
     if (!covidLow) return null;

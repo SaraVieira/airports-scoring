@@ -7,6 +7,9 @@ mod entities;
 #[allow(unused_imports)]
 pub use entities::*;
 
+mod supported;
+pub use supported::*;
+
 // ── Core airport ──────────────────────────────────────────────
 
 #[derive(Debug, Clone, FromRow, Serialize, Deserialize)]

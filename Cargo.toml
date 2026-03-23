@@ -26,3 +26,14 @@ regex = "1"
 bzip2 = "0.5"
 sha2 = "0.10"
 hex = "0.4"
+uuid = { version = "1", features = ["v4", "serde"] }
+
+# API server
+axum = { version = "0.8", features = ["json", "query"] }
+axum-extra = { version = "0.10", features = ["typed-header"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+
+# OpenAPI generation
+utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
+utoipa-axum = "0.2"

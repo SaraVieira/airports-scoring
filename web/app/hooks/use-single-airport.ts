@@ -6,7 +6,7 @@ import { useLatestSentiment } from "./use-sentiment";
 export const useSingleAirport = ({ airport }: { airport: Airport }) => {
   const latestSentiment = useLatestSentiment({ airport });
   const score = airport.scores[0];
-  const totalNum = score?.scoreTotal ? parseFloat(score.scoreTotal) : null;
+  const totalNum = score?.scoreTotal ?? null;
 
   const { recentOps, opsAgg, opsTrend } = useMemo(() => {
     const recent = airport.operationalStats.slice(0, 12);
@@ -25,8 +25,8 @@ export const useSingleAirport = ({ airport }: { airport: Airport }) => {
         (r.flightsPerMonth != null && r.flightsPerMonth > 0) || r.airlineName,
     );
     const byDest = new Map<string, (typeof all)[number]>();
-    for (const r of all) {
-      const key = r.destinationIata ?? r.destinationIcao ?? `${r.id}`;
+    for (const [idx, r] of all.entries()) {
+      const key = r.destinationIata ?? r.destinationIcao ?? `route-${idx}`;
       const existing = byDest.get(key);
       if (
         !existing ||

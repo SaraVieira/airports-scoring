@@ -9,11 +9,11 @@ export function ScoreBar({
   explanation,
 }: {
   label: string;
-  score: string | null | undefined;
+  score: number | string | null | undefined;
   weight: string;
   explanation?: { plain: string; technical: string };
 }) {
-  const num = score ? parseFloat(score) : null;
+  const num = score != null ? (typeof score === "number" ? score : parseFloat(score)) : null;
   const width = num != null ? `${Math.min(num, 100)}%` : "0%";
   return (
     <div className="flex items-center gap-2 w-full">

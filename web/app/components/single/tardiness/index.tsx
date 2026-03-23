@@ -135,16 +135,6 @@ export const Tardiness = ({ airport }: { airport: Airport }) => {
         </>
       )}
 
-      {opsAgg.mishandledBagsPer1k != null && (
-        <div className="flex gap-2 items-center">
-          <span className="font-grotesk text-[10px] font-bold text-zinc-500 tracking-wider">
-            MISHANDLED BAGS:
-          </span>
-          <span className="font-mono text-[11px] font-bold text-orange-500">
-            {opsAgg.mishandledBagsPer1k.toFixed(1)} per 1,000 passengers
-          </span>
-        </div>
-      )}
     </section>
   );
 };

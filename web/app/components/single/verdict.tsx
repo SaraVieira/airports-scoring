@@ -26,7 +26,7 @@ export const Verdict = ({ airport }: { airport: Airport }) => {
       <p className="font-mono text-[11px] text-zinc-600 italic max-w-2xl mt-1 leading-relaxed">
         {totalCommentary(score)}
       </p>
-      {airport.ranking.position > 0 && airport.ranking.total > 0 && (
+      {airport.ranking.position != null && airport.ranking.position > 0 && airport.ranking.total != null && airport.ranking.total > 0 && (
         <span className="font-mono text-[11px] text-zinc-600 mt-1">
           Ranked #{airport.ranking.position} of {airport.ranking.total} airports
         </span>

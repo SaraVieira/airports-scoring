@@ -17,7 +17,7 @@ export function Amenities({ airport }: { airport: Airport }) {
         </span>
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {lounges.map((lounge) => (
+        {lounges.map((lounge: (typeof lounges)[number]) => (
           <div
             key={lounge.id}
             className="flex flex-col gap-1 rounded-md bg-zinc-900/50 px-4 py-3 ring-1 ring-white/5"

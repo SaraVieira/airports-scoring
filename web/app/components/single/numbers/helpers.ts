@@ -16,9 +16,9 @@ export const findLatestPaxYear = (paxData: PaxYearly[]): PaxYearly => {
   if (paxData.length < 2) return paxData[0];
 
   const isPartial = isCurrentYearPartial(
-    paxData[0]?.year,
-    paxData[0]?.totalPax,
-    paxData[1]?.totalPax,
+    paxData[0]?.year ?? null,
+    paxData[0]?.totalPax ?? null,
+    paxData[1]?.totalPax ?? null,
   );
 
   return isPartial ? paxData[1] : paxData[0];
@@ -56,7 +56,7 @@ export const calculateCapacityNum = (
 export const createPaxSparkData = (paxYearly: PaxYearly[]) => {
   return [...paxYearly]
     .reverse()
-    .map((p) => ({ year: p.year!, pax: p.totalPax }))
+    .map((p) => ({ year: p.year!, pax: p.totalPax ?? null }))
     .slice(-15);
 };
 

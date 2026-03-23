@@ -1,0 +1,442 @@
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    Json,
+};
+use chrono::{DateTime, Utc};
+use serde::Serialize;
+use utoipa::ToSchema;
+
+use crate::models::{
+    CreateSupportedAirport, SourceStatus, SupportedAirport, UpdateSupportedAirport,
+};
+use crate::server::jobs::{JobInfo, StartJobRequest};
+use crate::server::AppState;
+
+// ── Response types ──────────────────────────────────────────────
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct SupportedAirportWithStatus {
+    pub iata_code: String,
+    pub country_code: String,
+    pub name: String,
+    pub skytrax_review_slug: Option<String>,
+    pub skytrax_rating_slug: Option<String>,
+    pub google_maps_url: Option<String>,
+    pub enabled: bool,
+    pub created_at: String,
+    pub updated_at: String,
+    pub sources: Vec<SourceStatusResponse>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceStatusResponse {
+    pub source: String,
+    pub last_fetched_at: Option<String>,
+    pub last_status: String,
+    pub last_record_count: Option<i32>,
+    pub last_error: Option<String>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct DataGapResponse {
+    pub iata_code: String,
+    pub name: String,
+    pub source: String,
+    pub last_fetched_at: Option<String>,
+    pub last_status: String,
+}
+
+// ── Helpers ─────────────────────────────────────────────────────
+
+fn airport_to_response(
+    airport: &SupportedAirport,
+    statuses: Vec<SourceStatus>,
+) -> SupportedAirportWithStatus {
+    SupportedAirportWithStatus {
+        iata_code: airport.iata_code.clone(),
+        country_code: airport.country_code.clone(),
+        name: airport.name.clone(),
+        skytrax_review_slug: airport.skytrax_review_slug.clone(),
+        skytrax_rating_slug: airport.skytrax_rating_slug.clone(),
+        google_maps_url: airport.google_maps_url.clone(),
+        enabled: airport.enabled,
+        created_at: airport.created_at.to_rfc3339(),
+        updated_at: airport.updated_at.to_rfc3339(),
+        sources: statuses
+            .into_iter()
+            .map(|s| SourceStatusResponse {
+                source: s.source,
+                last_fetched_at: s.last_fetched_at.map(|dt: DateTime<Utc>| dt.to_rfc3339()),
+                last_status: s.last_status,
+                last_record_count: s.last_record_count,
+                last_error: s.last_error,
+            })
+            .collect(),
+    }
+}
+
+// ── Handlers ────────────────────────────────────────────────────
+
+/// List all supported airports with their source statuses.
+#[utoipa::path(
+    get,
+    path = "/api/admin/supported-airports",
+    responses(
+        (status = 200, description = "All supported airports with source status", body = Vec<SupportedAirportWithStatus>),
+    ),
+    tag = "admin"
+)]
+pub async fn list_supported_airports(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<SupportedAirportWithStatus>>, StatusCode> {
+    let airports = sqlx::query_as::<sqlx::Postgres, SupportedAirport>(
+        "SELECT * FROM supported_airports ORDER BY iata_code",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let statuses = sqlx::query_as::<sqlx::Postgres, SourceStatus>(
+        "SELECT * FROM source_status ORDER BY iata_code, source",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Group statuses by iata_code
+    let mut status_map: std::collections::HashMap<String, Vec<SourceStatus>> =
+        std::collections::HashMap::new();
+    for s in statuses {
+        status_map
+            .entry(s.iata_code.clone())
+            .or_default()
+            .push(s);
+    }
+
+    let result: Vec<SupportedAirportWithStatus> = airports
+        .iter()
+        .map(|a| {
+            let statuses = status_map.remove(&a.iata_code).unwrap_or_default();
+            airport_to_response(a, statuses)
+        })
+        .collect();
+
+    Ok(Json(result))
+}
+
+/// Create a new supported airport.
+#[utoipa::path(
+    post,
+    path = "/api/admin/supported-airports",
+    request_body = CreateSupportedAirport,
+    responses(
+        (status = 201, description = "Airport created", body = SupportedAirportWithStatus),
+        (status = 409, description = "Airport already exists"),
+    ),
+    tag = "admin"
+)]
+pub async fn create_supported_airport(
+    State(state): State<AppState>,
+    Json(body): Json<CreateSupportedAirport>,
+) -> Result<(StatusCode, Json<SupportedAirportWithStatus>), StatusCode> {
+    let airport = sqlx::query_as::<sqlx::Postgres, SupportedAirport>(
+        r#"
+        INSERT INTO supported_airports (iata_code, country_code, name, skytrax_review_slug, skytrax_rating_slug, google_maps_url)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING *
+        "#,
+    )
+    .bind(&body.iata_code)
+    .bind(&body.country_code)
+    .bind(&body.name)
+    .bind(&body.skytrax_review_slug)
+    .bind(&body.skytrax_rating_slug)
+    .bind(&body.google_maps_url)
+    .fetch_one(&state.pool)
+    .await
+    .map_err(|e| match e {
+        sqlx::Error::Database(ref db_err) if db_err.is_unique_violation() => StatusCode::CONFLICT,
+        _ => StatusCode::INTERNAL_SERVER_ERROR,
+    })?;
+
+    let response = airport_to_response(&airport, vec![]);
+    Ok((StatusCode::CREATED, Json(response)))
+}
+
+/// Update a supported airport (partial update).
+#[utoipa::path(
+    patch,
+    path = "/api/admin/supported-airports/{iata}",
+    params(("iata" = String, Path, description = "IATA airport code")),
+    request_body = UpdateSupportedAirport,
+    responses(
+        (status = 200, description = "Airport updated", body = SupportedAirportWithStatus),
+        (status = 404, description = "Airport not found"),
+    ),
+    tag = "admin"
+)]
+pub async fn update_supported_airport(
+    State(state): State<AppState>,
+    Path(iata): Path<String>,
+    Json(body): Json<UpdateSupportedAirport>,
+) -> Result<Json<SupportedAirportWithStatus>, StatusCode> {
+    let airport = sqlx::query_as::<sqlx::Postgres, SupportedAirport>(
+        r#"
+        UPDATE supported_airports SET
+            name = COALESCE($1, name),
+            country_code = COALESCE($2, country_code),
+            skytrax_review_slug = COALESCE($3, skytrax_review_slug),
+            skytrax_rating_slug = COALESCE($4, skytrax_rating_slug),
+            google_maps_url = COALESCE($5, google_maps_url),
+            enabled = COALESCE($6, enabled),
+            updated_at = now()
+        WHERE iata_code = $7
+        RETURNING *
+        "#,
+    )
+    .bind(&body.name)
+    .bind(&body.country_code)
+    .bind(&body.skytrax_review_slug)
+    .bind(&body.skytrax_rating_slug)
+    .bind(&body.google_maps_url)
+    .bind(&body.enabled)
+    .bind(&iata)
+    .fetch_optional(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    .ok_or(StatusCode::NOT_FOUND)?;
+
+    let statuses = sqlx::query_as::<sqlx::Postgres, SourceStatus>(
+        "SELECT * FROM source_status WHERE iata_code = $1 ORDER BY source",
+    )
+    .bind(&iata)
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(airport_to_response(&airport, statuses)))
+}
+
+/// Delete a supported airport.
+#[utoipa::path(
+    delete,
+    path = "/api/admin/supported-airports/{iata}",
+    params(("iata" = String, Path, description = "IATA airport code")),
+    responses(
+        (status = 204, description = "Airport deleted"),
+        (status = 404, description = "Airport not found"),
+    ),
+    tag = "admin"
+)]
+pub async fn delete_supported_airport(
+    State(state): State<AppState>,
+    Path(iata): Path<String>,
+) -> Result<StatusCode, StatusCode> {
+    let result = sqlx::query("DELETE FROM supported_airports WHERE iata_code = $1")
+        .bind(&iata)
+        .execute(&state.pool)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    if result.rows_affected() == 0 {
+        return Err(StatusCode::NOT_FOUND);
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Find airports with missing or stale data sources.
+#[utoipa::path(
+    get,
+    path = "/api/admin/data-gaps",
+    responses(
+        (status = 200, description = "Airports with missing or stale data", body = Vec<DataGapResponse>),
+    ),
+    tag = "admin"
+)]
+pub async fn data_gaps(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<DataGapResponse>>, StatusCode> {
+    // Stale or never-fetched source_status rows
+    let stale = sqlx::query_as::<sqlx::Postgres, (String, String, String, Option<DateTime<Utc>>, String)>(
+        r#"
+        SELECT sa.iata_code, sa.name, ss.source, ss.last_fetched_at, ss.last_status
+        FROM source_status ss
+        JOIN supported_airports sa ON sa.iata_code = ss.iata_code
+        WHERE ss.last_fetched_at IS NULL
+           OR ss.last_fetched_at < now() - interval '7 days'
+        ORDER BY sa.iata_code, ss.source
+        "#,
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Airports with NO source_status rows at all
+    let missing = sqlx::query_as::<sqlx::Postgres, (String, String)>(
+        r#"
+        SELECT sa.iata_code, sa.name
+        FROM supported_airports sa
+        LEFT JOIN source_status ss ON ss.iata_code = sa.iata_code
+        WHERE ss.iata_code IS NULL
+        ORDER BY sa.iata_code
+        "#,
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let mut results: Vec<DataGapResponse> = stale
+        .into_iter()
+        .map(|(iata_code, name, source, last_fetched_at, last_status)| DataGapResponse {
+            iata_code,
+            name,
+            source,
+            last_fetched_at: last_fetched_at.map(|dt| dt.to_rfc3339()),
+            last_status,
+        })
+        .collect();
+
+    for (iata_code, name) in missing {
+        results.push(DataGapResponse {
+            iata_code,
+            name,
+            source: "none".to_string(),
+            last_fetched_at: None,
+            last_status: "never_fetched".to_string(),
+        });
+    }
+
+    Ok(Json(results))
+}
+
+// ── Job endpoints ──────────────────────────────────────────────
+
+/// Start a pipeline job.
+#[utoipa::path(
+    post,
+    path = "/api/admin/jobs",
+    request_body = StartJobRequest,
+    responses(
+        (status = 202, description = "Job started", body = JobInfo),
+        (status = 500, description = "Failed to start job"),
+    ),
+    tag = "admin"
+)]
+pub async fn start_job(
+    State(state): State<AppState>,
+    Json(body): Json<StartJobRequest>,
+) -> Result<(StatusCode, Json<JobInfo>), StatusCode> {
+    let job = state
+        .jobs
+        .start_job(body)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok((StatusCode::ACCEPTED, Json(job)))
+}
+
+/// List all jobs.
+#[utoipa::path(
+    get,
+    path = "/api/admin/jobs",
+    responses(
+        (status = 200, description = "All jobs", body = Vec<JobInfo>),
+    ),
+    tag = "admin"
+)]
+pub async fn list_jobs(State(state): State<AppState>) -> Json<Vec<JobInfo>> {
+    Json(state.jobs.list_jobs().await)
+}
+
+/// Get a single job by ID.
+#[utoipa::path(
+    get,
+    path = "/api/admin/jobs/{id}",
+    params(("id" = String, Path, description = "Job ID")),
+    responses(
+        (status = 200, description = "Job details", body = JobInfo),
+        (status = 404, description = "Job not found"),
+    ),
+    tag = "admin"
+)]
+pub async fn get_job(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<JobInfo>, StatusCode> {
+    state
+        .jobs
+        .get_job(&id)
+        .await
+        .map(Json)
+        .ok_or(StatusCode::NOT_FOUND)
+}
+
+/// Cancel a running job.
+#[utoipa::path(
+    post,
+    path = "/api/admin/jobs/{id}/cancel",
+    params(("id" = String, Path, description = "Job ID")),
+    responses(
+        (status = 202, description = "Cancellation requested"),
+        (status = 404, description = "Job not found"),
+    ),
+    tag = "admin"
+)]
+pub async fn cancel_job(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> StatusCode {
+    if state.jobs.cancel_job(&id).await {
+        StatusCode::ACCEPTED
+    } else {
+        StatusCode::NOT_FOUND
+    }
+}
+
+/// Incremental refresh all enabled airports (all sources, no full refresh).
+#[utoipa::path(
+    post,
+    path = "/api/admin/refresh",
+    responses(
+        (status = 202, description = "Refresh job started", body = JobInfo),
+        (status = 500, description = "Failed to start refresh"),
+    ),
+    tag = "admin"
+)]
+pub async fn refresh_all(
+    State(state): State<AppState>,
+) -> Result<(StatusCode, Json<JobInfo>), StatusCode> {
+    let request = StartJobRequest {
+        airports: None,
+        sources: None,
+        full_refresh: Some(false),
+        score: Some(true),
+    };
+    let job = state
+        .jobs
+        .start_job(request)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok((StatusCode::ACCEPTED, Json(job)))
+}
+
+/// Trigger scoring only (no data fetching).
+#[utoipa::path(
+    post,
+    path = "/api/admin/score",
+    responses(
+        (status = 200, description = "Scoring completed"),
+        (status = 500, description = "Scoring failed"),
+    ),
+    tag = "admin"
+)]
+pub async fn trigger_scoring(State(state): State<AppState>) -> StatusCode {
+    match state.jobs.trigger_scoring().await {
+        Ok(()) => StatusCode::OK,
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+    }
+}

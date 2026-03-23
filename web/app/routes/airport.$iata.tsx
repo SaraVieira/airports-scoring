@@ -16,6 +16,7 @@ import { getAirport } from "~/server/get-airport";
 import { CarbonBadge } from "~/components/single/carbon-badge";
 import { GroundTransport } from "~/components/single/ground-transport";
 import { Amenities } from "~/components/single/amenities";
+import type { Airport } from "~/utils/types";
 
 export const Route = createFileRoute("/airport/$iata")({
   loader: ({ params }) => getAirport({ data: params.iata! }),
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/airport/$iata")({
 });
 
 function AirportDetail() {
-  const airport = Route.useLoaderData();
+  const airport = Route.useLoaderData() as Airport;
   const { score } = useSingleAirport({ airport });
 
   return (

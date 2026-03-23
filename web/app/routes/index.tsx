@@ -1,29 +1,13 @@
 import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { db } from "../db";
-import { airports, airportScores } from "../db/schema";
-import { eq, desc } from "drizzle-orm";
+import { api } from "~/api/client";
 import { Hero } from "~/components/home/hero";
 import { Rankings } from "~/components/home/rankings";
 import { WallColumn } from "~/components/home/wall-column";
 
 const getHomepageData = createServerFn({ method: "GET" }).handler(async () => {
-  const ranked = await db
-    .select({
-      iataCode: airports.iataCode,
-      name: airports.name,
-      city: airports.city,
-      countryCode: airports.countryCode,
-      scoreTotal: airportScores.scoreTotal,
-      scoreSentimentVelocity: airportScores.scoreSentimentVelocity,
-    })
-    .from(airportScores)
-    .innerJoin(airports, eq(airportScores.airportId, airports.id))
-    .where(eq(airportScores.isLatest, true))
-    .orderBy(desc(airportScores.scoreTotal));
-
-  return ranked;
+  return api.listAirports();
 });
 
 export const Route = createFileRoute("/")({
@@ -37,9 +21,7 @@ function Home() {
   const { mostImproved, wallOfShame } = useMemo(() => {
     const filtered = ranked.filter((a) => a.scoreSentimentVelocity != null);
     filtered.sort(
-      (a, b) =>
-        parseFloat(b.scoreSentimentVelocity!) -
-        parseFloat(a.scoreSentimentVelocity!),
+      (a, b) => (b.scoreSentimentVelocity ?? 0) - (a.scoreSentimentVelocity ?? 0),
     );
     return {
       mostImproved: filtered.slice(0, 3),

@@ -72,14 +72,14 @@ export function RouteSection({ airport }: { airport: Airport }) {
       {/* Hub status pills */}
       {airport.hubStatus && airport.hubStatus.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {airport.hubStatus.map((hub) => {
-            const style = HUB_STATUS_STYLES[hub.statusType] ?? {
+          {airport.hubStatus.map((hub, idx) => {
+            const style = HUB_STATUS_STYLES[hub.statusType ?? ""] ?? {
               color: "bg-zinc-500/10 text-zinc-400 ring-zinc-500/20",
-              label: hub.statusType.replace(/_/g, " "),
+              label: (hub.statusType ?? "").replace(/_/g, " "),
             };
             return (
               <div
-                key={hub.id}
+                key={idx}
                 className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] ring-1 ${style.color}`}
               >
                 <span className="font-medium">{hub.airlineName}</span>
@@ -123,7 +123,7 @@ export function RouteSection({ airport }: { airport: Airport }) {
               const isTop = idx === 0;
               return (
                 <div
-                  key={r.id}
+                  key={r.destinationIata ?? idx}
                   className={`flex justify-between items-center border-b border-white/5 last:border-0 ${
                     isTop ? "py-3 px-4 bg-[#111113] -mx-4" : "py-1.5"
                   }`}

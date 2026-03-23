@@ -32,6 +32,13 @@ fn empty_data() -> ScoringData {
         operator_avg_sentiment: None,
         operator_avg_operational: None,
         operator_airport_count: 0,
+        transport_modes_count: 0,
+        has_direct_rail: false,
+        hub_airline_count: 0,
+        focus_city_count: 0,
+        operating_base_count: 0,
+        lounge_count: 0,
+        carbon_level: None,
     }
 }
 
@@ -46,12 +53,14 @@ fn infrastructure_large_hub() {
         ..empty_data()
     };
     let score = score_infrastructure(&data, 2024);
-    // runway: min(4/3,1)*100 = 100 * 0.35 = 35
-    // length: min(13000/13000,1)*100 = 100 * 0.25 = 25
-    // age: 100 - (2024-2020)*3 = 88 * 0.25 = 22
+    // runway: min(4/3,1)*100 = 100 * 0.25 = 25
+    // length: min(13000/13000,1)*100 = 100 * 0.20 = 20
+    // age: 100 - (2024-2020)*3 = 88 * 0.20 = 17.6
     // capacity: (70/80)*100 = 87.5 * 0.15 = 13.125
-    // total = 95.125
-    assert!((score - 95.125).abs() < 0.01, "got {}", score);
+    // lounge: 0 * 0.10 = 0
+    // carbon: 0 * 0.10 = 0
+    // total = 75.725
+    assert!((score - 75.725).abs() < 0.01, "got {}", score);
 }
 
 #[test]
@@ -61,12 +70,14 @@ fn infrastructure_single_runway_no_data() {
         ..empty_data()
     };
     let score = score_infrastructure(&data, 2024);
-    // runway: (1/3)*100 = 33.3 * 0.35 = 11.67
-    // length: 0 * 0.25 = 0
-    // age: 50 * 0.25 = 12.5
+    // runway: (1/3)*100 = 33.3 * 0.25 = 8.33
+    // length: 0 * 0.20 = 0
+    // age: 50 * 0.20 = 10
     // capacity: 50 * 0.15 = 7.5
-    // total ~ 31.67
-    assert!((score - 31.67).abs() < 0.1, "got {}", score);
+    // lounge: 0 * 0.10 = 0
+    // carbon: 0 * 0.10 = 0
+    // total ~ 25.83
+    assert!((score - 25.83).abs() < 0.1, "got {}", score);
 }
 
 #[test]
@@ -83,9 +94,9 @@ fn infrastructure_old_unrenovated_airport() {
     // age: 100 - 74*1.5 = 0 (clamped) * 0.25 = 0
     // capacity: 50 * 0.15 = 7.5
     // total ~ 50.0
-    // Age penalty bottoms out, but runways+length keep score around 50.
-    assert!(score < 55.0, "old airport should not score high, got {}", score);
-    assert!(score > 40.0, "airport has decent runways, got {}", score);
+    // With new weights (lounge/carbon=0), score is lower than before.
+    assert!(score < 45.0, "old airport should not score high, got {}", score);
+    assert!(score > 30.0, "airport has decent runways, got {}", score);
 }
 
 #[test]
@@ -199,8 +210,13 @@ fn connectivity_large_hub() {
         ..empty_data()
     };
     let score = score_connectivity(&data);
-    // 100*0.4 + 100*0.3 + 75*0.3 = 92.5
-    assert!((score - 92.5).abs() < 0.01, "got {}", score);
+    // destination: min(200/100,1)*100 = 100 * 0.30 = 30
+    // airline: min(50/30,1)*100 = 100 * 0.20 = 20
+    // intl_ratio: (60M/80M)*100 = 75 * 0.20 = 15
+    // transport: 0 * 0.15 = 0
+    // hub: 0 * 0.15 = 0
+    // total = 65
+    assert!((score - 65.0).abs() < 0.01, "got {}", score);
 }
 
 #[test]
@@ -211,8 +227,13 @@ fn connectivity_small_airport() {
         ..empty_data()
     };
     let score = score_connectivity(&data);
-    // 10*0.4 + 10*0.3 + 50*0.3 = 22
-    assert!((score - 22.0).abs() < 0.01, "got {}", score);
+    // destination: min(10/100,1)*100 = 10 * 0.30 = 3
+    // airline: min(3/30,1)*100 = 10 * 0.20 = 2
+    // intl_ratio: 50 (default) * 0.20 = 10
+    // transport: 0 * 0.15 = 0
+    // hub: 0 * 0.15 = 0
+    // total = 15
+    assert!((score - 15.0).abs() < 0.01, "got {}", score);
 }
 
 #[test]
@@ -274,6 +295,13 @@ fn all_scores_clamped_0_to_100() {
         operator_avg_sentiment: Some(100.0),
         operator_avg_operational: Some(100.0),
         operator_airport_count: 100,
+        transport_modes_count: 5,
+        has_direct_rail: true,
+        hub_airline_count: 10,
+        focus_city_count: 5,
+        operating_base_count: 5,
+        lounge_count: 20,
+        carbon_level: Some(7),
     };
     for (name, val) in [
         ("infra", score_infrastructure(&extreme, 2024)),

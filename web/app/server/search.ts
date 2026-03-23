@@ -1,38 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
-import { db } from "../db";
-import { airports, airportScores } from "../db/schema";
-import { sql, ilike, or } from "drizzle-orm";
+import { api } from "~/api/client";
 
 export const searchAirports = createServerFn({ method: "GET" })
   .inputValidator((query: string) => query)
   .handler(async ({ data: query }) => {
-    if (!query || query.length < 1) return [];
-
-    const escaped = query.replace(/[%_]/g, '\\$&');
-    const pattern = `%${escaped}%`;
-    const results = await db
-      .select({
-        iataCode: airports.iataCode,
-        name: airports.name,
-        city: airports.city,
-        countryCode: airports.countryCode,
-        scoreTotal: airportScores.scoreTotal,
-      })
-      .from(airports)
-      .leftJoin(
-        airportScores,
-        sql`${airportScores.airportId} = ${airports.id} AND ${airportScores.isLatest} = true`
-      )
-      .where(
-        or(
-          ilike(airports.name, pattern),
-          ilike(airports.iataCode, pattern),
-          ilike(airports.city, pattern),
-          ilike(airports.icaoCode, pattern)
-        )
-      )
-      .orderBy(sql`${airportScores.scoreTotal} DESC NULLS LAST`)
-      .limit(8);
-
-    return results;
+    if (query.length < 1) return [];
+    return api.searchAirports(query);
   });
