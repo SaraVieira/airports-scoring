@@ -13,6 +13,9 @@ import { Tardiness } from "~/components/single/tardiness";
 import { Runways } from "~/components/single/runways";
 import { Backstory } from "~/components/single/backstory";
 import { getAirport } from "~/server/get-airport";
+import { CarbonBadge } from "~/components/single/carbon-badge";
+import { GroundTransport } from "~/components/single/ground-transport";
+import { Amenities } from "~/components/single/amenities";
 
 export const Route = createFileRoute("/airport/$iata")({
   loader: ({ params }) => getAirport({ data: params.iata! }),
@@ -70,17 +73,21 @@ function AirportDetail() {
           />
         </div>
 
+        <CarbonBadge airport={airport} />
+
         <Divider />
         <Sentiment airport={airport} />
 
         <Divider />
 
         <Numbers airport={airport} />
+        <Amenities airport={airport} />
         <Divider />
 
         <Tardiness airport={airport} />
         <Divider />
         <RouteSection airport={airport} />
+        <GroundTransport airport={airport} />
         <Divider />
         <Runways airport={airport} />
         <Divider />

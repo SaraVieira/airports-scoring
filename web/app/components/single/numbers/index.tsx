@@ -35,7 +35,7 @@ export const Numbers = ({ airport }: { airport: Airport }) => {
 
       <GrowthNarrative narrative={growthNarrative} />
 
-      {capacityNum && latestPaxNum && (
+      {capacityNum != null && capacityNum > 0 && latestPaxNum != null && latestPaxNum > 0 && (
         <p className="font-mono text-xs text-zinc-600 italic leading-relaxed">
           {paxSnark(latestPaxNum, capacityNum)}
         </p>

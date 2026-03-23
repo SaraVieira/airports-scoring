@@ -13,7 +13,8 @@ use crate::models::{Airport, FetchResult};
 use aci::{fetch_aci_awards, WikiParseResponse, WikiQueryResponse};
 use parsers::{
     article_title_from_url, extract_section_text, extract_skytrax_history, extract_year,
-    parse_infobox_field, parse_infobox_field_raw, parse_infobox_stats, parse_passenger_table,
+    parse_ground_transport, parse_hub_status, parse_infobox_field, parse_infobox_field_raw,
+    parse_infobox_stats, parse_passenger_table,
 };
 
 pub const USER_AGENT: &str = "AirportIntelligencePlatform/1.0";
@@ -145,6 +146,69 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
     let ownership_notes = extract_section_text(&wikitext, &["ownership", "privatisation", "privatization", "shareholders"]);
     let milestone_notes = extract_section_text(&wikitext, &["history", "milestone", "timeline"]);
     let skytrax_history = extract_skytrax_history(&wikitext);
+
+    // --- Hub status ---
+    let hub_entries = parse_hub_status(&wikitext);
+    if !hub_entries.is_empty() {
+        sqlx::query("DELETE FROM hub_status WHERE airport_id = $1 AND source = 'wikipedia'")
+            .bind(airport.id)
+            .execute(pool)
+            .await
+            .with_context(|| format!("Failed to delete old hub_status for {}", iata))?;
+
+        for entry in &hub_entries {
+            sqlx::query(
+                "INSERT INTO hub_status (airport_id, airline_name, status_type, source)
+                 VALUES ($1, $2, $3, 'wikipedia')",
+            )
+            .bind(airport.id)
+            .bind(&entry.airline)
+            .bind(&entry.status_type)
+            .execute(pool)
+            .await
+            .with_context(|| format!("Failed to insert hub_status for {}", iata))?;
+        }
+
+        info!(airport = iata, count = hub_entries.len(), "Parsed hub status entries");
+    }
+
+    // --- Ground transport ---
+    let ground = parse_ground_transport(&wikitext);
+    if ground.transport_modes_count > 0 {
+        sqlx::query(
+            "INSERT INTO ground_transport
+                 (airport_id, has_metro, has_rail, has_tram, has_bus, has_direct_rail,
+                  transport_modes_count, raw_notes)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+             ON CONFLICT (airport_id) DO UPDATE SET
+                 has_metro             = EXCLUDED.has_metro,
+                 has_rail              = EXCLUDED.has_rail,
+                 has_tram              = EXCLUDED.has_tram,
+                 has_bus               = EXCLUDED.has_bus,
+                 has_direct_rail       = EXCLUDED.has_direct_rail,
+                 transport_modes_count = EXCLUDED.transport_modes_count,
+                 raw_notes             = EXCLUDED.raw_notes,
+                 fetched_at            = NOW()",
+        )
+        .bind(airport.id)
+        .bind(ground.has_metro)
+        .bind(ground.has_rail)
+        .bind(ground.has_tram)
+        .bind(ground.has_bus)
+        .bind(ground.has_direct_rail)
+        .bind(ground.transport_modes_count)
+        .bind(ground.raw_notes.as_deref())
+        .execute(pool)
+        .await
+        .with_context(|| format!("Failed to upsert ground_transport for {}", iata))?;
+
+        info!(
+            airport = iata,
+            modes = ground.transport_modes_count,
+            has_direct_rail = ground.has_direct_rail,
+            "Parsed ground transport"
+        );
+    }
 
     // Fetch ACI ASQ awards from the dedicated Wikipedia article.
     // Search by airport name, city, and short name for better matching.

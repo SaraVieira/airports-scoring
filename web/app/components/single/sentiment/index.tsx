@@ -6,7 +6,6 @@ import { scoreColor } from "~/utils/scoring";
 import { fmt } from "~/utils/format";
 import { ReviewCard } from "./review.card";
 import { SentimentTimeline } from "./timeline";
-import { useMemo } from "react";
 import { SentimentBar } from "./bar";
 
 export const Sentiment = ({ airport }: { airport: Airport }) => {
@@ -14,33 +13,30 @@ export const Sentiment = ({ airport }: { airport: Airport }) => {
     airport,
   });
 
-  const sentimentMetrics = useMemo(
-    () => [
-      {
-        l: "Positive",
-        v: latestSentiment?.positivePct,
-        c:
-          latestSentiment?.positivePct &&
-          parseFloat(latestSentiment?.positivePct) >= 50
-            ? "text-green-500"
-            : latestSentiment?.positivePct &&
-                parseFloat(latestSentiment?.positivePct) >= 30
-              ? "text-yellow-500"
-              : "text-red-500",
-      },
-      {
-        l: "Neutral",
-        v: latestSentiment?.neutralPct,
-        c: "text-zinc-400",
-      },
-      {
-        l: "Negative",
-        v: latestSentiment?.negativePct,
-        c: "text-red-500",
-      },
-    ],
-    [latestSentiment],
-  );
+  const sentimentMetrics = [
+    {
+      l: "Positive",
+      v: latestSentiment?.positivePct,
+      c:
+        latestSentiment?.positivePct &&
+        parseFloat(latestSentiment?.positivePct) >= 50
+          ? "text-green-500"
+          : latestSentiment?.positivePct &&
+              parseFloat(latestSentiment?.positivePct) >= 30
+            ? "text-yellow-500"
+            : "text-red-500",
+    },
+    {
+      l: "Neutral",
+      v: latestSentiment?.neutralPct,
+      c: "text-zinc-400",
+    },
+    {
+      l: "Negative",
+      v: latestSentiment?.negativePct,
+      c: "text-red-500",
+    },
+  ];
 
   return (
     <section className="flex flex-col gap-5 bg-[#0d0d0f] -mx-16 px-16 py-8">

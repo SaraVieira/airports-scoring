@@ -35,6 +35,16 @@ export const getAirport = createServerFn({ method: "GET" })
           orderBy: (w, { desc }) => [desc(w.fetchedAt)],
           limit: 1,
         },
+        carbonAccreditation: {
+          orderBy: (c, { desc }) => [desc(c.reportYear)],
+          limit: 1,
+        },
+        groundTransport: {
+          orderBy: (g, { desc }) => [desc(g.fetchedAt)],
+          limit: 1,
+        },
+        lounges: true,
+        hubStatus: true,
         slugs: true,
       },
     });

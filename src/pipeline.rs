@@ -33,6 +33,8 @@ pub const ALL_SOURCES: &[&str] = &[
     "wikipedia",
     "reviews",
     "sentiment",
+    "carbon_accreditation",
+    "priority_pass",
 ];
 
 /// Additional source aliases accepted by --source but not in ALL_SOURCES.
@@ -65,6 +67,8 @@ async fn dispatch_fetcher(
         "skytrax" => fetchers::skytrax::fetch(pool, airport, full_refresh).await,
         "google_reviews" => fetchers::google_reviews::fetch(pool, airport, full_refresh, seed_airports).await,
         "sentiment" => fetchers::sentiment::fetch(pool, airport, full_refresh).await,
+        "carbon_accreditation" => fetchers::carbon_accreditation::fetch(pool, airport, full_refresh).await,
+        "priority_pass" => fetchers::priority_pass::fetch(pool, airport, full_refresh).await,
         other => bail!("Unknown source: {}", other),
     }
 }

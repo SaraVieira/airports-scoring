@@ -3,6 +3,12 @@ import { useSingleAirport } from "~/hooks/use-single-airport";
 import { routeDisplayName, routeIata, routeRegion } from "~/utils/routes";
 import { Airport, RouteRow } from "~/utils/types";
 
+const HUB_STATUS_STYLES: Record<string, { color: string; label: string }> = {
+  hub: { color: "bg-yellow-500/10 text-yellow-400 ring-yellow-500/20", label: "Hub" },
+  focus_city: { color: "bg-blue-500/10 text-blue-400 ring-blue-500/20", label: "Focus City" },
+  operating_base: { color: "bg-zinc-500/10 text-zinc-400 ring-zinc-500/20", label: "Base" },
+};
+
 export function RouteSection({ airport }: { airport: Airport }) {
   const { routesWithFlights } = useSingleAirport({ airport });
   const [showAll, setShowAll] = useState(false);
@@ -62,6 +68,28 @@ export function RouteSection({ airport }: { airport: Airport }) {
       <h3 className="font-grotesk text-[13px] font-bold text-yellow-400 tracking-[2px] uppercase">
         Where You Can Escape To
       </h3>
+
+      {/* Hub status pills */}
+      {airport.hubStatus && airport.hubStatus.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {airport.hubStatus.map((hub) => {
+            const style = HUB_STATUS_STYLES[hub.statusType] ?? {
+              color: "bg-zinc-500/10 text-zinc-400 ring-zinc-500/20",
+              label: hub.statusType.replace(/_/g, " "),
+            };
+            return (
+              <div
+                key={hub.id}
+                className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] ring-1 ${style.color}`}
+              >
+                <span className="font-medium">{hub.airlineName}</span>
+                <span className="opacity-40">·</span>
+                <span className="opacity-70">{style.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Route summary stats */}
       <span className="font-mono text-[11px] text-zinc-400">

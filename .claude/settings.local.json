@@ -119,7 +119,12 @@
       "mcp__playwright__browser_take_screenshot",
       "Bash(psql \"$DATABASE_URL\" -t -A -c \":*)",
       "Bash(lsof -ti:3000)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(psql:*)",
+      "Bash(.venv/bin/python3 python/priority_pass_scraper.py --airport BCN)"
     ]
   }
 }

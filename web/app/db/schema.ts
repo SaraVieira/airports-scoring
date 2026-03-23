@@ -396,6 +396,88 @@ export const wikipediaSnapshots = pgTable("wikipedia_snapshots", {
 });
 
 // ============================================================
+// CARBON ACCREDITATION
+// ============================================================
+
+export const carbonAccreditation = pgTable("carbon_accreditation", {
+  id: serial("id").primaryKey(),
+  airportId: integer("airport_id")
+    .notNull()
+    .unique()
+    .references(() => airports.id, { onDelete: "cascade" }),
+  level: smallint("level").notNull(),
+  levelName: text("level_name").notNull(),
+  reportYear: smallint("report_year").notNull(),
+  source: text("source").notNull().default("aci_annual_report"),
+  fetchedAt: timestamp("fetched_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// ============================================================
+// GROUND TRANSPORT
+// ============================================================
+
+export const groundTransport = pgTable("ground_transport", {
+  id: serial("id").primaryKey(),
+  airportId: integer("airport_id")
+    .notNull()
+    .unique()
+    .references(() => airports.id, { onDelete: "cascade" }),
+  hasMetro: boolean("has_metro").default(false),
+  hasRail: boolean("has_rail").default(false),
+  hasTram: boolean("has_tram").default(false),
+  hasBus: boolean("has_bus").default(false),
+  hasDirectRail: boolean("has_direct_rail").default(false),
+  transportModesCount: smallint("transport_modes_count").notNull().default(0),
+  rawNotes: text("raw_notes"),
+  fetchedAt: timestamp("fetched_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// ============================================================
+// LOUNGES
+// ============================================================
+
+export const lounges = pgTable("lounges", {
+  id: serial("id").primaryKey(),
+  airportId: integer("airport_id")
+    .notNull()
+    .references(() => airports.id, { onDelete: "cascade" }),
+  loungeName: text("lounge_name").notNull(),
+  terminal: text("terminal"),
+  source: text("source").notNull().default("priority_pass"),
+  openingHours: text("opening_hours"),
+  amenities: jsonb("amenities").$type<Record<string, {}> | null>(),
+  sourceUrl: text("source_url"),
+  fetchedAt: timestamp("fetched_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// ============================================================
+// HUB STATUS
+// ============================================================
+
+export const hubStatus = pgTable("hub_status", {
+  id: serial("id").primaryKey(),
+  airportId: integer("airport_id")
+    .notNull()
+    .references(() => airports.id, { onDelete: "cascade" }),
+  airlineName: text("airline_name").notNull(),
+  statusType: text("status_type").notNull(),
+  source: text("source").notNull().default("wikipedia"),
+  fetchedAt: timestamp("fetched_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// ============================================================
 // NAVAIDS
 // ============================================================
 

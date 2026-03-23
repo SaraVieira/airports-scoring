@@ -74,6 +74,25 @@ pub(crate) fn extract_infobox_block(wikitext: &str) -> Option<String> {
     Some(wikitext[start..].to_string())
 }
 
+/// Extract a potentially multi-line infobox field value.
+/// Captures everything from `| field = ...` until the next `| other_field =` line.
+/// This handles fields like `hub` that use `{{ubl|...}}` templates spanning many lines.
+pub(crate) fn extract_multiline_infobox_field(infobox: &str, field: &str) -> Option<String> {
+    let pattern = format!(r"(?mi)^\|\s*{}\s*=\s*", regex::escape(field));
+    let re = Regex::new(&pattern).ok()?;
+    let m = re.find(infobox)?;
+    let start = m.end();
+
+    // Find the next `| field_name =` line, which marks the end of this field's value
+    let next_field_re = Regex::new(r"(?m)^\|\s*\w+\s*=").unwrap();
+    let end = next_field_re.find(&infobox[start..])
+        .map(|m2| start + m2.start())
+        .unwrap_or(infobox.len());
+
+    let value = infobox[start..end].trim();
+    if value.is_empty() { None } else { Some(value.to_string()) }
+}
+
 pub(crate) fn extract_year(s: &str) -> Option<i16> {
     RE_YEAR.captures(s)
         .and_then(|c| c.get(1))
@@ -205,7 +224,7 @@ pub(crate) fn parse_passenger_table(wikitext: &str) -> Vec<(i16, i64)> {
 
             if let Some(year_cap) = RE_YEAR.captures(&clean) {
                 let year: i16 = year_cap[1].parse().unwrap();
-                if year < 1950 || year > 2030 {
+                if !(1950..=2030).contains(&year) {
                     continue;
                 }
 
@@ -287,6 +306,171 @@ pub(crate) fn extract_section_text(wikitext: &str, keywords: &[&str]) -> Option<
     } else {
         Some(result.chars().take(5000).collect())
     }
+}
+
+/// A single hub/focus-city/operating-base entry for an airline at this airport.
+#[derive(Debug)]
+pub(crate) struct HubEntry {
+    pub(crate) airline: String,
+    pub(crate) status_type: String,
+}
+
+/// Parsed ground-transport data from a Wikipedia article section.
+#[derive(Debug, Default)]
+pub(crate) struct GroundTransportData {
+    pub(crate) has_metro: bool,
+    pub(crate) has_rail: bool,
+    pub(crate) has_tram: bool,
+    pub(crate) has_bus: bool,
+    pub(crate) has_direct_rail: bool,
+    pub(crate) transport_modes_count: i16,
+    pub(crate) raw_notes: Option<String>,
+}
+
+/// Parse airline hub/focus-city/operating-base entries from the infobox.
+///
+/// Reads the `hub`, `focus_city`, and `operating_base` fields and extracts
+/// airline names from wikilinks (`[[Foo|Bar]]`) or plain text separated by
+/// `<br>`, newlines, or bullet characters.
+pub(crate) fn parse_hub_status(wikitext: &str) -> Vec<HubEntry> {
+    let fields = [
+        ("hub", "hub"),
+        ("focus_city", "focus_city"),
+        ("operating_base", "operating_base"),
+    ];
+
+    let mut entries = Vec::new();
+    let infobox = match extract_infobox_block(wikitext) {
+        Some(ib) => ib,
+        None => return entries,
+    };
+
+    for (field, status_type) in &fields {
+        // Extract the full multi-line field value from the infobox.
+        // Fields like `hub` often use {{ubl|...}} spanning many lines.
+        let raw = match extract_multiline_infobox_field(&infobox, field) {
+            Some(r) => r,
+            None => continue,
+        };
+
+        // Extract all wikilink display names — this is the most reliable source.
+        for cap in RE_WIKILINK.captures_iter(&raw) {
+            if let Some(m) = cap.get(1) {
+                let name = m.as_str().trim().to_string();
+                if is_valid_airline_name(&name) {
+                    entries.push(HubEntry {
+                        airline: name,
+                        status_type: status_type.to_string(),
+                    });
+                }
+            }
+        }
+
+        // If no wikilinks found, try plain-text after stripping all markup.
+        // The {{ubl|...}} template and <br> tags are common separators.
+        if !entries.iter().any(|e| e.status_type == *status_type) {
+            // Strip templates, refs, html tags
+            let stripped = strip_wiki_markup(&raw);
+            for fragment in stripped.split(['\n', '*', '•', '|']) {
+                let name = fragment.trim().to_string();
+                if is_valid_airline_name(&name) {
+                    entries.push(HubEntry {
+                        airline: name,
+                        status_type: status_type.to_string(),
+                    });
+                }
+            }
+        }
+    }
+
+    entries
+}
+
+/// Check if a string looks like a valid airline name (not template junk).
+fn is_valid_airline_name(name: &str) -> bool {
+    if name.len() < 2 || name.len() > 80 {
+        return false;
+    }
+    // Filter out wiki template parameters and markup artifacts
+    if name.contains('=') || name.contains('{') || name.contains('}') {
+        return false;
+    }
+    // Filter out common non-airline values from infobox fields
+    let lower = name.to_lowercase();
+    if lower.starts_with("class")
+        || lower.starts_with("nowrap")
+        || lower.starts_with("ubl")
+        || lower.starts_with("unbulleted")
+        || lower.starts_with("plainlist")
+        || lower.starts_with("hlist")
+        || lower == "and"
+        || lower == "or"
+    {
+        return false;
+    }
+    true
+}
+
+/// Parse ground-transport information from a Wikipedia article section.
+///
+/// Looks for a section whose heading matches one of several transport-related
+/// keywords, then scans the text for mode keywords and direct-rail indicators.
+pub(crate) fn parse_ground_transport(wikitext: &str) -> GroundTransportData {
+    let mut data = GroundTransportData::default();
+
+    let text = match extract_section_text(
+        wikitext,
+        &[
+            "ground transport",
+            "ground transportation",
+            "public transport",
+            "access",
+        ],
+    ) {
+        Some(t) => t,
+        None => return data,
+    };
+
+    let lower = text.to_lowercase();
+
+    if lower.contains("metro") || lower.contains("subway") || lower.contains("underground") {
+        data.has_metro = true;
+    }
+    if lower.contains("rail")
+        || lower.contains("train")
+        || lower.contains("railway")
+        || lower.contains("express")
+        || lower.contains("cercan")
+        || lower.contains("rodalies")
+    {
+        data.has_rail = true;
+    }
+    if lower.contains("tram") || lower.contains("light rail") || lower.contains("streetcar") {
+        data.has_tram = true;
+    }
+    if lower.contains("bus") || lower.contains("coach") || lower.contains("shuttle") {
+        data.has_bus = true;
+    }
+
+    if lower.contains("station at")
+        || lower.contains("below the terminal")
+        || lower.contains("directly connect")
+        || lower.contains("integrated")
+        || lower.contains("airport station")
+    {
+        data.has_direct_rail = true;
+    }
+
+    data.transport_modes_count = [data.has_metro, data.has_rail, data.has_tram, data.has_bus]
+        .iter()
+        .filter(|&&b| b)
+        .count() as i16;
+
+    if !text.is_empty() {
+        data.raw_notes = Some(text.chars().take(2000).collect());
+    }
+
+    data
 }
 
 pub(crate) fn extract_skytrax_history(wikitext: &str) -> Option<serde_json::Map<String, Value>> {

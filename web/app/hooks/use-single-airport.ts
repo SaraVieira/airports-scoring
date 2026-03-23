@@ -8,9 +8,14 @@ export const useSingleAirport = ({ airport }: { airport: Airport }) => {
   const score = airport.scores[0];
   const totalNum = score?.scoreTotal ? parseFloat(score.scoreTotal) : null;
 
-  const recentOps = airport.operationalStats.slice(0, 12);
-  const opsAgg = recentOps.length > 0 ? aggregateOps(recentOps) : null;
-  const opsTrend = computeOpsTrend(airport.operationalStats);
+  const { recentOps, opsAgg, opsTrend } = useMemo(() => {
+    const recent = airport.operationalStats.slice(0, 12);
+    return {
+      recentOps: recent,
+      opsAgg: recent.length > 0 ? aggregateOps(recent) : null,
+      opsTrend: computeOpsTrend(airport.operationalStats),
+    };
+  }, [airport.operationalStats]);
 
   const wiki = airport.wikipediaSnapshots[0];
   // Deduplicate routes by destination
@@ -35,27 +40,46 @@ export const useSingleAirport = ({ airport }: { airport: Airport }) => {
     );
   }, [airport.routesOut]);
 
-  // Data range for subtitle
-  const paxYears = airport.paxYearly
-    .map((p) => p.year)
-    .filter(Boolean) as number[];
-  const opsYears = airport.operationalStats
-    .map((o) => o.periodYear)
-    .filter(Boolean) as number[];
-  const sentYears = airport.sentimentSnapshots
-    .map((s) => s.snapshotYear)
-    .filter(Boolean) as number[];
-  const allYears = [...paxYears, ...opsYears, ...sentYears];
-  const dataRange =
-    allYears.length > 0
-      ? `Based on data from ${Math.min(...allYears)}–${Math.max(...allYears)}`
+  // Data range for subtitle — single pass tracking min/max
+  const dataRange = useMemo(() => {
+    let minYear = Infinity,
+      maxYear = -Infinity,
+      hasYear = false;
+    for (const p of airport.paxYearly) {
+      if (p.year) {
+        minYear = Math.min(minYear, p.year);
+        maxYear = Math.max(maxYear, p.year);
+        hasYear = true;
+      }
+    }
+    for (const o of airport.operationalStats) {
+      if (o.periodYear) {
+        minYear = Math.min(minYear, o.periodYear);
+        maxYear = Math.max(maxYear, o.periodYear);
+        hasYear = true;
+      }
+    }
+    for (const s of airport.sentimentSnapshots) {
+      if (s.snapshotYear) {
+        minYear = Math.min(minYear, s.snapshotYear);
+        maxYear = Math.max(maxYear, s.snapshotYear);
+        hasYear = true;
+      }
+    }
+    return hasYear
+      ? `Based on data from ${minYear}\u2013${maxYear}`
       : null;
+  }, [airport.paxYearly, airport.operationalStats, airport.sentimentSnapshots]);
 
   // Source breakdown for sentiment
-  const googleCount =
-    airport.sourceBreakdown.find((s) => s.source === "google")?.count ?? 0;
-  const skytraxCount =
-    airport.sourceBreakdown.find((s) => s.source === "skytrax")?.count ?? 0;
+  const { googleCount, skytraxCount } = useMemo(() => {
+    return {
+      googleCount:
+        airport.sourceBreakdown.find((s) => s.source === "google")?.count ?? 0,
+      skytraxCount:
+        airport.sourceBreakdown.find((s) => s.source === "skytrax")?.count ?? 0,
+    };
+  }, [airport.sourceBreakdown]);
 
   return {
     totalNum,
