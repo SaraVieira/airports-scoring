@@ -28,8 +28,8 @@ services:
       HF_TOKEN: ${HF_TOKEN}
       OPENSKY_ID: ${OPENSKY_ID:-}
       OPENSKY_SECRET: ${OPENSKY_SECRET:-}
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
 
   google-scraper:
     build:
