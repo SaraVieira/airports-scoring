@@ -30,8 +30,6 @@ services:
       OPENSKY_SECRET: ${OPENSKY_SECRET:-}
     expose:
       - "8080"
-    ports:
-      - "8080:8080"
 
   web:
     build:
