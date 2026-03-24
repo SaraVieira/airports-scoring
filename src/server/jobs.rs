@@ -269,8 +269,8 @@ async fn run_job(
 
                 // Insert from all_airports reference table
                 let inserted = sqlx::query(
-                    "INSERT INTO airports (iata_code, icao_code, name, city, country_code, airport_type, in_seed_set) \
-                     SELECT iata, icao, name, city, country, type, true \
+                    "INSERT INTO airports (iata_code, icao_code, name, city, country_code, elevation_ft, timezone, airport_type, in_seed_set) \
+                     SELECT iata, icao, name, city, country, elevation, tz, 'large_airport', true \
                      FROM all_airports WHERE iata = $1 \
                      ON CONFLICT (iata_code) DO UPDATE SET in_seed_set = true \
                      RETURNING id"
