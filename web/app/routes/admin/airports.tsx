@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { api } from "~/api/client";
+import {
+  adminListAirports,
+  adminCreateAirport,
+  adminUpdateAirport,
+  adminDeleteAirport,
+  adminStartJob,
+} from "~/server/admin";
 import type { components } from "~/api/types";
 
 type SupportedAirport = components["schemas"]["SupportedAirportWithStatus"];
@@ -58,13 +64,19 @@ function AddAirportForm({ onCreated }: { onCreated: () => void }) {
     setLoading(true);
     setError("");
     try {
-      await api.admin.createSupportedAirport({
-        iata_code: form.iata_code.toUpperCase(),
-        name: form.name,
-        country_code: form.country_code.toUpperCase(),
-        skytrax_review_slug: form.skytrax_review_slug || null,
-        skytrax_rating_slug: form.skytrax_rating_slug || null,
-        google_maps_url: form.google_maps_url || null,
+      const password = localStorage.getItem("admin_password") || "";
+      await adminCreateAirport({
+        data: {
+          password,
+          body: {
+            iata_code: form.iata_code.toUpperCase(),
+            name: form.name,
+            country_code: form.country_code.toUpperCase(),
+            skytrax_review_slug: form.skytrax_review_slug || null,
+            skytrax_rating_slug: form.skytrax_rating_slug || null,
+            google_maps_url: form.google_maps_url || null,
+          },
+        },
       });
       setForm({
         iata_code: "",
@@ -231,12 +243,19 @@ function EditRow({
   const handleSave = async () => {
     setLoading(true);
     try {
-      await api.admin.updateSupportedAirport(airport.iataCode, {
-        enabled: form.enabled,
-        name: form.name,
-        skytrax_review_slug: form.skytrax_review_slug || null,
-        skytrax_rating_slug: form.skytrax_rating_slug || null,
-        google_maps_url: form.google_maps_url || null,
+      const password = localStorage.getItem("admin_password") || "";
+      await adminUpdateAirport({
+        data: {
+          password,
+          iata: airport.iataCode,
+          body: {
+            enabled: form.enabled,
+            name: form.name,
+            skytrax_review_slug: form.skytrax_review_slug || null,
+            skytrax_rating_slug: form.skytrax_rating_slug || null,
+            google_maps_url: form.google_maps_url || null,
+          },
+        },
       });
       onSaved();
     } catch (err) {
@@ -309,7 +328,8 @@ function AdminAirports() {
 
   const fetchData = useCallback(async () => {
     try {
-      const a = await api.admin.listSupportedAirports();
+      const password = localStorage.getItem("admin_password") || "";
+      const a = await adminListAirports({ data: password });
       setAirports(a);
     } catch {
       localStorage.removeItem("admin_password");
@@ -326,8 +346,7 @@ function AdminAirports() {
       setLoading(false);
       return;
     }
-    api.admin
-      .listSupportedAirports()
+    adminListAirports({ data: password })
       .then(() => {
         setAuthenticated(true);
         fetchData();
@@ -341,7 +360,8 @@ function AdminAirports() {
 
   const handleDelete = async (iata: string) => {
     try {
-      await api.admin.deleteSupportedAirport(iata);
+      const password = localStorage.getItem("admin_password") || "";
+      await adminDeleteAirport({ data: { password, iata } });
       setDeleteConfirm(null);
       await fetchData();
     } catch (err) {
@@ -352,7 +372,8 @@ function AdminAirports() {
   const handleFetchNow = async (iata: string) => {
     setFetchingIata(iata);
     try {
-      await api.admin.startJob({ airports: [iata] });
+      const password = localStorage.getItem("admin_password") || "";
+      await adminStartJob({ data: { password, body: { airports: [iata] } } });
     } catch (err) {
       console.error("Failed to start fetch", err);
     } finally {

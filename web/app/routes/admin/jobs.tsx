@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { api } from "~/api/client";
+import {
+  adminStartJob,
+  adminListJobs,
+  adminListAirports,
+  adminCancelJob,
+} from "~/server/admin";
 import type { components } from "~/api/types";
 
 type JobInfo = components["schemas"]["JobInfo"];
@@ -107,11 +112,17 @@ function StartJobForm({
     e.preventDefault();
     setLoading(true);
     try {
-      await api.admin.startJob({
-        airports: selectedAirports.length > 0 ? selectedAirports : null,
-        sources: selectedSources.length > 0 ? selectedSources : null,
-        fullRefresh: fullRefresh || null,
-        score: score || null,
+      const password = localStorage.getItem("admin_password") || "";
+      await adminStartJob({
+        data: {
+          password,
+          body: {
+            airports: selectedAirports.length > 0 ? selectedAirports : null,
+            sources: selectedSources.length > 0 ? selectedSources : null,
+            fullRefresh: fullRefresh || null,
+            score: score || null,
+          },
+        },
       });
       setSelectedAirports([]);
       setSelectedSources([]);
@@ -244,9 +255,10 @@ function AdminJobs() {
 
   const fetchData = useCallback(async () => {
     try {
+      const password = localStorage.getItem("admin_password") || "";
       const [j, a] = await Promise.all([
-        api.admin.listJobs(),
-        api.admin.listSupportedAirports(),
+        adminListJobs({ data: password }),
+        adminListAirports({ data: password }),
       ]);
       setJobs(j);
       setAirports(a);
@@ -266,8 +278,7 @@ function AdminJobs() {
       setLoading(false);
       return;
     }
-    api.admin
-      .listSupportedAirports()
+    adminListAirports({ data: password })
       .then(() => {
         setAuthenticated(true);
         fetchData();
@@ -292,7 +303,8 @@ function AdminJobs() {
 
   const handleCancel = async (id: string) => {
     try {
-      await api.admin.cancelJob(id);
+      const password = localStorage.getItem("admin_password") || "";
+      await adminCancelJob({ data: { password, id } });
       await fetchData();
     } catch (err) {
       console.error("Failed to cancel job", err);

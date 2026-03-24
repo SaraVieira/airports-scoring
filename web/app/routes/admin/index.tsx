@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { api } from "~/api/client";
 import type { components } from "~/api/types";
+import {
+  adminListAirports,
+  adminDataGaps,
+  adminListJobs,
+  adminRefresh,
+  adminTriggerScoring,
+} from "~/server/admin";
 
 type SupportedAirport = components["schemas"]["SupportedAirportWithStatus"];
 type DataGap = components["schemas"]["DataGapResponse"];
@@ -20,8 +26,7 @@ function useAdmin() {
       setAuthenticated(false);
       return;
     }
-    api.admin
-      .listSupportedAirports()
+    adminListAirports({ data: password })
       .then(() => setAuthenticated(true))
       .catch(() => {
         localStorage.removeItem("admin_password");
@@ -51,7 +56,7 @@ function LoginForm({
     setError("");
     localStorage.setItem("admin_password", password);
     try {
-      await api.admin.listSupportedAirports();
+      await adminListAirports({ data: password });
       onLogin();
     } catch {
       localStorage.removeItem("admin_password");
@@ -115,11 +120,12 @@ function Dashboard() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
+    const password = localStorage.getItem("admin_password") || "";
     try {
       const [a, g, j] = await Promise.all([
-        api.admin.listSupportedAirports(),
-        api.admin.dataGaps(),
-        api.admin.listJobs(),
+        adminListAirports({ data: password }),
+        adminDataGaps({ data: password }),
+        adminListJobs({ data: password }),
       ]);
       setAirports(a);
       setDataGaps(g);
@@ -146,9 +152,10 @@ function Dashboard() {
   }, [jobs, fetchData]);
 
   const handleRefreshAll = async () => {
+    const password = localStorage.getItem("admin_password") || "";
     setActionLoading("refresh");
     try {
-      await api.admin.refresh();
+      await adminRefresh({ data: password });
       await fetchData();
     } finally {
       setActionLoading(null);
@@ -156,9 +163,10 @@ function Dashboard() {
   };
 
   const handleScoring = async () => {
+    const password = localStorage.getItem("admin_password") || "";
     setActionLoading("scoring");
     try {
-      await api.admin.triggerScoring();
+      await adminTriggerScoring({ data: password });
       await fetchData();
     } finally {
       setActionLoading(null);
