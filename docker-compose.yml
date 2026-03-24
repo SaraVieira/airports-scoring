@@ -30,6 +30,21 @@ services:
       OPENSKY_SECRET: ${OPENSKY_SECRET:-}
     expose:
       - "8080"
+    ports:
+      - "8080:8080"
+
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_API_URL: http://api:8080
+        VITE_API_KEY: ${API_KEY}
+    depends_on:
+      - api
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: production
 
   google-scraper:
     build:
