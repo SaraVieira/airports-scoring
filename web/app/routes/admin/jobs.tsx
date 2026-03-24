@@ -11,21 +11,7 @@ import type { components } from "~/api/types";
 type JobInfo = components["schemas"]["JobInfo"];
 type SupportedAirport = components["schemas"]["SupportedAirportWithStatus"];
 
-const SOURCES = [
-  "ourairports",
-  "wikipedia",
-  "eurocontrol",
-  "eurostat",
-  "routes",
-  "metar",
-  "reviews",
-  "skytrax",
-  "google_reviews",
-  "sentiment",
-  "opensky",
-  "caa",
-  "aena",
-];
+import { ALL_SOURCES as SOURCES } from "~/utils/constants";
 
 export const Route = createFileRoute("/admin/jobs")({
   component: AdminJobs,
@@ -302,8 +288,8 @@ function AdminJobs() {
   }, [jobs, authenticated, fetchData]);
 
   const handleCancel = async (id: string) => {
+    const password = localStorage.getItem("admin_password") || "";
     try {
-      const password = localStorage.getItem("admin_password") || "";
       await adminCancelJob({ data: { password, id } });
       await fetchData();
     } catch (err) {

@@ -16,33 +16,105 @@ export const Route = createFileRoute("/admin/airports")({
   component: AdminAirports,
 });
 
-function SourceIndicator({ source }: { source: SourceStatus }) {
+import { PIPELINE_SOURCES } from "~/utils/constants";
+
+function SourceDot({
+  name,
+  source,
+}: {
+  name: string;
+  source?: SourceStatus;
+}) {
   const now = Date.now();
-  const fetched = source.lastFetchedAt
+  const fetched = source?.lastFetchedAt
     ? new Date(source.lastFetchedAt).getTime()
     : 0;
-  const daysSince = fetched ? (now - fetched) / (1000 * 60 * 60 * 24) : Infinity;
+  const daysSince = fetched
+    ? (now - fetched) / (1000 * 60 * 60 * 24)
+    : Infinity;
 
-  let color = "bg-red-400"; // never fetched
-  let title = `${source.source}: never fetched`;
-  if (fetched && source.lastStatus === "ok") {
+  let color: string;
+  let status: string;
+  let statusColor: string;
+
+  if (!source || !fetched) {
+    color = "bg-zinc-600";
+    status = "never ran";
+    statusColor = "text-zinc-500";
+  } else if (source.lastStatus === "success") {
     if (daysSince < 30) {
       color = "bg-green-400";
-      title = `${source.source}: ${Math.floor(daysSince)}d ago`;
+      status = `${Math.floor(daysSince)}d ago`;
+      statusColor = "text-green-400";
     } else {
       color = "bg-yellow-400";
-      title = `${source.source}: ${Math.floor(daysSince)}d ago (stale)`;
+      status = `${Math.floor(daysSince)}d ago (stale)`;
+      statusColor = "text-yellow-400";
     }
-  } else if (fetched && source.lastStatus === "failed") {
+  } else if (source.lastStatus === "failed") {
     color = "bg-red-400";
-    title = `${source.source}: failed ${source.lastError ? `- ${source.lastError}` : ""}`;
+    status = `failed${source.lastError ? `: ${source.lastError}` : ""}`;
+    statusColor = "text-red-400";
+  } else {
+    color = "bg-zinc-600";
+    status = source.lastStatus;
+    statusColor = "text-zinc-500";
   }
 
   return (
-    <span
-      className={`inline-block w-2 h-2 rounded-full ${color} mr-1`}
-      title={title}
-    />
+    <span className="relative group">
+      <span
+        className={`inline-block w-2 h-2 rounded-full ${color} mr-1 cursor-help`}
+      />
+      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-start bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1.5 whitespace-nowrap z-50 shadow-lg pointer-events-none">
+        <span className="font-mono text-[10px] font-bold text-zinc-300">
+          {name}
+        </span>
+        <span className={`font-mono text-[10px] ${statusColor}`}>
+          {status}
+        </span>
+      </span>
+    </span>
+  );
+}
+
+function ScoreDot({ hasScore }: { hasScore: boolean }) {
+  const color = hasScore ? "bg-blue-400" : "bg-zinc-600";
+  const status = hasScore ? "scored" : "not scored";
+  const statusColor = hasScore ? "text-blue-400" : "text-zinc-500";
+
+  return (
+    <span className="relative group ml-1">
+      <span
+        className={`inline-block w-2 h-2 rounded-sm ${color} cursor-help`}
+      />
+      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-start bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1.5 whitespace-nowrap z-50 shadow-lg pointer-events-none">
+        <span className="font-mono text-[10px] font-bold text-zinc-300">
+          score
+        </span>
+        <span className={`font-mono text-[10px] ${statusColor}`}>
+          {status}
+        </span>
+      </span>
+    </span>
+  );
+}
+
+function SourceIndicators({
+  sources,
+  hasScore,
+}: {
+  sources: SourceStatus[];
+  hasScore: boolean;
+}) {
+  const byName = new Map(sources.map((s) => [s.source, s]));
+  return (
+    <span className="flex flex-wrap items-center gap-0">
+      {PIPELINE_SOURCES.map((name) => (
+        <SourceDot key={name} name={name} source={byName.get(name)} />
+      ))}
+      <ScoreDot hasScore={hasScore} />
+    </span>
   );
 }
 
@@ -292,9 +364,7 @@ function EditRow({
         </label>
       </td>
       <td className="py-2">
-        {airport.sources.map((s) => (
-          <SourceIndicator key={s.source} source={s} />
-        ))}
+        <SourceIndicators sources={airport.sources} hasScore={airport.hasScore} />
       </td>
       <td className="py-2">
         <div className="flex gap-1">
@@ -468,9 +538,15 @@ function AdminAirports() {
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full bg-red-400" />
-            <span className="font-mono text-xs text-zinc-500">
-              never/failed
-            </span>
+            <span className="font-mono text-xs text-zinc-500">failed</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-2 h-2 rounded-full bg-zinc-600" />
+            <span className="font-mono text-xs text-zinc-500">never ran</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-2 h-2 rounded-sm bg-blue-400" />
+            <span className="font-mono text-xs text-zinc-500">scored</span>
           </span>
         </div>
 
@@ -532,9 +608,7 @@ function AdminAirports() {
                     </span>
                   </td>
                   <td className="py-2">
-                    {airport.sources.map((s) => (
-                      <SourceIndicator key={s.source} source={s} />
-                    ))}
+                    <SourceIndicators sources={airport.sources} hasScore={airport.hasScore} />
                   </td>
                   <td className="py-2">
                     <div className="flex gap-2">

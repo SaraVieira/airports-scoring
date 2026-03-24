@@ -28,6 +28,7 @@ pub struct SupportedAirportWithStatus {
     pub created_at: String,
     pub updated_at: String,
     pub sources: Vec<SourceStatusResponse>,
+    pub has_score: bool,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -55,6 +56,7 @@ pub struct DataGapResponse {
 fn airport_to_response(
     airport: &SupportedAirport,
     statuses: Vec<SourceStatus>,
+    has_score: bool,
 ) -> SupportedAirportWithStatus {
     SupportedAirportWithStatus {
         iata_code: airport.iata_code.clone(),
@@ -76,6 +78,7 @@ fn airport_to_response(
                 last_error: s.last_error,
             })
             .collect(),
+        has_score,
     }
 }
 
@@ -117,11 +120,24 @@ pub async fn list_supported_airports(
             .push(s);
     }
 
+    // Check which airports have scores
+    let scored_iatas: std::collections::HashSet<String> = sqlx::query_scalar::<_, String>(
+        "SELECT a.iata_code FROM airports a \
+         INNER JOIN airport_scores s ON s.airport_id = a.id AND s.is_latest = TRUE \
+         WHERE a.in_seed_set = TRUE AND s.score_total IS NOT NULL",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    .into_iter()
+    .collect();
+
     let result: Vec<SupportedAirportWithStatus> = airports
         .iter()
         .map(|a| {
             let statuses = status_map.remove(&a.iata_code).unwrap_or_default();
-            airport_to_response(a, statuses)
+            let has_score = scored_iatas.contains(&a.iata_code);
+            airport_to_response(a, statuses, has_score)
         })
         .collect();
 
@@ -163,7 +179,7 @@ pub async fn create_supported_airport(
         _ => StatusCode::INTERNAL_SERVER_ERROR,
     })?;
 
-    let response = airport_to_response(&airport, vec![]);
+    let response = airport_to_response(&airport, vec![], false);
     Ok((StatusCode::CREATED, Json(response)))
 }
 
@@ -218,7 +234,17 @@ pub async fn update_supported_airport(
     .await
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    Ok(Json(airport_to_response(&airport, statuses)))
+    let has_score: bool = sqlx::query_scalar(
+        "SELECT EXISTS(SELECT 1 FROM airport_scores s \
+         INNER JOIN airports a ON a.id = s.airport_id \
+         WHERE a.iata_code = $1 AND s.is_latest = TRUE AND s.score_total IS NOT NULL)",
+    )
+    .bind(&iata)
+    .fetch_one(&state.pool)
+    .await
+    .unwrap_or(false);
+
+    Ok(Json(airport_to_response(&airport, statuses, has_score)))
 }
 
 /// Delete a supported airport.

@@ -96,7 +96,11 @@ pub async fn fetch(
 
     // ── Step 1: Submit scrape job and wait ────────────────────
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .connect_timeout(std::time::Duration::from_secs(30))
+        .build()
+        .context("Failed to build HTTP client")?;
     let scrape_resp = client
         .post(format!("{}/scrape", base_url))
         .header("X-API-Key", &api_key)
@@ -123,10 +127,12 @@ pub async fn fetch(
 
     info!(airport = iata, job_id = %job.job_id, "Scrape job submitted, polling...");
 
-    // Poll for completion
+    // Poll for completion (with retry on transient errors)
     let mut poll_interval = std::time::Duration::from_secs(POLL_MIN_INTERVAL_SECS);
     let max_interval = std::time::Duration::from_secs(POLL_MAX_INTERVAL_SECS);
     let start = tokio::time::Instant::now();
+    let mut consecutive_errors = 0u32;
+    const MAX_POLL_ERRORS: u32 = 10;
 
     loop {
         tokio::time::sleep(poll_interval).await;
@@ -137,17 +143,44 @@ pub async fn fetch(
             info!(airport = iata, elapsed_secs = elapsed, "Still waiting for scraper...");
         }
 
-        let status_resp = client
+        let status_resp = match client
             .get(format!("{}/jobs/{}", base_url, job.job_id))
             .header("X-API-Key", &api_key)
             .send()
             .await
-            .context("Failed to poll job status")?;
+        {
+            Ok(r) => r,
+            Err(e) => {
+                consecutive_errors += 1;
+                warn!(
+                    airport = iata,
+                    error = %e,
+                    attempt = consecutive_errors,
+                    "Failed to poll scraper, retrying..."
+                );
+                if consecutive_errors >= MAX_POLL_ERRORS {
+                    anyhow::bail!(
+                        "Scraper unreachable after {} attempts for {}: {}",
+                        MAX_POLL_ERRORS, iata, e
+                    );
+                }
+                continue;
+            }
+        };
 
-        let status: JobStatus = status_resp
-            .json()
-            .await
-            .context("Failed to parse job status")?;
+        let status: JobStatus = match status_resp.json().await {
+            Ok(s) => s,
+            Err(e) => {
+                consecutive_errors += 1;
+                warn!(airport = iata, error = %e, "Failed to parse scraper status, retrying...");
+                if consecutive_errors >= MAX_POLL_ERRORS {
+                    anyhow::bail!("Failed to parse scraper status after {} attempts for {}", MAX_POLL_ERRORS, iata);
+                }
+                continue;
+            }
+        };
+
+        consecutive_errors = 0; // Reset on success
 
         match status.status.as_str() {
             "completed" => break,

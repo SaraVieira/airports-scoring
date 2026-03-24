@@ -290,15 +290,33 @@ async fn run_job(
 
             info!(job_id = %job_id, iata = %iata, source = %source, "Running fetcher");
 
-            let result = pipeline::dispatch_fetcher(
-                &pool,
-                &airport,
-                source,
-                full_refresh,
-                &seed_iata_codes,
-                &seed_airports,
-            )
-            .await;
+            let mut cancel_watch = cancel_rx.clone();
+            let result = tokio::select! {
+                r = pipeline::dispatch_fetcher(
+                    &pool,
+                    &airport,
+                    source,
+                    full_refresh,
+                    &seed_iata_codes,
+                    &seed_airports,
+                ) => r,
+                _ = async {
+                    while !*cancel_watch.borrow_and_update() {
+                        if cancel_watch.changed().await.is_err() {
+                            std::future::pending::<()>().await;
+                        }
+                    }
+                } => {
+                    info!(job_id = %job_id, iata = %iata, source = %source, "Fetcher interrupted by cancellation");
+                    // If this was a google_reviews or reviews source, cancel active scraper jobs.
+                    if source == "google_reviews" || source == "reviews" {
+                        cancel_scraper_jobs().await;
+                    }
+                    update_job_status(&jobs_map, &job_id, "cancelled", None).await;
+                    cleanup_cancel_token(&cancel_tokens_map, &job_id).await;
+                    return;
+                }
+            };
 
             // Update source_status table.
             let (status_str, record_count, error_msg) = match &result {
@@ -457,4 +475,47 @@ async fn load_seed_from_db(pool: &PgPool) -> Result<Vec<SeedAirport>, sqlx::Erro
             google_maps_url: r.google_maps_url,
         })
         .collect())
+}
+
+/// Cancel all running jobs on the Google Reviews scraper service.
+async fn cancel_scraper_jobs() {
+    let base_url =
+        std::env::var("GOOGLE_SCRAPER_URL").unwrap_or_else(|_| "http://localhost:8000".to_string());
+    let client = reqwest::Client::new();
+
+    // List jobs from the scraper.
+    let resp = match client.get(format!("{}/jobs", base_url)).send().await {
+        Ok(r) => r,
+        Err(e) => {
+            warn!("Failed to list scraper jobs for cancellation: {e}");
+            return;
+        }
+    };
+
+    #[derive(serde::Deserialize)]
+    struct ScraperJob {
+        job_id: String,
+        status: String,
+    }
+
+    let jobs: Vec<ScraperJob> = match resp.json().await {
+        Ok(j) => j,
+        Err(e) => {
+            warn!("Failed to parse scraper jobs list: {e}");
+            return;
+        }
+    };
+
+    for job in jobs {
+        if job.status == "running" || job.status == "pending" || job.status == "queued" {
+            info!(scraper_job_id = %job.job_id, "Cancelling scraper job");
+            if let Err(e) = client
+                .post(format!("{}/jobs/{}/cancel", base_url, job.job_id))
+                .send()
+                .await
+            {
+                warn!(scraper_job_id = %job.job_id, "Failed to cancel scraper job: {e}");
+            }
+        }
+    }
 }

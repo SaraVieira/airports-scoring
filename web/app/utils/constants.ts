@@ -1,3 +1,38 @@
+/** All data sources that run per-airport in the pipeline. */
+export const PIPELINE_SOURCES = [
+  "eurocontrol",
+  "metar",
+  "opensky",
+  "routes",
+  "eurostat",
+  "caa",
+  "aena",
+  "wikipedia",
+  "reviews",
+  "sentiment",
+  "carbon_accreditation",
+  "priority_pass",
+] as const;
+
+/** Sources available in the job form (includes aliases). */
+export const ALL_SOURCES = [
+  "ourairports",
+  "wikipedia",
+  "eurocontrol",
+  "eurostat",
+  "routes",
+  "metar",
+  "reviews",
+  "skytrax",
+  "google_reviews",
+  "sentiment",
+  "opensky",
+  "caa",
+  "aena",
+  "carbon_accreditation",
+  "priority_pass",
+] as const;
+
 export const SCORE_EXPLANATIONS: Record<
   string,
   { plain: string; technical: string }

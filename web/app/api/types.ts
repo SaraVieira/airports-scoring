@@ -632,6 +632,7 @@ export interface components {
             createdAt: string;
             enabled: boolean;
             googleMapsUrl?: string | null;
+            hasScore: boolean;
             iataCode: string;
             name: string;
             skytraxRatingSlug?: string | null;
