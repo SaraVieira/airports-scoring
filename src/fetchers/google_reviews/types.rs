@@ -37,7 +37,6 @@ pub(crate) struct ReviewsPage {
 #[derive(Debug, Deserialize)]
 pub(crate) struct GoogleReview {
     pub review_id: String,
-    pub author: Option<String>,
     pub rating: Option<f64>,
     /// Maps language code → text, e.g. {"en": "Great airport"}
     pub review_text: Option<HashMap<String, String>>,

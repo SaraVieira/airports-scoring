@@ -527,8 +527,6 @@ CREATE TABLE reviews_raw (
     airport_id          INTEGER NOT NULL REFERENCES airports(id) ON DELETE CASCADE,
     source              TEXT NOT NULL DEFAULT 'skytrax',
     review_date         DATE,
-    author              TEXT,
-    author_country      TEXT,
     overall_rating      SMALLINT               -- 1-10 for Skytrax
         CHECK (overall_rating BETWEEN 1 AND 10),
     score_queuing       SMALLINT CHECK (score_queuing BETWEEN 1 AND 5),

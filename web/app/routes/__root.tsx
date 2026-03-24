@@ -26,12 +26,20 @@ function RootComponent() {
         {!isHome && (
           <nav className="fixed top-0 left-0 right-0 z-50 h-12 bg-[#0a0a0b]/90 backdrop-blur-sm border-b border-white/[0.05]">
             <div className="max-w-5xl mx-auto px-16 h-full flex items-center justify-between">
-              <Link
-                to="/"
-                className="font-grotesk text-sm font-bold text-zinc-400 tracking-wider hover:text-zinc-100 transition-colors"
-              >
-                Airport Intelligence
-              </Link>
+              <div className="flex items-center gap-6">
+                <Link
+                  to="/"
+                  className="font-grotesk text-sm font-bold text-zinc-400 tracking-wider hover:text-zinc-100 transition-colors"
+                >
+                  Airport Intelligence
+                </Link>
+                <Link
+                  to="/countries"
+                  className="text-xs font-medium text-zinc-500 hover:text-zinc-200 transition-colors"
+                >
+                  Countries
+                </Link>
+              </div>
               <AirportSearch compact />
             </div>
           </nav>

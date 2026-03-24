@@ -11,3 +11,10 @@ export function scoreBg(score: number | null | undefined): string {
   if (score >= 40) return "bg-yellow-500";
   return "bg-red-500";
 }
+
+export function scoreHex(score: number | null | undefined): string {
+  if (score == null) return "#52525b";
+  if (score >= 70) return "#22c55e";
+  if (score >= 40) return "#eab308";
+  return "#ef4444";
+}

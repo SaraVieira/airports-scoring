@@ -123,8 +123,6 @@ pub struct ReviewRaw {
     pub airport_id: i32,
     pub source: String,
     pub review_date: Option<NaiveDate>,
-    pub author: Option<String>,
-    pub author_country: Option<String>,
     pub overall_rating: Option<i16>,
     pub score_queuing: Option<i16>,
     pub score_cleanliness: Option<i16>,

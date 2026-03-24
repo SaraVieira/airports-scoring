@@ -18,8 +18,6 @@ struct ScraperOutput {
 #[derive(Debug, Deserialize)]
 struct ScrapedReview {
     review_date: Option<String>,
-    author: Option<String>,
-    author_country: Option<String>,
     overall_rating: Option<i16>,
     score_queuing: Option<i16>,
     score_cleanliness: Option<i16>,
@@ -139,17 +137,17 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool, seed_ai
         let upsert = sqlx::query(
             r#"
             INSERT INTO reviews_raw (
-                airport_id, source, review_date, author, author_country,
+                airport_id, source, review_date,
                 overall_rating, score_queuing, score_cleanliness, score_staff,
                 score_food_bev, score_wifi, score_wayfinding, score_transport,
                 recommended, verified, trip_type, review_title, review_text,
                 source_url
             ) VALUES (
-                $1, 'skytrax', $2, $3, $4,
-                $5, $6, $7, $8,
-                $9, $10, $11, $12,
-                $13, $14, $15, $16, $17,
-                $18
+                $1, 'skytrax', $2,
+                $3, $4, $5, $6,
+                $7, $8, $9, $10,
+                $11, $12, $13, $14, $15,
+                $16
             )
             ON CONFLICT (source_url) DO UPDATE SET
                 overall_rating = EXCLUDED.overall_rating,
@@ -158,8 +156,6 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool, seed_ai
         )
         .bind(airport.id)
         .bind(review_date)
-        .bind(&review.author)
-        .bind(&review.author_country)
         .bind(review.overall_rating)
         .bind(review.score_queuing)
         .bind(review.score_cleanliness)

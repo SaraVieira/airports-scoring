@@ -211,6 +211,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/countries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List aggregated country-level stats for all tracked airports. */
+        get: operations["list_countries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/countries/{code}/airports": {
         parameters: {
             query?: never;
@@ -352,6 +369,31 @@ export interface components {
         CountryResponse: {
             code: string;
             name: string;
+        };
+        /** @description Aggregated country-level stats for all tracked airports. */
+        CountrySummary: {
+            /** Format: int64 */
+            airportCount: number;
+            /** Format: double */
+            avgOnTime?: number | null;
+            /** Format: double */
+            avgScore?: number | null;
+            /** Format: double */
+            avgSentimentPositive?: number | null;
+            /** Format: double */
+            bestScore?: number | null;
+            code: string;
+            /** Format: double */
+            lat?: number | null;
+            /** Format: double */
+            lng?: number | null;
+            name: string;
+            /** Format: int64 */
+            totalPax?: number | null;
+            /** Format: int64 */
+            totalRoutes?: number | null;
+            /** Format: double */
+            worstScore?: number | null;
         };
         /** @description For creating a supported airport via the admin API. */
         CreateSupportedAirport: {
@@ -1014,6 +1056,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list_countries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Country summaries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountrySummary"][];
+                };
             };
         };
     };

@@ -181,8 +181,6 @@ def map_row_to_review(row: dict, iata: str) -> dict:
     return {
         "airport_iata":     iata,
         "review_date":      review_date,
-        "author":           (norm.get("author") or norm.get("author_name") or "").strip() or None,
-        "author_country":   (norm.get("author_country") or norm.get("country") or "").strip() or None,
         "overall_rating":   _safe_int(norm.get("overall_rating") or norm.get("overall")),
         "score_queuing":    _safe_int(norm.get("queuing_rating") or norm.get("terminal_seating_rating")
                                       or norm.get("queuing")),
@@ -232,7 +230,7 @@ def insert_reviews(conn, reviews: list[dict]):
     iata_to_id = _lookup_airport_ids(conn, iata_codes)
 
     columns = [
-        "airport_id", "review_date", "author", "author_country",
+        "airport_id", "review_date",
         "overall_rating", "score_queuing", "score_cleanliness", "score_staff",
         "score_food_bev", "score_wifi", "score_wayfinding", "score_transport",
         "recommended", "verified", "trip_type", "review_title", "review_text",

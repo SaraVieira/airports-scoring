@@ -348,8 +348,6 @@ export const reviewsRaw = pgTable("reviews_raw", {
     .references(() => airports.id, { onDelete: "cascade" }),
   source: text("source").notNull().default("skytrax"),
   reviewDate: date("review_date"),
-  author: text("author"),
-  authorCountry: text("author_country"),
   overallRating: smallint("overall_rating"),
   scoreQueuing: smallint("score_queuing"),
   scoreCleanliness: smallint("score_cleanliness"),

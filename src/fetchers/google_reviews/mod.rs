@@ -244,11 +244,11 @@ pub async fn fetch(
             let upsert = sqlx::query(
                 r#"
                 INSERT INTO reviews_raw (
-                    airport_id, source, review_date, author,
+                    airport_id, source, review_date,
                     overall_rating, review_text, source_url
                 ) VALUES (
-                    $1, 'google', $2, $3,
-                    $4, $5, $6
+                    $1, 'google', $2,
+                    $3, $4, $5
                 )
                 ON CONFLICT (source_url) DO UPDATE SET
                     overall_rating = EXCLUDED.overall_rating,
@@ -257,7 +257,6 @@ pub async fn fetch(
             )
             .bind(airport.id)
             .bind(review_date)
-            .bind(&review.author)
             .bind(overall_rating)
             .bind(review_text)
             .bind(&source_url)

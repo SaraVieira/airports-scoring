@@ -1062,6 +1062,97 @@ pub async fn get_rankings(
     list_airports(State(state)).await
 }
 
+/// Aggregated country-level stats for all tracked airports.
+#[derive(Debug, Serialize, FromRow, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CountrySummary {
+    pub code: String,
+    pub name: String,
+    pub airport_count: i64,
+    pub avg_score: Option<f64>,
+    pub best_score: Option<f64>,
+    pub worst_score: Option<f64>,
+    pub total_pax: Option<i64>,
+    pub avg_sentiment_positive: Option<f64>,
+    pub avg_on_time: Option<f64>,
+    pub total_routes: Option<i64>,
+    pub lat: Option<f64>,
+    pub lng: Option<f64>,
+}
+
+/// List aggregated country-level stats for all tracked airports.
+#[utoipa::path(
+    get,
+    path = "/api/countries",
+    responses(
+        (status = 200, description = "Country summaries", body = Vec<CountrySummary>),
+    ),
+    tag = "airports"
+)]
+pub async fn list_countries(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<CountrySummary>>, StatusCode> {
+    let results = sqlx::query_as::<_, CountrySummary>(
+        "SELECT
+            c.iso_code                          AS code,
+            c.name                              AS name,
+            COUNT(DISTINCT a.id)::bigint        AS airport_count,
+            AVG(s.score_total::float8)          AS avg_score,
+            MAX(s.score_total::float8)          AS best_score,
+            MIN(s.score_total::float8)          AS worst_score,
+            (
+                SELECT SUM(py.total_pax)::bigint
+                FROM pax_yearly py
+                WHERE py.airport_id = ANY(ARRAY_AGG(a.id))
+                  AND py.year = (
+                      SELECT MAX(py2.year)
+                      FROM pax_yearly py2
+                      WHERE py2.airport_id = py.airport_id
+                  )
+            )                                   AS total_pax,
+            (
+                SELECT AVG(ss.positive_pct::float8)
+                FROM sentiment_snapshots ss
+                WHERE ss.airport_id = ANY(ARRAY_AGG(a.id))
+            )                                   AS avg_sentiment_positive,
+            (
+                SELECT AVG(100.0 - os.delay_pct::float8)
+                FROM operational_stats os
+                WHERE os.airport_id = ANY(ARRAY_AGG(a.id))
+                  AND os.delay_pct IS NOT NULL
+            )                                   AS avg_on_time,
+            (
+                SELECT COUNT(*)::bigint
+                FROM routes ro
+                WHERE ro.origin_id = ANY(ARRAY_AGG(a.id))
+            )                                   AS total_routes,
+            (
+                SELECT AVG(aa.lat::float8)
+                FROM all_airports aa
+                WHERE aa.iata = ANY(ARRAY_AGG(a.iata_code))
+            )                                   AS lat,
+            (
+                SELECT AVG(aa.lon::float8)
+                FROM all_airports aa
+                WHERE aa.iata = ANY(ARRAY_AGG(a.iata_code))
+            )                                   AS lng
+         FROM airports a
+         INNER JOIN countries c ON c.iso_code = a.country_code
+         LEFT JOIN airport_scores s ON s.airport_id = a.id AND s.is_latest = TRUE
+         WHERE a.in_seed_set = TRUE
+         GROUP BY c.iso_code, c.name
+         ORDER BY avg_score DESC NULLS LAST",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("list_countries query failed: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    Ok(Json(results))
+}
+
 /// List airports in a specific country.
 #[utoipa::path(
     get,

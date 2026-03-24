@@ -121,8 +121,6 @@ def _parse_review(article, page_url: str) -> dict:
 
     review: dict = {
         "review_date": None,
-        "author": None,
-        "author_country": None,
         "overall_rating": None,
         "score_queuing": None,
         "score_cleanliness": None,
@@ -160,12 +158,7 @@ def _parse_review(article, page_url: str) -> dict:
         if "Trip Verified" in verified_marker or "\u2714" in verified_marker:
             review["verified"] = True
 
-    # --- Author and date ---
-    # Author is in <span itemprop="name"> or similar
-    author_tag = article.find("span", itemprop="name")
-    if author_tag:
-        review["author"] = author_tag.get_text(strip=True)
-
+    # --- Date ---
     date_tag = article.find("time", itemprop="datePublished") or article.find("meta", itemprop="datePublished")
     if date_tag:
         date_str = date_tag.get("datetime") or date_tag.get("content") or date_tag.get_text(strip=True)
@@ -173,15 +166,15 @@ def _parse_review(article, page_url: str) -> dict:
         if parsed:
             review["review_date"] = parsed.strftime("%Y-%m-%d")
 
-    # Fallback: date often in a <h3> or <h2> like "John Smith (United Kingdom) 15th June 2024"
-    if not review["review_date"] or not review["author"]:
+    # Fallback: date from header text like "John Smith (United Kingdom) 15th June 2024"
+    if not review["review_date"]:
         header = article.find("h3", class_="text_sub_header")
         if header:
             header_text = header.get_text(strip=True)
-            # Try to extract country in parentheses
-            country_match = re.search(r"\(([^)]+)\)", header_text)
-            if country_match:
-                review["author_country"] = country_match.group(1).strip()
+            # Try to parse a date from the header text
+            parsed_fallback = _parse_date(header_text)
+            if parsed_fallback:
+                review["review_date"] = parsed_fallback.strftime("%Y-%m-%d")
 
     # --- Overall rating (1-10) ---
     rating_tag = article.find("span", itemprop="ratingValue")

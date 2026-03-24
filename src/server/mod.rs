@@ -39,6 +39,7 @@ async fn health() -> Json<serde_json::Value> {
         routes::airports::search_airports,
         routes::airports::get_rankings,
         routes::airports::airports_by_country,
+        routes::airports::list_countries,
         routes::admin::list_supported_airports,
         routes::admin::create_supported_airport,
         routes::admin::update_supported_airport,
@@ -111,6 +112,7 @@ pub async fn run(port: u16) -> Result<()> {
         .route("/airports/search", get(routes::airports::search_airports))
         .route("/airports/rankings", get(routes::airports::get_rankings))
         .route("/airports/{iata}", get(routes::airports::get_airport))
+        .route("/countries", get(routes::airports::list_countries))
         .route(
             "/countries/{code}/airports",
             get(routes::airports::airports_by_country),

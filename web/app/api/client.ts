@@ -1,3 +1,7 @@
+import type { components } from "./types";
+
+export type CountrySummary = components["schemas"]["CountrySummary"];
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 
@@ -52,6 +56,10 @@ export const api = {
   getCountryAirports: (code: string) =>
     apiFetch<import("./types").components["schemas"]["AirportListItem"][]>(
       `/api/countries/${code}/airports`,
+    ),
+  listCountries: () =>
+    apiFetch<import("./types").components["schemas"]["CountrySummary"][]>(
+      `/api/countries`,
     ),
   admin: {
     listSupportedAirports: () =>
@@ -110,9 +118,9 @@ export const api = {
     cancelJob: (id: string) =>
       adminFetch<void>(`/api/admin/jobs/${id}/cancel`, { method: "POST" }),
     dataGaps: () =>
-      adminFetch<
-        import("./types").components["schemas"]["DataGapResponse"][]
-      >(`/api/admin/data-gaps`),
+      adminFetch<import("./types").components["schemas"]["DataGapResponse"][]>(
+        `/api/admin/data-gaps`,
+      ),
     triggerScoring: () =>
       adminFetch<void>(`/api/admin/score`, { method: "POST" }),
   },
