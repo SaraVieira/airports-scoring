@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { components } from "~/api/types";
+import { AdminLayout } from "~/components/admin-layout";
 import {
   adminListAirports,
   adminDataGaps,
@@ -173,11 +174,6 @@ function Dashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("admin_password");
-    window.location.reload();
-  };
-
   const enabledCount = airports.filter((a) => a.enabled).length;
   const disabledCount = airports.length - enabledCount;
   const recentJobs = jobs.slice(0, 10);
@@ -202,32 +198,7 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-zinc-100">
-      <div className="max-w-5xl mx-auto px-16 pt-20 pb-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="font-grotesk text-xl font-bold">Admin Dashboard</h1>
-          <div className="flex items-center gap-4">
-            <Link
-              to="/admin/jobs"
-              className="font-mono text-xs text-zinc-400 hover:text-zinc-100"
-            >
-              Jobs
-            </Link>
-            <Link
-              to="/admin/airports"
-              className="font-mono text-xs text-zinc-400 hover:text-zinc-100"
-            >
-              Airports
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="font-mono text-xs text-zinc-500 hover:text-zinc-300"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
+    <AdminLayout title="Dashboard">
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
@@ -424,8 +395,7 @@ function Dashboard() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </AdminLayout>
   );
 }
 

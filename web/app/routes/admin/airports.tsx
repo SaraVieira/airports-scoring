@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { AdminLayout } from "~/components/admin-layout";
 import {
   adminListAirports,
   adminCreateAirport,
@@ -486,29 +487,7 @@ function AdminAirports() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-zinc-100">
-      <div className="max-w-5xl mx-auto px-16 pt-20 pb-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="font-grotesk text-xl font-bold">
-            Supported Airports
-          </h1>
-          <div className="flex items-center gap-4">
-            <Link
-              to="/admin"
-              className="font-mono text-xs text-zinc-400 hover:text-zinc-100"
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/admin/jobs"
-              className="font-mono text-xs text-zinc-400 hover:text-zinc-100"
-            >
-              Jobs
-            </Link>
-          </div>
-        </div>
-
+    <AdminLayout title="Airports">
         <AddAirportForm onCreated={fetchData} />
 
         {/* Filter */}
@@ -657,7 +636,6 @@ function AdminAirports() {
             )}
           </tbody>
         </table>
-      </div>
-    </div>
+    </AdminLayout>
   );
 }

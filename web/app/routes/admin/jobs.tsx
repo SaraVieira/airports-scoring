@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { AdminLayout } from "~/components/admin-layout";
 import {
   adminStartJob,
   adminListJobs,
@@ -324,27 +325,7 @@ function AdminJobs() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-zinc-100">
-      <div className="max-w-5xl mx-auto px-16 pt-20 pb-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="font-grotesk text-xl font-bold">Job Management</h1>
-          <div className="flex items-center gap-4">
-            <Link
-              to="/admin"
-              className="font-mono text-xs text-zinc-400 hover:text-zinc-100"
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/admin/airports"
-              className="font-mono text-xs text-zinc-400 hover:text-zinc-100"
-            >
-              Airports
-            </Link>
-          </div>
-        </div>
-
+    <AdminLayout title="Jobs">
         <StartJobForm airports={airports} onStarted={fetchData} />
 
         {/* Jobs List */}
@@ -430,7 +411,6 @@ function AdminJobs() {
             </tbody>
           </table>
         )}
-      </div>
-    </div>
+    </AdminLayout>
   );
 }
