@@ -7,3 +7,5 @@ __pycache__/
 .tanstack
 dist
 backups/
+web/dist/
+web/.output/
