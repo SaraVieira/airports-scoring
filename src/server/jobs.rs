@@ -257,14 +257,44 @@ async fn run_job(
         // Acquire semaphore permit.
         let _permit = semaphore.acquire().await.expect("Semaphore closed");
 
-        // Resolve airport from DB.
+        // Resolve airport from DB. If not found, bootstrap from all_airports.
         let airport = match db::get_airport_by_iata(&pool, iata).await {
             Ok(a) => a,
-            Err(e) => {
-                warn!(job_id = %job_id, iata = %iata, error = %e, "Airport not found, skipping");
-                airports_completed += 1;
-                update_job_progress(&jobs_map, &job_id, airports_completed, airport_iatas.len(), None, None).await;
-                continue;
+            Err(_) => {
+                info!(job_id = %job_id, iata = %iata, "Airport not in DB, bootstrapping from all_airports");
+                update_job_progress(
+                    &jobs_map, &job_id, airports_completed, airport_iatas.len(),
+                    Some(iata.clone()), Some("bootstrap".to_string()),
+                ).await;
+
+                // Insert from all_airports reference table
+                let inserted = sqlx::query(
+                    "INSERT INTO airports (iata_code, icao_code, name, city, country_code, airport_type, in_seed_set) \
+                     SELECT iata, icao, name, city, country, type, true \
+                     FROM all_airports WHERE iata = $1 \
+                     ON CONFLICT (iata_code) DO UPDATE SET in_seed_set = true \
+                     RETURNING id"
+                )
+                .bind(iata)
+                .fetch_optional(&pool)
+                .await;
+
+                if let Err(e) = inserted {
+                    warn!(job_id = %job_id, iata = %iata, error = %e, "Failed to bootstrap airport, skipping");
+                    airports_completed += 1;
+                    update_job_progress(&jobs_map, &job_id, airports_completed, airport_iatas.len(), None, None).await;
+                    continue;
+                }
+
+                match db::get_airport_by_iata(&pool, iata).await {
+                    Ok(a) => a,
+                    Err(e) => {
+                        warn!(job_id = %job_id, iata = %iata, error = %e, "Airport not found in all_airports, skipping");
+                        airports_completed += 1;
+                        update_job_progress(&jobs_map, &job_id, airports_completed, airport_iatas.len(), None, None).await;
+                        continue;
+                    }
+                }
             }
         };
 
