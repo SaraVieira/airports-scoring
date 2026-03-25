@@ -105,3 +105,17 @@ export const adminDeleteAirport = createServerFn({ method: "POST" })
       method: "DELETE",
     });
   });
+
+export const adminBatchImport = createServerFn({ method: "POST" })
+  .inputValidator(
+    (d: {
+      password: string;
+      body: { iata_codes: string[]; run_pipeline?: boolean; score?: boolean };
+    }) => d,
+  )
+  .handler(async ({ data: { password, body } }) => {
+    return adminFetch("/api/admin/batch-import", password, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  });

@@ -1,36 +1,65 @@
 import { useState, useEffect, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useAdminAuth } from "~/hooks/use-admin-auth";
 import { AdminLayout } from "~/components/admin-layout";
+import { Button } from "~/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "~/components/ui/dialog";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "~/components/ui/table";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Input } from "~/components/ui/input";
+import { JobStatusBadge } from "~/components/admin/job-status-badge";
 import {
   adminStartJob,
   adminListJobs,
   adminListAirports,
   adminCancelJob,
 } from "~/server/admin";
+import { ALL_SOURCES } from "~/utils/constants";
 import type { components } from "~/api/types";
+import { Plus, Loader2, X } from "lucide-react";
 
 type JobInfo = components["schemas"]["JobInfo"];
 type SupportedAirport = components["schemas"]["SupportedAirportWithStatus"];
 
-import { ALL_SOURCES as SOURCES } from "~/utils/constants";
+const SOURCE_DESCRIPTIONS: Record<string, string> = {
+  ourairports:
+    "Runways, frequencies, navaids, basic airport info from OurAirports database",
+  wikipedia:
+    "Passenger stats, opened year, operator, terminals, Skytrax history, ACI awards",
+  eurocontrol: "Monthly flight counts, ATFM delays, delay cause breakdown",
+  eurostat: "Historical passenger traffic from EU statistics",
+  routes: "Route network from OPDI + FlightRadar24 fallback",
+  metar: "Daily weather — temperature, wind, visibility, fog flags",
+  reviews:
+    "Skytrax + Google Maps reviews (both scrapers). Longest running source",
+  skytrax: "Skytrax reviews only",
+  google_reviews: "Google Maps reviews only — requires scraper service",
+  sentiment:
+    "RoBERTa + NLI ML sentiment analysis on unprocessed reviews. Requires HF_TOKEN",
+  opensky: "Flight movements from OpenSky Network",
+  caa: "UK CAA passenger statistics",
+  aena: "Spanish AENA passenger statistics",
+  carbon_accreditation: "ACI carbon accreditation levels",
+  priority_pass: "Priority Pass lounge data",
+};
 
 export const Route = createFileRoute("/admin/jobs")({
   component: AdminJobs,
 });
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    completed: "text-green-400 bg-green-400/10",
-    running: "text-yellow-400 bg-yellow-400/10",
-    queued: "text-zinc-400 bg-zinc-400/10",
-    failed: "text-red-400 bg-red-400/10",
-    cancelled: "text-zinc-500 bg-zinc-500/10",
-  };
-  const cls = colors[status] || "text-zinc-400 bg-zinc-400/10";
-  return (
-    <span className={`font-mono text-xs px-2 py-0.5 ${cls}`}>{status}</span>
-  );
-}
 
 function ProgressBar({ progress }: { progress: JobInfo["progress"] }) {
   const pct =
@@ -39,17 +68,17 @@ function ProgressBar({ progress }: { progress: JobInfo["progress"] }) {
       : 0;
   return (
     <div className="flex items-center gap-2">
-      <div className="w-24 h-1.5 bg-zinc-800 overflow-hidden">
+      <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
         <div
-          className="h-full bg-yellow-400 transition-all"
+          className="h-full bg-yellow-400 transition-all rounded-full"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="font-mono text-xs text-zinc-400">
+      <span className="font-mono text-xs text-muted-foreground">
         {progress.airportsCompleted}/{progress.airportsTotal}
       </span>
       {progress.currentAirport && (
-        <span className="font-mono text-xs text-zinc-500">
+        <span className="font-mono text-xs text-muted-foreground/60">
           {progress.currentAirport}
           {progress.currentSource && ` / ${progress.currentSource}`}
         </span>
@@ -58,10 +87,14 @@ function ProgressBar({ progress }: { progress: JobInfo["progress"] }) {
   );
 }
 
-function StartJobForm({
+function NewJobDialog({
+  open,
+  onOpenChange,
   airports,
   onStarted,
 }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   airports: SupportedAirport[];
   onStarted: () => void;
 }) {
@@ -95,8 +128,7 @@ function StartJobForm({
     );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setLoading(true);
     try {
       const password = localStorage.getItem("admin_password") || "";
@@ -115,6 +147,8 @@ function StartJobForm({
       setSelectedSources([]);
       setFullRefresh(false);
       setScore(false);
+      setAirportFilter("");
+      onOpenChange(false);
       onStarted();
     } catch (err) {
       console.error("Failed to start job", err);
@@ -124,121 +158,141 @@ function StartJobForm({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-zinc-900 border border-zinc-800 p-4 mb-8"
-    >
-      <h2 className="font-grotesk text-sm font-bold text-zinc-300 mb-4">
-        Start Custom Job
-      </h2>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-5xl flex flex-col" style={{ height: "min(85vh, 700px)" }}>
+        <DialogHeader>
+          <DialogTitle>New Job</DialogTitle>
+          <DialogDescription>
+            Configure and start a new pipeline job. Leave airports and sources
+            empty to run all.
+          </DialogDescription>
+        </DialogHeader>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        {/* Airport selection */}
-        <div>
-          <label className="font-mono text-xs text-zinc-500 block mb-2">
-            Airports{" "}
-            <span className="text-zinc-600">(empty = all enabled)</span>
-          </label>
-          <input
-            type="text"
-            value={airportFilter}
-            onChange={(e) => setAirportFilter(e.target.value)}
-            placeholder="Filter airports..."
-            className="w-full bg-zinc-800 border border-zinc-700 text-zinc-100 font-mono text-xs px-2 py-1 mb-2 focus:outline-none focus:border-zinc-500"
-          />
-          <div className="max-h-32 overflow-y-auto border border-zinc-800 bg-zinc-950 p-1">
-            {filteredAirports.map((a) => (
-              <label
-                key={a.iataCode}
-                className="flex items-center gap-2 px-1 py-0.5 hover:bg-zinc-800 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedAirports.includes(a.iataCode)}
-                  onChange={() => toggleAirport(a.iataCode)}
-                  className="accent-yellow-400"
-                />
-                <span className="font-mono text-xs text-zinc-300">
-                  {a.iataCode}
-                </span>
-                <span className="font-mono text-xs text-zinc-500 truncate">
-                  {a.name}
-                </span>
-              </label>
-            ))}
+        <div className="flex-1 min-h-0 grid grid-cols-[1fr_1.2fr] gap-6 py-2">
+          {/* Left: Airport selection */}
+          <div className="flex flex-col min-h-0">
+            <label className="text-sm font-medium mb-2 block">
+              Airports{" "}
+              <span className="text-muted-foreground font-normal">
+                (empty = all enabled)
+              </span>
+            </label>
+            <Input
+              value={airportFilter}
+              onChange={(e) => setAirportFilter(e.target.value)}
+              placeholder="Filter airports..."
+              className="mb-2"
+            />
+            <div className="flex-1 overflow-y-auto border rounded-md bg-muted/20 p-1 min-h-0">
+              {filteredAirports.map((a) => (
+                <label
+                  key={a.iataCode}
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors ${
+                    selectedAirports.includes(a.iataCode)
+                      ? "bg-green-500/10"
+                      : "hover:bg-muted"
+                  }`}
+                >
+                  <Checkbox
+                    checked={selectedAirports.includes(a.iataCode)}
+                    onCheckedChange={() => toggleAirport(a.iataCode)}
+                  />
+                  <span className="text-sm font-mono font-medium">
+                    {a.iataCode}
+                  </span>
+                  <span className="text-sm text-muted-foreground truncate">
+                    {a.name}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {selectedAirports.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {selectedAirports.length} selected:{" "}
+                {selectedAirports.join(", ")}
+              </p>
+            )}
           </div>
-          {selectedAirports.length > 0 && (
-            <p className="font-mono text-xs text-zinc-500 mt-1">
-              {selectedAirports.length} selected:{" "}
-              {selectedAirports.join(", ")}
-            </p>
-          )}
+
+          {/* Right: Source selection */}
+          <div className="flex flex-col min-h-0">
+            <label className="text-sm font-medium mb-2 block">
+              Sources{" "}
+              <span className="text-muted-foreground font-normal">
+                (empty = all sources)
+              </span>
+            </label>
+            <div className="flex-1 overflow-y-auto border rounded-md bg-muted/20 p-1 space-y-0.5 min-h-0">
+              {ALL_SOURCES.map((s) => (
+                <label
+                  key={s}
+                  className={`flex items-start gap-2 px-2.5 py-2 rounded cursor-pointer transition-colors ${
+                    selectedSources.includes(s)
+                      ? "bg-green-500/10"
+                      : "hover:bg-muted"
+                  }`}
+                >
+                  <Checkbox
+                    checked={selectedSources.includes(s)}
+                    onCheckedChange={() => toggleSource(s)}
+                    className="mt-0.5"
+                  />
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium block">{s}</span>
+                    {SOURCE_DESCRIPTIONS[s] && (
+                      <span className="text-xs text-muted-foreground block leading-relaxed">
+                        {SOURCE_DESCRIPTIONS[s]}
+                      </span>
+                    )}
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Source selection */}
-        <div>
-          <label className="font-mono text-xs text-zinc-500 block mb-2">
-            Sources{" "}
-            <span className="text-zinc-600">(empty = all sources)</span>
+        {/* Options */}
+        <div className="flex items-center gap-6 pt-2">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={fullRefresh}
+              onCheckedChange={(v) => setFullRefresh(v === true)}
+            />
+            Full Refresh
           </label>
-          <div className="border border-zinc-800 bg-zinc-950 p-1">
-            {SOURCES.map((s) => (
-              <label
-                key={s}
-                className="flex items-center gap-2 px-1 py-0.5 hover:bg-zinc-800 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedSources.includes(s)}
-                  onChange={() => toggleSource(s)}
-                  className="accent-yellow-400"
-                />
-                <span className="font-mono text-xs text-zinc-300">{s}</span>
-              </label>
-            ))}
-          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={score}
+              onCheckedChange={(v) => setScore(v === true)}
+            />
+            Score After
+          </label>
         </div>
-      </div>
 
-      <div className="flex items-center gap-6 mb-4">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={fullRefresh}
-            onChange={(e) => setFullRefresh(e.target.checked)}
-            className="accent-yellow-400"
-          />
-          <span className="font-mono text-xs text-zinc-300">Full Refresh</span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={score}
-            onChange={(e) => setScore(e.target.checked)}
-            className="accent-yellow-400"
-          />
-          <span className="font-mono text-xs text-zinc-300">
-            Run Scoring After
-          </span>
-        </label>
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-mono text-xs px-3 py-1.5 disabled:opacity-50"
-      >
-        {loading ? "Starting..." : "Start Job"}
-      </button>
-    </form>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading && <Loader2 className="size-3 animate-spin" />}
+            {loading ? "Starting..." : "Start Job"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function AdminJobs() {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const { authenticated } = useAdminAuth();
   const [jobs, setJobs] = useState<JobInfo[]>([]);
   const [airports, setAirports] = useState<SupportedAirport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -249,33 +303,16 @@ function AdminJobs() {
       ]);
       setJobs(j);
       setAirports(a);
-    } catch {
-      // If auth fails, redirect to login
-      localStorage.removeItem("admin_password");
-      setAuthenticated(false);
+    } catch (err) {
+      console.error("Failed to fetch jobs data", err);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const password = localStorage.getItem("admin_password");
-    if (!password) {
-      setAuthenticated(false);
-      setLoading(false);
-      return;
-    }
-    adminListAirports({ data: password })
-      .then(() => {
-        setAuthenticated(true);
-        fetchData();
-      })
-      .catch(() => {
-        localStorage.removeItem("admin_password");
-        setAuthenticated(false);
-        setLoading(false);
-      });
-  }, [fetchData]);
+    if (authenticated) fetchData();
+  }, [authenticated, fetchData]);
 
   // Auto-refresh every 5s if active jobs
   useEffect(() => {
@@ -300,14 +337,14 @@ function AdminJobs() {
 
   if (authenticated === false) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="font-mono text-sm text-zinc-500 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Not authenticated
           </p>
           <Link
             to="/admin"
-            className="font-mono text-xs text-zinc-400 hover:text-zinc-100"
+            className="text-xs text-muted-foreground hover:text-foreground"
           >
             Go to login
           </Link>
@@ -318,99 +355,97 @@ function AdminJobs() {
 
   if (loading || authenticated === null) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
-        <p className="font-mono text-sm text-zinc-500">Loading...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <AdminLayout title="Jobs">
-        <StartJobForm airports={airports} onStarted={fetchData} />
+    <AdminLayout
+      title="Jobs"
+      actions={
+        <Button
+          onClick={() => setDialogOpen(true)}
+          className="bg-green-600 hover:bg-green-700 text-white"
+        >
+          <Plus className="size-3" />
+          New Job
+        </Button>
+      }
+    >
+      <NewJobDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        airports={airports}
+        onStarted={fetchData}
+      />
 
-        {/* Jobs List */}
-        <h2 className="font-grotesk text-sm font-bold text-zinc-300 mb-3">
-          All Jobs
-        </h2>
-        {jobs.length === 0 ? (
-          <p className="font-mono text-xs text-zinc-500">No jobs</p>
-        ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-zinc-800">
-                <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                  ID
-                </th>
-                <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                  Status
-                </th>
-                <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                  Airports
-                </th>
-                <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                  Sources
-                </th>
-                <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                  Progress
-                </th>
-                <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                  Started
-                </th>
-                <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {jobs.map((job) => (
-                <tr key={job.id} className="border-b border-zinc-800/50">
-                  <td className="font-mono text-xs text-zinc-400 py-2">
-                    {job.id.slice(0, 8)}
-                  </td>
-                  <td className="py-2">
-                    <StatusBadge status={job.status} />
-                  </td>
-                  <td className="font-mono text-xs text-zinc-400 py-2 max-w-32 truncate">
-                    {job.airports.length > 0
-                      ? job.airports.join(", ")
-                      : "all"}
-                  </td>
-                  <td className="font-mono text-xs text-zinc-400 py-2 max-w-32 truncate">
-                    {job.sources.length > 0
-                      ? job.sources.join(", ")
-                      : "all"}
-                  </td>
-                  <td className="py-2">
-                    <ProgressBar progress={job.progress} />
-                  </td>
-                  <td className="font-mono text-xs text-zinc-500 py-2">
-                    {job.startedAt
-                      ? new Date(job.startedAt).toLocaleString()
-                      : "-"}
-                  </td>
-                  <td className="py-2">
-                    {(job.status === "running" || job.status === "queued") && (
-                      <button
-                        onClick={() => handleCancel(job.id)}
-                        className="font-mono text-xs text-red-400 hover:text-red-300"
-                      >
-                        Cancel
-                      </button>
-                    )}
-                    {job.error && (
-                      <span
-                        className="font-mono text-xs text-red-400 cursor-help"
-                        title={job.error}
-                      >
-                        error
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      {jobs.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-8 text-center">
+          No jobs yet. Start one with the button above.
+        </p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Airports</TableHead>
+              <TableHead>Sources</TableHead>
+              <TableHead>Progress</TableHead>
+              <TableHead>Started</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {jobs.map((job) => (
+              <TableRow key={job.id}>
+                <TableCell className="font-mono text-xs">
+                  {job.id.slice(0, 8)}
+                </TableCell>
+                <TableCell>
+                  <JobStatusBadge status={job.status} />
+                </TableCell>
+                <TableCell className="font-mono text-xs max-w-32 truncate">
+                  {job.airports.length > 0 ? job.airports.join(", ") : "all"}
+                </TableCell>
+                <TableCell className="font-mono text-xs max-w-32 truncate">
+                  {job.sources.length > 0 ? job.sources.join(", ") : "all"}
+                </TableCell>
+                <TableCell>
+                  <ProgressBar progress={job.progress} />
+                </TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  {job.startedAt
+                    ? new Date(job.startedAt).toLocaleString()
+                    : "-"}
+                </TableCell>
+                <TableCell>
+                  {(job.status === "running" || job.status === "queued") && (
+                    <Button
+                      variant="destructive"
+                      size="xs"
+                      onClick={() => handleCancel(job.id)}
+                    >
+                      <X className="size-3" />
+                      Cancel
+                    </Button>
+                  )}
+                  {job.error && (
+                    <span
+                      className="text-xs text-destructive cursor-help"
+                      title={job.error}
+                    >
+                      error
+                    </span>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </AdminLayout>
   );
 }

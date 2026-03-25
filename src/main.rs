@@ -9,7 +9,10 @@ mod server;
 
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
+use tokio::sync::broadcast;
 use tracing::info;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::EnvFilter;
 
 /// Airport Intelligence Platform — data pipeline and API server.
@@ -65,11 +68,19 @@ async fn main() -> Result<()> {
     // Load .env file (silently ignore if missing).
     dotenvy::dotenv().ok();
 
-    // Initialise tracing (respects RUST_LOG env var, defaults to info).
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
-        )
+    // Create a broadcast channel for streaming logs over SSE.
+    let (log_sender, _) = broadcast::channel::<server::logs::LogEntry>(1000);
+
+    // Build the tracing subscriber with an optional broadcast log layer.
+    let env_filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    let fmt_layer = tracing_subscriber::fmt::layer();
+    let broadcast_layer = server::logs::BroadcastLogLayer::new(log_sender.clone());
+
+    tracing_subscriber::registry()
+        .with(env_filter)
+        .with(fmt_layer)
+        .with(broadcast_layer)
         .init();
 
     let cli = Cli::parse();
@@ -85,7 +96,7 @@ async fn main() -> Result<()> {
             run_fetch(airports, all, source, full_refresh, score).await?;
         }
         Command::Serve { port } => {
-            server::run(port).await?;
+            server::run(port, log_sender).await?;
         }
     }
 

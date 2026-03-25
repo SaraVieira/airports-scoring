@@ -1,5 +1,6 @@
 mod auth;
 pub mod jobs;
+pub mod logs;
 mod routes;
 
 use std::sync::Arc;
@@ -7,18 +8,21 @@ use std::sync::Arc;
 use anyhow::{Context, Result};
 use axum::{middleware, routing::{get, patch, post}, Json, Router};
 use sqlx::PgPool;
+use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 use utoipa::OpenApi;
 
 use jobs::JobManager;
+use logs::LogEntry;
 
 /// Shared application state available to all handlers via `State<AppState>`.
 #[derive(Clone)]
 pub struct AppState {
     pub pool: PgPool,
     pub jobs: Arc<JobManager>,
+    pub log_sender: broadcast::Sender<LogEntry>,
 }
 
 async fn health() -> Json<serde_json::Value> {
@@ -51,6 +55,7 @@ async fn health() -> Json<serde_json::Value> {
         routes::admin::cancel_job,
         routes::admin::refresh_all,
         routes::admin::trigger_scoring,
+        routes::admin::batch_import,
         routes::cron::cron_full_refresh,
         routes::cron::cron_sentiment,
         routes::cron::cron_reviews,
@@ -63,7 +68,7 @@ async fn openapi_spec() -> Json<utoipa::openapi::OpenApi> {
 }
 
 /// Start the API server on the given port.
-pub async fn run(port: u16) -> Result<()> {
+pub async fn run(port: u16, log_sender: broadcast::Sender<LogEntry>) -> Result<()> {
     let pool = crate::db::get_pool().await?;
 
     // Run SQL migrations on startup.
@@ -75,7 +80,7 @@ pub async fn run(port: u16) -> Result<()> {
     info!("Migrations complete");
 
     let jobs = Arc::new(JobManager::new(pool.clone(), 3));
-    let state = AppState { pool, jobs };
+    let state = AppState { pool, jobs, log_sender };
 
     // Admin routes: require both API key and admin password.
     let admin_routes = Router::new()
@@ -98,7 +103,14 @@ pub async fn run(port: u16) -> Result<()> {
         .route("/jobs/{id}/cancel", post(routes::admin::cancel_job))
         .route("/refresh", post(routes::admin::refresh_all))
         .route("/score", post(routes::admin::trigger_scoring))
+        .route("/batch-import", post(routes::admin::batch_import))
         .layer(middleware::from_fn(auth::require_admin));
+
+    // SSE logs route — outside admin middleware since EventSource can't send headers.
+    // Auth is checked via query param inside the handler.
+    let logs_route = Router::new()
+        .route("/logs/stream", get(logs::stream_logs))
+        .layer(middleware::from_fn(auth::require_api_key));
 
     // Cron routes: API key only (called by Coolify scheduler).
     let cron_routes = Router::new()
@@ -118,6 +130,7 @@ pub async fn run(port: u16) -> Result<()> {
             get(routes::airports::airports_by_country),
         )
         .nest("/admin", admin_routes)
+        .nest("/admin", logs_route)
         .nest("/cron", cron_routes)
         .layer(middleware::from_fn(auth::require_api_key));
 

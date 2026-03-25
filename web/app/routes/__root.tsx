@@ -16,14 +16,15 @@ export const Route = createRootRoute({
 function RootComponent() {
   const { location } = useRouterState()
   const isHome = location.pathname === '/'
+  const isAdmin = location.pathname.startsWith('/admin')
 
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
-      <body className="bg-[#0a0a0b]">
-        {!isHome && (
+      <body className="dark bg-background text-foreground">
+        {!isHome && !isAdmin && (
           <nav className="fixed top-0 left-0 right-0 z-50 h-12 bg-[#0a0a0b]/90 backdrop-blur-sm border-b border-white/[0.05]">
             <div className="max-w-5xl mx-auto px-16 h-full flex items-center justify-between">
               <div className="flex items-center gap-6">

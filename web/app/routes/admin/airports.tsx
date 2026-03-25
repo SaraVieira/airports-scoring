@@ -1,6 +1,39 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useAdminAuth } from "~/hooks/use-admin-auth";
 import { AdminLayout } from "~/components/admin-layout";
+import { Button } from "~/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "~/components/ui/dialog";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "~/components/ui/table";
+import { Input } from "~/components/ui/input";
+import { Badge } from "~/components/ui/badge";
+import { Checkbox } from "~/components/ui/checkbox";
+import { BatchImportModal } from "~/components/admin/batch-import-modal";
+import {
+  Plus,
+  FileText,
+  Pencil,
+  Trash2,
+  Play,
+  Loader2,
+  Search,
+  Check,
+  X,
+} from "lucide-react";
 import {
   adminListAirports,
   adminCreateAirport,
@@ -9,6 +42,7 @@ import {
   adminStartJob,
 } from "~/server/admin";
 import type { components } from "~/api/types";
+import { PIPELINE_SOURCES } from "~/utils/constants";
 
 type SupportedAirport = components["schemas"]["SupportedAirportWithStatus"];
 type SourceStatus = components["schemas"]["SourceStatusResponse"];
@@ -16,8 +50,6 @@ type SourceStatus = components["schemas"]["SourceStatusResponse"];
 export const Route = createFileRoute("/admin/airports")({
   component: AdminAirports,
 });
-
-import { PIPELINE_SOURCES } from "~/utils/constants";
 
 function SourceDot({
   name,
@@ -119,8 +151,15 @@ function SourceIndicators({
   );
 }
 
-function AddAirportForm({ onCreated }: { onCreated: () => void }) {
-  const [open, setOpen] = useState(false);
+function AddAirportDialog({
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreated: () => void;
+}) {
   const [form, setForm] = useState({
     iata_code: "",
     name: "",
@@ -159,7 +198,7 @@ function AddAirportForm({ onCreated }: { onCreated: () => void }) {
         skytrax_rating_slug: "",
         google_maps_url: "",
       });
-      setOpen(false);
+      onOpenChange(false);
       onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create");
@@ -168,130 +207,120 @@ function AddAirportForm({ onCreated }: { onCreated: () => void }) {
     }
   };
 
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-mono text-xs px-3 py-1.5 mb-6"
-      >
-        + Add Airport
-      </button>
-    );
-  }
-
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-zinc-900 border border-zinc-800 p-4 mb-6"
-    >
-      <h3 className="font-grotesk text-sm font-bold text-zinc-300 mb-3">
-        Add Supported Airport
-      </h3>
-      <div className="grid grid-cols-3 gap-3 mb-3">
-        <div>
-          <label className="font-mono text-xs text-zinc-500 block mb-1">
-            IATA Code *
-          </label>
-          <input
-            type="text"
-            value={form.iata_code}
-            onChange={(e) =>
-              setForm({ ...form, iata_code: e.target.value })
-            }
-            maxLength={3}
-            required
-            className="w-full bg-zinc-800 border border-zinc-700 text-zinc-100 font-mono text-xs px-2 py-1 uppercase focus:outline-none focus:border-zinc-500"
-          />
-        </div>
-        <div>
-          <label className="font-mono text-xs text-zinc-500 block mb-1">
-            Name *
-          </label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-            className="w-full bg-zinc-800 border border-zinc-700 text-zinc-100 font-mono text-xs px-2 py-1 focus:outline-none focus:border-zinc-500"
-          />
-        </div>
-        <div>
-          <label className="font-mono text-xs text-zinc-500 block mb-1">
-            Country Code *
-          </label>
-          <input
-            type="text"
-            value={form.country_code}
-            onChange={(e) =>
-              setForm({ ...form, country_code: e.target.value })
-            }
-            maxLength={2}
-            required
-            className="w-full bg-zinc-800 border border-zinc-700 text-zinc-100 font-mono text-xs px-2 py-1 uppercase focus:outline-none focus:border-zinc-500"
-          />
-        </div>
-      </div>
-      <div className="grid grid-cols-3 gap-3 mb-3">
-        <div>
-          <label className="font-mono text-xs text-zinc-500 block mb-1">
-            Skytrax Review Slug
-          </label>
-          <input
-            type="text"
-            value={form.skytrax_review_slug}
-            onChange={(e) =>
-              setForm({ ...form, skytrax_review_slug: e.target.value })
-            }
-            className="w-full bg-zinc-800 border border-zinc-700 text-zinc-100 font-mono text-xs px-2 py-1 focus:outline-none focus:border-zinc-500"
-          />
-        </div>
-        <div>
-          <label className="font-mono text-xs text-zinc-500 block mb-1">
-            Skytrax Rating Slug
-          </label>
-          <input
-            type="text"
-            value={form.skytrax_rating_slug}
-            onChange={(e) =>
-              setForm({ ...form, skytrax_rating_slug: e.target.value })
-            }
-            className="w-full bg-zinc-800 border border-zinc-700 text-zinc-100 font-mono text-xs px-2 py-1 focus:outline-none focus:border-zinc-500"
-          />
-        </div>
-        <div>
-          <label className="font-mono text-xs text-zinc-500 block mb-1">
-            Google Maps URL
-          </label>
-          <input
-            type="text"
-            value={form.google_maps_url}
-            onChange={(e) =>
-              setForm({ ...form, google_maps_url: e.target.value })
-            }
-            className="w-full bg-zinc-800 border border-zinc-700 text-zinc-100 font-mono text-xs px-2 py-1 focus:outline-none focus:border-zinc-500"
-          />
-        </div>
-      </div>
-      {error && (
-        <p className="font-mono text-xs text-red-400 mb-3">{error}</p>
-      )}
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-mono text-xs px-3 py-1.5 disabled:opacity-50"
-        >
-          {loading ? "Creating..." : "Create"}
-        </button>
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          className="text-zinc-500 hover:text-zinc-300 font-mono text-xs px-3 py-1.5"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Add Airport</DialogTitle>
+          <DialogDescription>
+            Add a new supported airport to the pipeline.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="text-sm font-medium mb-1 block">
+                IATA Code *
+              </label>
+              <Input
+                value={form.iata_code}
+                onChange={(e) =>
+                  setForm({ ...form, iata_code: e.target.value })
+                }
+                maxLength={3}
+                required
+                placeholder="BER"
+                className="uppercase"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Name *</label>
+              <Input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+                placeholder="Berlin Brandenburg"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">
+                Country *
+              </label>
+              <Input
+                value={form.country_code}
+                onChange={(e) =>
+                  setForm({ ...form, country_code: e.target.value })
+                }
+                maxLength={2}
+                required
+                placeholder="DE"
+                className="uppercase"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium mb-1 block">
+                Skytrax Review Slug
+              </label>
+              <Input
+                value={form.skytrax_review_slug}
+                onChange={(e) =>
+                  setForm({ ...form, skytrax_review_slug: e.target.value })
+                }
+                placeholder="berlin-brandenburg-airport"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">
+                Skytrax Rating Slug
+              </label>
+              <Input
+                value={form.skytrax_rating_slug}
+                onChange={(e) =>
+                  setForm({ ...form, skytrax_rating_slug: e.target.value })
+                }
+                placeholder="berlin-brandenburg"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-1 block">
+              Google Maps URL
+            </label>
+            <Input
+              value={form.google_maps_url}
+              onChange={(e) =>
+                setForm({ ...form, google_maps_url: e.target.value })
+              }
+              placeholder="https://maps.google.com/..."
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="size-3 animate-spin" />}
+              {loading ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -339,95 +368,81 @@ function EditRow({
   };
 
   return (
-    <tr className="border-b border-zinc-800/50 bg-zinc-900/50">
-      <td className="font-mono text-xs text-zinc-300 py-2">
-        {airport.iataCode}
-      </td>
-      <td className="py-2">
-        <input
-          type="text"
+    <TableRow className="bg-muted/30">
+      <TableCell className="font-mono text-xs">{airport.iataCode}</TableCell>
+      <TableCell>
+        <Input
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="bg-zinc-800 border border-zinc-700 text-zinc-100 font-mono text-xs px-1 py-0.5 w-full focus:outline-none focus:border-zinc-500"
+          className="h-7 text-xs"
         />
-      </td>
-      <td className="font-mono text-xs text-zinc-400 py-2">
+      </TableCell>
+      <TableCell className="font-mono text-xs text-muted-foreground">
         {airport.countryCode}
-      </td>
-      <td className="py-2">
-        <label className="cursor-pointer">
-          <input
-            type="checkbox"
-            checked={form.enabled}
-            onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
-            className="accent-yellow-400"
-          />
-        </label>
-      </td>
-      <td className="py-2">
-        <SourceIndicators sources={airport.sources} hasScore={airport.hasScore} />
-      </td>
-      <td className="py-2">
-        <div className="flex gap-1">
-          <button
+      </TableCell>
+      <TableCell>
+        <Checkbox
+          checked={form.enabled}
+          onCheckedChange={(v) => setForm({ ...form, enabled: v === true })}
+        />
+      </TableCell>
+      <TableCell>
+        <SourceIndicators
+          sources={airport.sources}
+          hasScore={airport.hasScore}
+        />
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="xs"
             onClick={handleSave}
             disabled={loading}
-            className="font-mono text-xs text-green-400 hover:text-green-300 disabled:opacity-50"
           >
+            {loading ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <Check className="size-3" />
+            )}
             Save
-          </button>
-          <button
-            onClick={onCancel}
-            className="font-mono text-xs text-zinc-500 hover:text-zinc-300"
-          >
+          </Button>
+          <Button variant="ghost" size="xs" onClick={onCancel}>
+            <X className="size-3" />
             Cancel
-          </button>
+          </Button>
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
 function AdminAirports() {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const { authenticated } = useAdminAuth();
   const [airports, setAirports] = useState<SupportedAirport[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingIata, setEditingIata] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [fetchingIata, setFetchingIata] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
+  const [batchOpen, setBatchOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
       const password = localStorage.getItem("admin_password") || "";
       const a = await adminListAirports({ data: password });
       setAirports(a);
-    } catch {
-      localStorage.removeItem("admin_password");
-      setAuthenticated(false);
+    } catch (err) {
+      console.error("Failed to fetch airports", err);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const password = localStorage.getItem("admin_password");
-    if (!password) {
-      setAuthenticated(false);
-      setLoading(false);
-      return;
-    }
-    adminListAirports({ data: password })
-      .then(() => {
-        setAuthenticated(true);
-        fetchData();
-      })
-      .catch(() => {
-        localStorage.removeItem("admin_password");
-        setAuthenticated(false);
-        setLoading(false);
-      });
-  }, [fetchData]);
+    if (authenticated) fetchData();
+  }, [authenticated, fetchData]);
 
   const handleDelete = async (iata: string) => {
     try {
@@ -444,7 +459,9 @@ function AdminAirports() {
     setFetchingIata(iata);
     try {
       const password = localStorage.getItem("admin_password") || "";
-      await adminStartJob({ data: { password, body: { airports: [iata] } } });
+      await adminStartJob({
+        data: { password, body: { airports: [iata] } },
+      });
     } catch (err) {
       console.error("Failed to start fetch", err);
     } finally {
@@ -452,24 +469,28 @@ function AdminAirports() {
     }
   };
 
-  const filtered = airports.filter(
-    (a) =>
-      !filter ||
-      a.iataCode.toLowerCase().includes(filter.toLowerCase()) ||
-      a.name.toLowerCase().includes(filter.toLowerCase()) ||
-      a.countryCode.toLowerCase().includes(filter.toLowerCase()),
+  const filtered = useMemo(
+    () =>
+      airports.filter(
+        (a) =>
+          !filter ||
+          a.iataCode.toLowerCase().includes(filter.toLowerCase()) ||
+          a.name.toLowerCase().includes(filter.toLowerCase()) ||
+          a.countryCode.toLowerCase().includes(filter.toLowerCase()),
+      ),
+    [airports, filter],
   );
 
   if (authenticated === false) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="font-mono text-sm text-zinc-500 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Not authenticated
           </p>
           <Link
             to="/admin"
-            className="font-mono text-xs text-zinc-400 hover:text-zinc-100"
+            className="text-xs text-muted-foreground hover:text-foreground"
           >
             Go to login
           </Link>
@@ -480,162 +501,190 @@ function AdminAirports() {
 
   if (loading || authenticated === null) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
-        <p className="font-mono text-sm text-zinc-500">Loading...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <AdminLayout title="Airports">
-        <AddAirportForm onCreated={fetchData} />
+    <AdminLayout
+      title="Airports"
+      actions={
+        <>
+          <Button size="sm" onClick={() => setAddOpen(true)}>
+            <Plus className="size-3.5" />
+            Add Airport
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setBatchOpen(true)}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <FileText className="size-3.5" />
+            Batch Import
+          </Button>
+        </>
+      }
+    >
+      <AddAirportDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        onCreated={fetchData}
+      />
+      <BatchImportModal
+        open={batchOpen}
+        onOpenChange={setBatchOpen}
+        onComplete={fetchData}
+      />
 
-        {/* Filter */}
-        <div className="mb-4">
-          <input
-            type="text"
+      {/* Filter */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+          <Input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Filter by IATA, name, or country..."
-            className="bg-zinc-800 border border-zinc-700 text-zinc-100 font-mono text-xs px-3 py-1.5 w-64 focus:outline-none focus:border-zinc-500"
+            className="pl-8 w-64"
           />
-          <span className="font-mono text-xs text-zinc-500 ml-3">
-            {filtered.length} airports
-          </span>
         </div>
+        <span className="text-xs text-muted-foreground">
+          {filtered.length} airports
+        </span>
+      </div>
 
-        {/* Legend */}
-        <div className="flex items-center gap-4 mb-3">
-          <span className="font-mono text-xs text-zinc-500">Sources:</span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
-            <span className="font-mono text-xs text-zinc-500">recent</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-2 h-2 rounded-full bg-yellow-400" />
-            <span className="font-mono text-xs text-zinc-500">stale</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-2 h-2 rounded-full bg-red-400" />
-            <span className="font-mono text-xs text-zinc-500">failed</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-2 h-2 rounded-full bg-zinc-600" />
-            <span className="font-mono text-xs text-zinc-500">never ran</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-2 h-2 rounded-sm bg-blue-400" />
-            <span className="font-mono text-xs text-zinc-500">scored</span>
-          </span>
-        </div>
+      {/* Legend */}
+      <div className="flex items-center gap-4 mb-3">
+        <span className="text-xs text-muted-foreground">Sources:</span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
+          <span className="text-xs text-muted-foreground">recent</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2 h-2 rounded-full bg-yellow-400" />
+          <span className="text-xs text-muted-foreground">stale</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2 h-2 rounded-full bg-red-400" />
+          <span className="text-xs text-muted-foreground">failed</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2 h-2 rounded-full bg-zinc-600" />
+          <span className="text-xs text-muted-foreground">never ran</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2 h-2 rounded-sm bg-blue-400" />
+          <span className="text-xs text-muted-foreground">scored</span>
+        </span>
+      </div>
 
-        {/* Table */}
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-zinc-800">
-              <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                IATA
-              </th>
-              <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                Name
-              </th>
-              <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                Country
-              </th>
-              <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                Enabled
-              </th>
-              <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                Sources
-              </th>
-              <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((airport) =>
-              editingIata === airport.iataCode ? (
-                <EditRow
-                  key={airport.iataCode}
-                  airport={airport}
-                  onSaved={() => {
-                    setEditingIata(null);
-                    fetchData();
-                  }}
-                  onCancel={() => setEditingIata(null)}
-                />
-              ) : (
-                <tr
-                  key={airport.iataCode}
-                  className="border-b border-zinc-800/50"
-                >
-                  <td className="font-mono text-xs text-zinc-300 py-2">
-                    {airport.iataCode}
-                  </td>
-                  <td className="font-mono text-xs text-zinc-400 py-2">
-                    {airport.name}
-                  </td>
-                  <td className="font-mono text-xs text-zinc-400 py-2">
-                    {airport.countryCode}
-                  </td>
-                  <td className="py-2">
-                    <span
-                      className={`font-mono text-xs ${airport.enabled ? "text-green-400" : "text-zinc-500"}`}
+      {/* Table */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>IATA</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Country</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Sources</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filtered.map((airport) =>
+            editingIata === airport.iataCode ? (
+              <EditRow
+                key={airport.iataCode}
+                airport={airport}
+                onSaved={() => {
+                  setEditingIata(null);
+                  fetchData();
+                }}
+                onCancel={() => setEditingIata(null)}
+              />
+            ) : (
+              <TableRow key={airport.iataCode}>
+                <TableCell className="font-mono text-xs">
+                  {airport.iataCode}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {airport.name}
+                </TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  {airport.countryCode}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={airport.enabled ? "default" : "secondary"}
+                  >
+                    {airport.enabled ? "enabled" : "disabled"}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <SourceIndicators
+                    sources={airport.sources}
+                    hasScore={airport.hasScore}
+                  />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => setEditingIata(airport.iataCode)}
                     >
-                      {airport.enabled ? "yes" : "no"}
-                    </span>
-                  </td>
-                  <td className="py-2">
-                    <SourceIndicators sources={airport.sources} hasScore={airport.hasScore} />
-                  </td>
-                  <td className="py-2">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setEditingIata(airport.iataCode)}
-                        className="font-mono text-xs text-zinc-400 hover:text-zinc-100"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleFetchNow(airport.iataCode)}
-                        disabled={fetchingIata === airport.iataCode}
-                        className="font-mono text-xs text-yellow-400 hover:text-yellow-300 disabled:opacity-50"
-                      >
-                        {fetchingIata === airport.iataCode
-                          ? "..."
-                          : "Fetch"}
-                      </button>
-                      {deleteConfirm === airport.iataCode ? (
-                        <span className="flex gap-1">
-                          <button
-                            onClick={() => handleDelete(airport.iataCode)}
-                            className="font-mono text-xs text-red-400 hover:text-red-300"
-                          >
-                            Confirm
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(null)}
-                            className="font-mono text-xs text-zinc-500 hover:text-zinc-300"
-                          >
-                            No
-                          </button>
-                        </span>
+                      <Pencil className="size-3" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => handleFetchNow(airport.iataCode)}
+                      disabled={fetchingIata === airport.iataCode}
+                    >
+                      {fetchingIata === airport.iataCode ? (
+                        <Loader2 className="size-3 animate-spin" />
                       ) : (
-                        <button
-                          onClick={() => setDeleteConfirm(airport.iataCode)}
-                          className="font-mono text-xs text-red-400/50 hover:text-red-400"
-                        >
-                          Delete
-                        </button>
+                        <Play className="size-3" />
                       )}
-                    </div>
-                  </td>
-                </tr>
-              ),
-            )}
-          </tbody>
-        </table>
+                      Fetch
+                    </Button>
+                    {deleteConfirm === airport.iataCode ? (
+                      <>
+                        <Button
+                          variant="destructive"
+                          size="xs"
+                          onClick={() => handleDelete(airport.iataCode)}
+                        >
+                          Confirm
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => setDeleteConfirm(null)}
+                        >
+                          No
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => setDeleteConfirm(airport.iataCode)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="size-3" />
+                        Delete
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ),
+          )}
+        </TableBody>
+      </Table>
     </AdminLayout>
   );
 }

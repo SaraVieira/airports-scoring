@@ -4,7 +4,7 @@ use axum::{
     Json,
 };
 use chrono::{DateTime, Utc};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::models::{
@@ -465,4 +465,172 @@ pub async fn trigger_scoring(State(state): State<AppState>) -> StatusCode {
         Ok(()) => StatusCode::OK,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
+}
+
+// ── Batch import ────────────────────────────────────────────────
+
+#[derive(Debug, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct BatchImportRequest {
+    pub iata_codes: Vec<String>,
+    #[serde(default)]
+    pub run_pipeline: bool,
+    #[serde(default)]
+    pub score: bool,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct BatchResolvedAirport {
+    pub iata_code: String,
+    pub name: String,
+    pub country_code: String,
+    pub icao_code: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct BatchImportResponse {
+    pub resolved: Vec<BatchResolvedAirport>,
+    pub failed: Vec<String>,
+    pub job_id: Option<String>,
+}
+
+/// Row type for reading from the all_airports table.
+#[derive(Debug, sqlx::FromRow)]
+#[allow(dead_code)]
+struct AllAirportRow {
+    pub iata: Option<String>,
+    pub icao: String,
+    pub name: String,
+    pub city: String,
+    pub country: String,
+}
+
+/// Batch import airports by IATA codes, resolving from all_airports.
+#[utoipa::path(
+    post,
+    path = "/api/admin/batch-import",
+    request_body = BatchImportRequest,
+    responses(
+        (status = 200, description = "Batch import results", body = BatchImportResponse),
+        (status = 500, description = "Internal error"),
+    ),
+    tag = "admin"
+)]
+pub async fn batch_import(
+    State(state): State<AppState>,
+    Json(body): Json<BatchImportRequest>,
+) -> Result<Json<BatchImportResponse>, StatusCode> {
+    let upper_codes: Vec<String> = body.iata_codes.iter().map(|c| c.to_uppercase()).collect();
+
+    // 1) Single SELECT to resolve all IATA codes at once.
+    let rows = sqlx::query_as::<sqlx::Postgres, AllAirportRow>(
+        "SELECT iata, icao, name, city, country FROM all_airports WHERE iata = ANY($1)",
+    )
+    .bind(&upper_codes)
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Partition into resolved vs failed.
+    let found_set: std::collections::HashSet<String> = rows
+        .iter()
+        .filter_map(|r| r.iata.clone())
+        .collect();
+
+    let failed: Vec<String> = upper_codes
+        .iter()
+        .filter(|c| !found_set.contains(c.as_str()))
+        .cloned()
+        .collect();
+
+    let resolved: Vec<BatchResolvedAirport> = rows
+        .iter()
+        .filter_map(|r| {
+            let iata = r.iata.as_ref()?;
+            Some(BatchResolvedAirport {
+                iata_code: iata.clone(),
+                name: r.name.clone(),
+                country_code: r.country.clone(),
+                icao_code: r.icao.clone(),
+            })
+        })
+        .collect();
+
+    if !resolved.is_empty() {
+        // Prepare column vectors for batch inserts.
+        let iata_codes: Vec<&str> = resolved.iter().map(|r| r.iata_code.as_str()).collect();
+        let names: Vec<&str> = resolved.iter().map(|r| r.name.as_str()).collect();
+        let country_codes: Vec<&str> = resolved.iter().map(|r| r.country_code.as_str()).collect();
+        let icao_codes: Vec<&str> = resolved.iter().map(|r| r.icao_code.as_str()).collect();
+        let cities: Vec<&str> = rows
+            .iter()
+            .filter(|r| r.iata.is_some())
+            .map(|r| r.city.as_str())
+            .collect();
+
+        // 2) & 3) Batch inserts inside a transaction.
+        let mut tx = state
+            .pool
+            .begin()
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+        sqlx::query(
+            r#"
+            INSERT INTO supported_airports (iata_code, country_code, name)
+            SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[])
+            ON CONFLICT (iata_code) DO NOTHING
+            "#,
+        )
+        .bind(&iata_codes)
+        .bind(&country_codes)
+        .bind(&names)
+        .execute(&mut *tx)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+        sqlx::query(
+            r#"
+            INSERT INTO airports (iata_code, icao_code, name, city, country_code, airport_type, in_seed_set)
+            SELECT *, 'large_airport', true FROM UNNEST($1::text[], $2::text[], $3::text[], $4::text[], $5::text[])
+            ON CONFLICT (iata_code) DO UPDATE SET in_seed_set = true
+            "#,
+        )
+        .bind(&iata_codes)
+        .bind(&icao_codes)
+        .bind(&names)
+        .bind(&cities)
+        .bind(&country_codes)
+        .execute(&mut *tx)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+        tx.commit()
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    }
+
+    // Optionally start a pipeline job for the resolved airports.
+    let job_id = if body.run_pipeline && !resolved.is_empty() {
+        let request = StartJobRequest {
+            airports: Some(resolved.iter().map(|r| r.iata_code.clone()).collect()),
+            sources: None,
+            full_refresh: Some(false),
+            score: Some(body.score),
+        };
+        match state.jobs.start_job(request).await {
+            Ok(job) => Some(job.id),
+            Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        }
+    } else {
+        None
+    };
+
+    Ok(Json(BatchImportResponse {
+        resolved,
+        failed,
+        job_id,
+    }))
 }

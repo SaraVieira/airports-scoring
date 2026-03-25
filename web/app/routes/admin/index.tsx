@@ -1,7 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
+import { useAdminAuth } from "~/hooks/use-admin-auth";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { components } from "~/api/types";
 import { AdminLayout } from "~/components/admin-layout";
+import { LogTerminal } from "~/components/admin/log-terminal";
+import { JobStatusBadge } from "~/components/admin/job-status-badge";
+import { Card, CardContent } from "~/components/ui/card";
+import { Button } from "~/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "~/components/ui/table";
+import { RefreshCw, Calculator, Plane, AlertTriangle, CheckCircle, Activity } from "lucide-react";
 import {
   adminListAirports,
   adminDataGaps,
@@ -18,35 +32,8 @@ export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
 });
 
-function useAdmin() {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
 
-  const verify = useCallback(() => {
-    const password = localStorage.getItem("admin_password");
-    if (!password) {
-      setAuthenticated(false);
-      return;
-    }
-    adminListAirports({ data: password })
-      .then(() => setAuthenticated(true))
-      .catch(() => {
-        localStorage.removeItem("admin_password");
-        setAuthenticated(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    verify();
-  }, [verify]);
-
-  return { authenticated, setAuthenticated };
-}
-
-function LoginForm({
-  onLogin,
-}: {
-  onLogin: () => void;
-}) {
+function LoginForm({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -68,48 +55,62 @@ function LoginForm({
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-zinc-900 border border-zinc-800 p-8 w-full max-w-sm"
-      >
-        <h1 className="font-grotesk text-lg font-bold text-zinc-100 mb-6">
-          Admin Login
-        </h1>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          className="w-full bg-zinc-800 border border-zinc-700 text-zinc-100 font-mono text-sm px-3 py-2 mb-4 focus:outline-none focus:border-zinc-500"
-          autoFocus
-        />
-        {error && (
-          <p className="text-red-400 font-mono text-xs mb-4">{error}</p>
-        )}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-mono text-xs px-3 py-2 disabled:opacity-50"
-        >
-          {loading ? "Verifying..." : "Login"}
-        </button>
-      </form>
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <Card className="w-full max-w-sm">
+        <CardContent className="pt-6">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <h1 className="font-grotesk text-lg font-bold">Admin Login</h1>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full bg-muted border border-border text-foreground text-sm px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
+              autoFocus
+            />
+            {error && <p className="text-destructive text-xs">{error}</p>}
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Verifying..." : "Login"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    completed: "text-green-400 bg-green-400/10",
-    running: "text-yellow-400 bg-yellow-400/10",
-    queued: "text-zinc-400 bg-zinc-400/10",
-    failed: "text-red-400 bg-red-400/10",
-    cancelled: "text-zinc-500 bg-zinc-500/10",
-  };
-  const cls = colors[status] || "text-zinc-400 bg-zinc-400/10";
+function StatCard({
+  label,
+  value,
+  sub,
+  icon: Icon,
+  color,
+}: {
+  label: string;
+  value: string | number;
+  sub?: string;
+  icon: React.FC<{ className?: string }>;
+  color?: string;
+}) {
   return (
-    <span className={`font-mono text-xs px-2 py-0.5 ${cls}`}>{status}</span>
+    <Card>
+      <CardContent className="pt-4 pb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+            {label}
+          </span>
+          <Icon className="size-3.5 text-muted-foreground/50" />
+        </div>
+        <span
+          className={`font-grotesk text-2xl font-bold ${color || "text-foreground"}`}
+        >
+          {value}
+        </span>
+        {sub && (
+          <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -142,7 +143,6 @@ function Dashboard() {
     fetchData();
   }, [fetchData]);
 
-  // Auto-refresh every 5s if there are active jobs
   useEffect(() => {
     const hasActive = jobs.some(
       (j) => j.status === "running" || j.status === "queued",
@@ -175,237 +175,182 @@ function Dashboard() {
   };
 
   const enabledCount = airports.filter((a) => a.enabled).length;
-  const disabledCount = airports.length - enabledCount;
-  const recentJobs = jobs.slice(0, 10);
-
-  // Group data gaps by airport
-  const gapsByAirport = dataGaps.reduce(
-    (acc, gap) => {
-      if (!acc[gap.iataCode]) acc[gap.iataCode] = [];
-      acc[gap.iataCode].push(gap);
-      return acc;
-    },
-    {} as Record<string, DataGap[]>,
-  );
-  const airportsWithGaps = Object.keys(gapsByAirport).length;
+  const activeJobs = jobs.filter(
+    (j) => j.status === "running" || j.status === "queued",
+  ).length;
+  const scoredCount = airports.filter((a) => a.hasScore).length;
+  const recentJobs = jobs.slice(0, 5);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] text-zinc-100 flex items-center justify-center">
-        <p className="font-mono text-sm text-zinc-500">Loading...</p>
+      <div className="flex items-center justify-center h-64">
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     );
   }
 
   return (
-    <AdminLayout title="Dashboard">
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-zinc-900 border border-zinc-800 p-4">
-            <p className="font-mono text-xs text-zinc-500 mb-1">
-              Supported Airports
-            </p>
-            <p className="font-grotesk text-2xl font-bold">
-              {enabledCount}
-              <span className="text-sm text-zinc-500 ml-2">
-                +{disabledCount} disabled
-              </span>
-            </p>
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 p-4">
-            <p className="font-mono text-xs text-zinc-500 mb-1">Data Gaps</p>
-            <p className="font-grotesk text-2xl font-bold">
-              {dataGaps.length}
-              <span className="text-sm text-zinc-500 ml-2">
-                across {airportsWithGaps} airports
-              </span>
-            </p>
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 p-4">
-            <p className="font-mono text-xs text-zinc-500 mb-1">Active Jobs</p>
-            <p className="font-grotesk text-2xl font-bold">
-              {
-                jobs.filter(
-                  (j) => j.status === "running" || j.status === "queued",
-                ).length
-              }
-            </p>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="flex gap-3 mb-8">
-          <button
+    <AdminLayout
+      title="Dashboard"
+      actions={
+        <>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleRefreshAll}
             disabled={actionLoading != null}
-            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-mono text-xs px-3 py-1.5 disabled:opacity-50"
           >
-            {actionLoading === "refresh" ? "Starting..." : "Refresh All"}
-          </button>
-          <button
+            <RefreshCw
+              className={`size-3.5 ${actionLoading === "refresh" ? "animate-spin" : ""}`}
+            />
+            Refresh All
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleScoring}
             disabled={actionLoading != null}
-            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-mono text-xs px-3 py-1.5 disabled:opacity-50"
           >
-            {actionLoading === "scoring" ? "Running..." : "Run Scoring"}
-          </button>
-        </div>
+            <Calculator className="size-3.5" />
+            Run Scoring
+          </Button>
+          <Link to="/admin/jobs">
+            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+              New Job
+            </Button>
+          </Link>
+        </>
+      }
+    >
+      {/* Stats row */}
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        <StatCard
+          label="Airports"
+          value={enabledCount}
+          sub="tracked"
+          icon={Plane}
+        />
+        <StatCard
+          label="Active Jobs"
+          value={activeJobs}
+          sub={activeJobs > 0 ? "running" : "idle"}
+          icon={Activity}
+          color={activeJobs > 0 ? "text-yellow-500" : undefined}
+        />
+        <StatCard
+          label="Data Gaps"
+          value={dataGaps.length}
+          sub={`across ${new Set(dataGaps.map((g) => g.iataCode)).size} airports`}
+          icon={AlertTriangle}
+          color={dataGaps.length > 0 ? "text-destructive" : undefined}
+        />
+        <StatCard
+          label="Scored"
+          value={`${scoredCount}/${enabledCount}`}
+          icon={CheckCircle}
+          color={
+            scoredCount === enabledCount ? "text-green-500" : "text-yellow-500"
+          }
+        />
+      </div>
 
-        {/* Recent Jobs */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-grotesk text-sm font-bold text-zinc-300">
+      {/* Main content: jobs table + log panel */}
+      <div className="grid grid-cols-[1fr_420px] gap-4" style={{ height: "calc(100vh - 320px)" }}>
+        {/* Jobs table */}
+        <Card className="overflow-hidden flex flex-col">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
               Recent Jobs
-            </h2>
-            <Link
-              to="/admin/jobs"
-              className="font-mono text-xs text-zinc-500 hover:text-zinc-300"
-            >
-              View all
+            </span>
+            <Link to="/admin/jobs">
+              <Button variant="ghost" size="xs">
+                View all
+              </Button>
             </Link>
           </div>
-          {recentJobs.length === 0 ? (
-            <p className="font-mono text-xs text-zinc-500">No jobs yet</p>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-zinc-800">
-                  <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                    ID
-                  </th>
-                  <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                    Status
-                  </th>
-                  <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                    Airports
-                  </th>
-                  <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                    Sources
-                  </th>
-                  <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                    Progress
-                  </th>
-                  <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                    Started
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="flex-1 overflow-y-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-20">Status</TableHead>
+                  <TableHead className="w-20">Airport</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead className="w-28">Progress</TableHead>
+                  <TableHead className="w-36">Started</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentJobs.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="text-center text-muted-foreground py-8"
+                    >
+                      No jobs yet
+                    </TableCell>
+                  </TableRow>
+                )}
                 {recentJobs.map((job) => (
-                  <tr key={job.id} className="border-b border-zinc-800/50">
-                    <td className="font-mono text-xs text-zinc-400 py-2">
-                      <Link
-                        to="/admin/jobs"
-                        className="hover:text-zinc-100"
-                      >
-                        {job.id.slice(0, 8)}
-                      </Link>
-                    </td>
-                    <td className="py-2">
-                      <StatusBadge status={job.status} />
-                    </td>
-                    <td className="font-mono text-xs text-zinc-400 py-2">
-                      {job.airports.length > 3
-                        ? `${job.airports.slice(0, 3).join(", ")}...`
-                        : job.airports.join(", ") || "all"}
-                    </td>
-                    <td className="font-mono text-xs text-zinc-400 py-2">
-                      {job.sources.length > 3
-                        ? `${job.sources.slice(0, 3).join(", ")}...`
-                        : job.sources.join(", ") || "all"}
-                    </td>
-                    <td className="font-mono text-xs text-zinc-400 py-2">
-                      {job.progress.airportsCompleted}/
-                      {job.progress.airportsTotal}
-                      {job.progress.currentAirport &&
-                        ` (${job.progress.currentAirport})`}
-                    </td>
-                    <td className="font-mono text-xs text-zinc-500 py-2">
+                  <TableRow key={job.id}>
+                    <TableCell>
+                      <JobStatusBadge status={job.status} />
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {job.progress.currentAirport || job.airports[0] || "—"}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {job.progress.currentSource ||
+                        job.sources.slice(0, 3).join(", ") ||
+                        "all"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-yellow-500 transition-all"
+                            style={{
+                              width: `${
+                                job.progress.airportsTotal > 0
+                                  ? (job.progress.airportsCompleted /
+                                      job.progress.airportsTotal) *
+                                    100
+                                  : 0
+                              }%`,
+                            }}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {job.progress.airportsCompleted}/
+                          {job.progress.airportsTotal}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
                       {job.startedAt
                         ? new Date(job.startedAt).toLocaleString()
-                        : "-"}
-                    </td>
-                  </tr>
+                        : "—"}
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {/* Data Gaps Summary */}
-        {dataGaps.length > 0 && (
-          <div>
-            <h2 className="font-grotesk text-sm font-bold text-zinc-300 mb-3">
-              Data Gaps
-            </h2>
-            <div className="max-h-64 overflow-y-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-zinc-800">
-                    <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                      Airport
-                    </th>
-                    <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                      Source
-                    </th>
-                    <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                      Status
-                    </th>
-                    <th className="font-mono text-xs text-zinc-500 text-left py-2">
-                      Last Fetched
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dataGaps.map((gap, i) => (
-                    <tr
-                      key={`${gap.iataCode}-${gap.source}-${i}`}
-                      className="border-b border-zinc-800/50"
-                    >
-                      <td className="font-mono text-xs text-zinc-300 py-2">
-                        {gap.iataCode}{" "}
-                        <span className="text-zinc-500">{gap.name}</span>
-                      </td>
-                      <td className="font-mono text-xs text-zinc-400 py-2">
-                        {gap.source}
-                      </td>
-                      <td className="py-2">
-                        <span
-                          className={`font-mono text-xs px-2 py-0.5 ${
-                            gap.lastStatus === "failed"
-                              ? "text-red-400 bg-red-400/10"
-                              : gap.lastStatus === "stale"
-                                ? "text-yellow-400 bg-yellow-400/10"
-                                : "text-zinc-400 bg-zinc-400/10"
-                          }`}
-                        >
-                          {gap.lastStatus}
-                        </span>
-                      </td>
-                      <td className="font-mono text-xs text-zinc-500 py-2">
-                        {gap.lastFetchedAt
-                          ? new Date(gap.lastFetchedAt).toLocaleDateString()
-                          : "never"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+              </TableBody>
+            </Table>
           </div>
-        )}
+        </Card>
+
+        {/* Log terminal */}
+        <LogTerminal />
+      </div>
     </AdminLayout>
   );
 }
 
 function AdminDashboard() {
-  const { authenticated, setAuthenticated } = useAdmin();
+  const { authenticated, setAuthenticated } = useAdminAuth();
 
   if (authenticated === null) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
-        <p className="font-mono text-sm text-zinc-500">Loading...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     );
   }
