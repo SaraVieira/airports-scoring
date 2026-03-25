@@ -9,7 +9,7 @@ export const useSingleAirport = ({ airport }: { airport: Airport }) => {
   const totalNum = score?.scoreTotal ?? null;
 
   const { recentOps, opsAgg, opsTrend } = useMemo(() => {
-    const recent = airport.operationalStats.slice(0, 12);
+    const recent = airport.operationalStats.slice(-12);
     return {
       recentOps: recent,
       opsAgg: recent.length > 0 ? aggregateOps(recent) : null,

@@ -50,7 +50,7 @@ services:
       dockerfile: google-scraper.Dockerfile
     environment:
       USE_MONGODB: "false"
-      MAX_REVIEWS: "5000"
+      MAX_REVIEWS: "1500"
       DOWNLOAD_IMAGES: "false"
     # No exposed ports — internal only
 
