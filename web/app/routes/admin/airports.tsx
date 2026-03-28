@@ -4,14 +4,6 @@ import { useAdminAuth } from "~/hooks/use-admin-auth";
 import { AdminLayout } from "~/components/admin-layout";
 import { Button } from "~/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "~/components/ui/dialog";
-import {
   Table,
   TableHeader,
   TableBody,
@@ -21,8 +13,10 @@ import {
 } from "~/components/ui/table";
 import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
-import { Checkbox } from "~/components/ui/checkbox";
 import { BatchImportModal } from "~/components/admin/batch-import-modal";
+import { AddAirportDialog } from "~/components/admin/add-airport-dialog";
+import { EditRow } from "~/components/admin/edit-airport-row";
+import { SourceIndicators } from "~/components/admin/source-indicators";
 import {
   Plus,
   FileText,
@@ -31,391 +25,19 @@ import {
   Play,
   Loader2,
   Search,
-  Check,
-  X,
 } from "lucide-react";
 import {
   adminListAirports,
-  adminCreateAirport,
-  adminUpdateAirport,
   adminDeleteAirport,
   adminStartJob,
 } from "~/server/admin";
 import type { components } from "~/api/types";
-import { PIPELINE_SOURCES } from "~/utils/constants";
 
 type SupportedAirport = components["schemas"]["SupportedAirportWithStatus"];
-type SourceStatus = components["schemas"]["SourceStatusResponse"];
 
 export const Route = createFileRoute("/admin/airports")({
   component: AdminAirports,
 });
-
-function SourceDot({
-  name,
-  source,
-}: {
-  name: string;
-  source?: SourceStatus;
-}) {
-  const now = Date.now();
-  const fetched = source?.lastFetchedAt
-    ? new Date(source.lastFetchedAt).getTime()
-    : 0;
-  const daysSince = fetched
-    ? (now - fetched) / (1000 * 60 * 60 * 24)
-    : Infinity;
-
-  let color: string;
-  let status: string;
-  let statusColor: string;
-
-  if (!source || !fetched) {
-    color = "bg-zinc-600";
-    status = "never ran";
-    statusColor = "text-zinc-500";
-  } else if (source.lastStatus === "success") {
-    if (daysSince < 30) {
-      color = "bg-green-400";
-      status = `${Math.floor(daysSince)}d ago`;
-      statusColor = "text-green-400";
-    } else {
-      color = "bg-yellow-400";
-      status = `${Math.floor(daysSince)}d ago (stale)`;
-      statusColor = "text-yellow-400";
-    }
-  } else if (source.lastStatus === "failed") {
-    color = "bg-red-400";
-    status = `failed${source.lastError ? `: ${source.lastError}` : ""}`;
-    statusColor = "text-red-400";
-  } else {
-    color = "bg-zinc-600";
-    status = source.lastStatus;
-    statusColor = "text-zinc-500";
-  }
-
-  return (
-    <span className="relative group">
-      <span
-        className={`inline-block w-2 h-2 rounded-full ${color} mr-1 cursor-help`}
-      />
-      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-start bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1.5 whitespace-nowrap z-50 shadow-lg pointer-events-none">
-        <span className="font-mono text-[10px] font-bold text-zinc-300">
-          {name}
-        </span>
-        <span className={`font-mono text-[10px] ${statusColor}`}>
-          {status}
-        </span>
-      </span>
-    </span>
-  );
-}
-
-function ScoreDot({ hasScore }: { hasScore: boolean }) {
-  const color = hasScore ? "bg-blue-400" : "bg-zinc-600";
-  const status = hasScore ? "scored" : "not scored";
-  const statusColor = hasScore ? "text-blue-400" : "text-zinc-500";
-
-  return (
-    <span className="relative group ml-1">
-      <span
-        className={`inline-block w-2 h-2 rounded-sm ${color} cursor-help`}
-      />
-      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-start bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1.5 whitespace-nowrap z-50 shadow-lg pointer-events-none">
-        <span className="font-mono text-[10px] font-bold text-zinc-300">
-          score
-        </span>
-        <span className={`font-mono text-[10px] ${statusColor}`}>
-          {status}
-        </span>
-      </span>
-    </span>
-  );
-}
-
-function SourceIndicators({
-  sources,
-  hasScore,
-}: {
-  sources: SourceStatus[];
-  hasScore: boolean;
-}) {
-  const byName = new Map(sources.map((s) => [s.source, s]));
-  return (
-    <span className="flex flex-wrap items-center gap-0">
-      {PIPELINE_SOURCES.map((name) => (
-        <SourceDot key={name} name={name} source={byName.get(name)} />
-      ))}
-      <ScoreDot hasScore={hasScore} />
-    </span>
-  );
-}
-
-function AddAirportDialog({
-  open,
-  onOpenChange,
-  onCreated,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onCreated: () => void;
-}) {
-  const [form, setForm] = useState({
-    iata_code: "",
-    name: "",
-    country_code: "",
-    skytrax_review_slug: "",
-    skytrax_rating_slug: "",
-    google_maps_url: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const password = localStorage.getItem("admin_password") || "";
-      await adminCreateAirport({
-        data: {
-          password,
-          body: {
-            iata_code: form.iata_code.toUpperCase(),
-            name: form.name,
-            country_code: form.country_code.toUpperCase(),
-            skytrax_review_slug: form.skytrax_review_slug || null,
-            skytrax_rating_slug: form.skytrax_rating_slug || null,
-            google_maps_url: form.google_maps_url || null,
-          },
-        },
-      });
-      setForm({
-        iata_code: "",
-        name: "",
-        country_code: "",
-        skytrax_review_slug: "",
-        skytrax_rating_slug: "",
-        google_maps_url: "",
-      });
-      onOpenChange(false);
-      onCreated();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Add Airport</DialogTitle>
-          <DialogDescription>
-            Add a new supported airport to the pipeline.
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="text-sm font-medium mb-1 block">
-                IATA Code *
-              </label>
-              <Input
-                value={form.iata_code}
-                onChange={(e) =>
-                  setForm({ ...form, iata_code: e.target.value })
-                }
-                maxLength={3}
-                required
-                placeholder="BER"
-                className="uppercase"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Name *</label>
-              <Input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-                placeholder="Berlin Brandenburg"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">
-                Country *
-              </label>
-              <Input
-                value={form.country_code}
-                onChange={(e) =>
-                  setForm({ ...form, country_code: e.target.value })
-                }
-                maxLength={2}
-                required
-                placeholder="DE"
-                className="uppercase"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm font-medium mb-1 block">
-                Skytrax Review Slug
-              </label>
-              <Input
-                value={form.skytrax_review_slug}
-                onChange={(e) =>
-                  setForm({ ...form, skytrax_review_slug: e.target.value })
-                }
-                placeholder="berlin-brandenburg-airport"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">
-                Skytrax Rating Slug
-              </label>
-              <Input
-                value={form.skytrax_rating_slug}
-                onChange={(e) =>
-                  setForm({ ...form, skytrax_rating_slug: e.target.value })
-                }
-                placeholder="berlin-brandenburg"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-1 block">
-              Google Maps URL
-            </label>
-            <Input
-              value={form.google_maps_url}
-              onChange={(e) =>
-                setForm({ ...form, google_maps_url: e.target.value })
-              }
-              placeholder="https://maps.google.com/..."
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="size-3 animate-spin" />}
-              {loading ? "Creating..." : "Create"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function EditRow({
-  airport,
-  onSaved,
-  onCancel,
-}: {
-  airport: SupportedAirport;
-  onSaved: () => void;
-  onCancel: () => void;
-}) {
-  const [form, setForm] = useState({
-    enabled: airport.enabled,
-    name: airport.name,
-    skytrax_review_slug: airport.skytraxReviewSlug || "",
-    skytrax_rating_slug: airport.skytraxRatingSlug || "",
-    google_maps_url: airport.googleMapsUrl || "",
-  });
-  const [loading, setLoading] = useState(false);
-
-  const handleSave = async () => {
-    setLoading(true);
-    try {
-      const password = localStorage.getItem("admin_password") || "";
-      await adminUpdateAirport({
-        data: {
-          password,
-          iata: airport.iataCode,
-          body: {
-            enabled: form.enabled,
-            name: form.name,
-            skytrax_review_slug: form.skytrax_review_slug || null,
-            skytrax_rating_slug: form.skytrax_rating_slug || null,
-            google_maps_url: form.google_maps_url || null,
-          },
-        },
-      });
-      onSaved();
-    } catch (err) {
-      console.error("Failed to update", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <TableRow className="bg-muted/30">
-      <TableCell className="font-mono text-xs">{airport.iataCode}</TableCell>
-      <TableCell>
-        <Input
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="h-7 text-xs"
-        />
-      </TableCell>
-      <TableCell className="font-mono text-xs text-muted-foreground">
-        {airport.countryCode}
-      </TableCell>
-      <TableCell>
-        <Checkbox
-          checked={form.enabled}
-          onCheckedChange={(v) => setForm({ ...form, enabled: v === true })}
-        />
-      </TableCell>
-      <TableCell>
-        <SourceIndicators
-          sources={airport.sources}
-          hasScore={airport.hasScore}
-        />
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={handleSave}
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader2 className="size-3 animate-spin" />
-            ) : (
-              <Check className="size-3" />
-            )}
-            Save
-          </Button>
-          <Button variant="ghost" size="xs" onClick={onCancel}>
-            <X className="size-3" />
-            Cancel
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-}
 
 function AdminAirports() {
   const { authenticated } = useAdminAuth();
@@ -557,26 +179,20 @@ function AdminAirports() {
       {/* Legend */}
       <div className="flex items-center gap-4 mb-3">
         <span className="text-xs text-muted-foreground">Sources:</span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
-          <span className="text-xs text-muted-foreground">recent</span>
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block w-2 h-2 rounded-full bg-yellow-400" />
-          <span className="text-xs text-muted-foreground">stale</span>
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block w-2 h-2 rounded-full bg-red-400" />
-          <span className="text-xs text-muted-foreground">failed</span>
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block w-2 h-2 rounded-full bg-zinc-600" />
-          <span className="text-xs text-muted-foreground">never ran</span>
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block w-2 h-2 rounded-sm bg-blue-400" />
-          <span className="text-xs text-muted-foreground">scored</span>
-        </span>
+        {[
+          { color: "bg-green-400", label: "recent", shape: "rounded-full" },
+          { color: "bg-yellow-400", label: "stale", shape: "rounded-full" },
+          { color: "bg-red-400", label: "failed", shape: "rounded-full" },
+          { color: "bg-zinc-600", label: "never ran", shape: "rounded-full" },
+          { color: "bg-blue-400", label: "scored", shape: "rounded-sm" },
+        ].map((l) => (
+          <span key={l.label} className="flex items-center gap-1">
+            <span
+              className={`inline-block w-2 h-2 ${l.shape} ${l.color}`}
+            />
+            <span className="text-xs text-muted-foreground">{l.label}</span>
+          </span>
+        ))}
       </div>
 
       {/* Table */}
