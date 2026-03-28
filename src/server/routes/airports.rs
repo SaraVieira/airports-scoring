@@ -1062,6 +1062,47 @@ pub async fn get_rankings(
     list_airports(State(state)).await
 }
 
+/// Airport delay ranking item.
+#[derive(Debug, Serialize, FromRow, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct DelayRankingItem {
+    pub iata_code: String,
+    pub name: String,
+    pub city: String,
+    pub country_code: String,
+    pub avg_delay_pct: f64,
+}
+
+/// Get airports ranked by average delay percentage (last 12 months).
+#[utoipa::path(
+    get,
+    path = "/api/airports/delays",
+    responses(
+        (status = 200, description = "Airports ranked by delay", body = Vec<DelayRankingItem>),
+    ),
+    tag = "airports"
+)]
+pub async fn get_delay_rankings(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<DelayRankingItem>>, StatusCode> {
+    let results = sqlx::query_as::<_, DelayRankingItem>(
+        "SELECT a.iata_code, a.name, a.city, a.country_code,
+                AVG(os.delay_pct)::float8 as avg_delay_pct
+         FROM operational_stats os
+         INNER JOIN airports a ON a.id = os.airport_id
+         WHERE os.delay_pct IS NOT NULL
+           AND os.period_year >= EXTRACT(YEAR FROM NOW())::int - 1
+         GROUP BY a.iata_code, a.name, a.city, a.country_code
+         HAVING COUNT(*) >= 3
+         ORDER BY avg_delay_pct DESC",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(results))
+}
+
 /// Aggregated country-level stats for all tracked airports.
 #[derive(Debug, Serialize, FromRow, ToSchema)]
 #[serde(rename_all = "camelCase")]
@@ -1179,6 +1220,185 @@ pub async fn airports_by_country(
          ORDER BY s.score_total DESC NULLS LAST",
     )
     .bind(&code_upper)
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(results))
+}
+
+// ── Busiest airports ────────────────────────────────────────────
+
+/// Top 10 airports by latest passenger count.
+#[derive(Debug, Serialize, FromRow, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct BusiestAirportItem {
+    pub iata_code: String,
+    pub name: String,
+    pub city: String,
+    pub country_code: String,
+    pub year: i16,
+    pub total_pax: i64,
+}
+
+/// Get the top 10 busiest airports by latest year passenger count.
+#[utoipa::path(
+    get,
+    path = "/api/airports/busiest",
+    responses(
+        (status = 200, description = "Top 10 busiest airports", body = Vec<BusiestAirportItem>),
+    ),
+    tag = "airports"
+)]
+pub async fn get_busiest(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<BusiestAirportItem>>, StatusCode> {
+    let results = sqlx::query_as::<_, BusiestAirportItem>(
+        "SELECT a.iata_code, a.name, a.city, a.country_code,
+                p.year::int2 AS year, p.total_pax
+         FROM pax_yearly p
+         INNER JOIN airports a ON a.id = p.airport_id
+         WHERE p.total_pax IS NOT NULL
+           AND a.in_seed_set = true
+           AND p.year = (SELECT MAX(p2.year) FROM pax_yearly p2 WHERE p2.airport_id = p.airport_id AND p2.total_pax IS NOT NULL)
+         ORDER BY p.total_pax DESC
+         LIMIT 10",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(results))
+}
+
+// ── Best-reviewed airports ──────────────────────────────────────
+
+/// Top 10 airports by average sentiment rating.
+#[derive(Debug, Serialize, FromRow, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct BestReviewedItem {
+    pub iata_code: String,
+    pub name: String,
+    pub city: String,
+    pub country_code: String,
+    pub avg_rating: f64,
+    pub review_count: i64,
+}
+
+/// Get the top 10 best-reviewed airports by average rating.
+#[utoipa::path(
+    get,
+    path = "/api/airports/best-reviewed",
+    responses(
+        (status = 200, description = "Top 10 best-reviewed airports", body = Vec<BestReviewedItem>),
+    ),
+    tag = "airports"
+)]
+pub async fn get_best_reviewed(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<BestReviewedItem>>, StatusCode> {
+    let results = sqlx::query_as::<_, BestReviewedItem>(
+        "SELECT a.iata_code, a.name, a.city, a.country_code,
+                AVG(ss.avg_rating)::float8 AS avg_rating,
+                SUM(ss.review_count)::int8 AS review_count
+         FROM sentiment_snapshots ss
+         INNER JOIN airports a ON a.id = ss.airport_id
+         WHERE ss.avg_rating IS NOT NULL
+           AND a.in_seed_set = true
+           AND (ss.snapshot_year, ss.snapshot_quarter) = (
+             SELECT MAX(ss2.snapshot_year), MAX(ss2.snapshot_quarter)
+             FROM sentiment_snapshots ss2 WHERE ss2.airport_id = ss.airport_id
+           )
+         GROUP BY a.iata_code, a.name, a.city, a.country_code
+         HAVING SUM(ss.review_count) >= 10
+         ORDER BY avg_rating DESC
+         LIMIT 10",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(results))
+}
+
+// ── Most-connected airports ─────────────────────────────────────
+
+/// Airport connectivity item with route count.
+#[derive(Debug, Serialize, FromRow, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ConnectivityItem {
+    pub iata_code: String,
+    pub name: String,
+    pub city: String,
+    pub country_code: String,
+    pub route_count: i64,
+}
+
+/// Get all airports ordered by number of unique destination routes.
+#[utoipa::path(
+    get,
+    path = "/api/airports/most-connected",
+    responses(
+        (status = 200, description = "Airports ordered by route count", body = Vec<ConnectivityItem>),
+    ),
+    tag = "airports"
+)]
+pub async fn get_most_connected(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<ConnectivityItem>>, StatusCode> {
+    let results = sqlx::query_as::<_, ConnectivityItem>(
+        "SELECT a.iata_code, a.name, a.city, a.country_code,
+                COUNT(DISTINCT r.destination_iata)::int8 AS route_count
+         FROM routes r
+         INNER JOIN airports a ON a.id = r.origin_id
+         WHERE a.in_seed_set = true
+         GROUP BY a.iata_code, a.name, a.city, a.country_code
+         ORDER BY route_count DESC",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(results))
+}
+
+// ── Map airports ────────────────────────────────────────────────
+
+/// Airport item with coordinates for map visualization.
+#[derive(Debug, Serialize, FromRow, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct MapAirportItem {
+    pub iata_code: String,
+    pub name: String,
+    pub city: String,
+    pub country_code: String,
+    pub score_total: Option<f64>,
+    pub lat: Option<f64>,
+    pub lng: Option<f64>,
+}
+
+/// Get all scored airports with lat/lng for map visualization.
+#[utoipa::path(
+    get,
+    path = "/api/airports/map",
+    responses(
+        (status = 200, description = "All airports with coordinates", body = Vec<MapAirportItem>),
+    ),
+    tag = "airports"
+)]
+pub async fn get_map_airports(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<MapAirportItem>>, StatusCode> {
+    let results = sqlx::query_as::<_, MapAirportItem>(
+        "SELECT a.iata_code, a.name, a.city, a.country_code,
+                s.score_total::float8 AS score_total,
+                ST_Y(a.location::geometry)::float8 AS lat,
+                ST_X(a.location::geometry)::float8 AS lng
+         FROM airports a
+         LEFT JOIN airport_scores s ON s.airport_id = a.id AND s.is_latest = TRUE
+         WHERE a.in_seed_set = true AND a.location IS NOT NULL
+         ORDER BY a.iata_code",
+    )
     .fetch_all(&state.pool)
     .await
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;

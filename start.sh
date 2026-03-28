@@ -25,6 +25,7 @@ if [ "$TABLE_EXISTS" != "t" ]; then
   psql "$DB_URL" -q < scripts/airport_schema.sql
   DATABASE_URL="$DB_URL" bash scripts/seed-all-airports.sh
   DATABASE_URL="$DB_URL" bash scripts/seed-reference-data.sh
+  DATABASE_URL="$DB_URL" bash scripts/seed-operators.sh
   echo "Database seeded"
 fi
 

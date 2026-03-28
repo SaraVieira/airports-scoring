@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RankingsRouteImport } from './routes/rankings'
 import { Route as CountriesRouteImport } from './routes/countries'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -16,6 +17,11 @@ import { Route as AirportIataRouteImport } from './routes/airport.$iata'
 import { Route as AdminJobsRouteImport } from './routes/admin/jobs'
 import { Route as AdminAirportsRouteImport } from './routes/admin/airports'
 
+const RankingsRoute = RankingsRouteImport.update({
+  id: '/rankings',
+  path: '/rankings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CountriesRoute = CountriesRouteImport.update({
   id: '/countries',
   path: '/countries',
@@ -50,6 +56,7 @@ const AdminAirportsRoute = AdminAirportsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/countries': typeof CountriesRoute
+  '/rankings': typeof RankingsRoute
   '/admin/airports': typeof AdminAirportsRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/airport/$iata': typeof AirportIataRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/countries': typeof CountriesRoute
+  '/rankings': typeof RankingsRoute
   '/admin/airports': typeof AdminAirportsRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/airport/$iata': typeof AirportIataRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/countries': typeof CountriesRoute
+  '/rankings': typeof RankingsRoute
   '/admin/airports': typeof AdminAirportsRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/airport/$iata': typeof AirportIataRoute
@@ -77,6 +86,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/countries'
+    | '/rankings'
     | '/admin/airports'
     | '/admin/jobs'
     | '/airport/$iata'
@@ -85,6 +95,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/countries'
+    | '/rankings'
     | '/admin/airports'
     | '/admin/jobs'
     | '/airport/$iata'
@@ -93,6 +104,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/countries'
+    | '/rankings'
     | '/admin/airports'
     | '/admin/jobs'
     | '/airport/$iata'
@@ -102,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CountriesRoute: typeof CountriesRoute
+  RankingsRoute: typeof RankingsRoute
   AdminAirportsRoute: typeof AdminAirportsRoute
   AdminJobsRoute: typeof AdminJobsRoute
   AirportIataRoute: typeof AirportIataRoute
@@ -110,6 +123,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/rankings': {
+      id: '/rankings'
+      path: '/rankings'
+      fullPath: '/rankings'
+      preLoaderRoute: typeof RankingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/countries': {
       id: '/countries'
       path: '/countries'
@@ -158,6 +178,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CountriesRoute: CountriesRoute,
+  RankingsRoute: RankingsRoute,
   AdminAirportsRoute: AdminAirportsRoute,
   AdminJobsRoute: AdminJobsRoute,
   AirportIataRoute: AirportIataRoute,

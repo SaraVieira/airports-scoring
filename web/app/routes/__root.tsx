@@ -1,22 +1,29 @@
-import { createRootRoute, Outlet, HeadContent, Scripts, Link, useRouterState } from '@tanstack/react-router'
-import { AirportSearch } from '../components/airport-search'
-import '../styles.css'
+import {
+  createRootRoute,
+  Outlet,
+  HeadContent,
+  Scripts,
+  Link,
+  useRouterState,
+} from "@tanstack/react-router";
+import { AirportSearch } from "../components/airport-search";
+import "../styles.css";
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Airport Intelligence' },
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: "airports.report" },
     ],
   }),
   component: RootComponent,
-})
+});
 
 function RootComponent() {
-  const { location } = useRouterState()
-  const isHome = location.pathname === '/'
-  const isAdmin = location.pathname.startsWith('/admin')
+  const { location } = useRouterState();
+  const isHome = location.pathname === "/";
+  const isAdmin = location.pathname.startsWith("/admin");
 
   return (
     <html lang="en">
@@ -32,13 +39,19 @@ function RootComponent() {
                   to="/"
                   className="font-grotesk text-sm font-bold text-zinc-400 tracking-wider hover:text-zinc-100 transition-colors"
                 >
-                  Airport Intelligence
+                  airports.report
                 </Link>
                 <Link
                   to="/countries"
                   className="text-xs font-medium text-zinc-500 hover:text-zinc-200 transition-colors"
                 >
                   Countries
+                </Link>
+                <Link
+                  to="/rankings"
+                  className="text-xs font-medium text-zinc-500 hover:text-zinc-200 transition-colors"
+                >
+                  All airports
                 </Link>
               </div>
               <AirportSearch compact />
@@ -49,5 +62,5 @@ function RootComponent() {
         <Scripts />
       </body>
     </html>
-  )
+  );
 }

@@ -35,7 +35,7 @@ export function AdminLayout({
               to="/"
               className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
             >
-              Airport Intelligence
+              airports.report
             </Link>
             <Separator orientation="vertical" className="h-4" />
             <div className="flex items-center gap-1">

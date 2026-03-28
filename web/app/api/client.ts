@@ -53,6 +53,26 @@ export const api = {
     apiFetch<import("./types").components["schemas"]["AirportListItem"][]>(
       `/api/airports/rankings`,
     ),
+  getDelayRankings: () =>
+    apiFetch<{ iataCode: string; name: string; city: string; countryCode: string; avgDelayPct: number }[]>(
+      `/api/airports/delays`,
+    ),
+  getBusiest: () =>
+    apiFetch<{ iataCode: string; name: string; city: string; countryCode: string; year: number; totalPax: number }[]>(
+      `/api/airports/busiest`,
+    ),
+  getBestReviewed: () =>
+    apiFetch<{ iataCode: string; name: string; city: string; countryCode: string; avgRating: number; reviewCount: number }[]>(
+      `/api/airports/best-reviewed`,
+    ),
+  getMostConnected: () =>
+    apiFetch<{ iataCode: string; name: string; city: string; countryCode: string; routeCount: number }[]>(
+      `/api/airports/most-connected`,
+    ),
+  getMapAirports: () =>
+    apiFetch<{ iataCode: string; name: string; city: string; countryCode: string; scoreTotal: number | null; lat: number; lng: number }[]>(
+      `/api/airports/map`,
+    ),
   getCountryAirports: (code: string) =>
     apiFetch<import("./types").components["schemas"]["AirportListItem"][]>(
       `/api/countries/${code}/airports`,

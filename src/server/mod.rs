@@ -44,6 +44,10 @@ async fn health() -> Json<serde_json::Value> {
         routes::airports::get_rankings,
         routes::airports::airports_by_country,
         routes::airports::list_countries,
+        routes::airports::get_busiest,
+        routes::airports::get_best_reviewed,
+        routes::airports::get_most_connected,
+        routes::airports::get_map_airports,
         routes::admin::list_supported_airports,
         routes::admin::create_supported_airport,
         routes::admin::update_supported_airport,
@@ -123,6 +127,11 @@ pub async fn run(port: u16, log_sender: broadcast::Sender<LogEntry>) -> Result<(
         .route("/airports", get(routes::airports::list_airports))
         .route("/airports/search", get(routes::airports::search_airports))
         .route("/airports/rankings", get(routes::airports::get_rankings))
+        .route("/airports/delays", get(routes::airports::get_delay_rankings))
+        .route("/airports/busiest", get(routes::airports::get_busiest))
+        .route("/airports/best-reviewed", get(routes::airports::get_best_reviewed))
+        .route("/airports/most-connected", get(routes::airports::get_most_connected))
+        .route("/airports/map", get(routes::airports::get_map_airports))
         .route("/airports/{iata}", get(routes::airports::get_airport))
         .route("/countries", get(routes::airports::list_countries))
         .route(

@@ -262,41 +262,9 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
     .await
     .context("Failed to update airports with Wikipedia data")?;
 
-    // Try to match operator_raw against organisations and set operator_id
-    if let Some(ref op) = operator_raw {
-        let org_id: Option<(i32,)> = sqlx::query_as(
-            "SELECT id FROM organisations WHERE name ILIKE $1 OR short_name ILIKE $1 LIMIT 1",
-        )
-        .bind(op)
-        .fetch_optional(pool)
-        .await?;
-
-        if let Some((oid,)) = org_id {
-            sqlx::query("UPDATE airports SET operator_id = $1 WHERE id = $2 AND operator_id IS NULL")
-                .bind(oid)
-                .bind(airport.id)
-                .execute(pool)
-                .await?;
-        }
-    }
-
-    // Try to match owner_raw against organisations and set owner_id
-    if let Some(ref ow) = owner_raw {
-        let org_id: Option<(i32,)> = sqlx::query_as(
-            "SELECT id FROM organisations WHERE name ILIKE $1 OR short_name ILIKE $1 LIMIT 1",
-        )
-        .bind(ow)
-        .fetch_optional(pool)
-        .await?;
-
-        if let Some((oid,)) = org_id {
-            sqlx::query("UPDATE airports SET owner_id = $1 WHERE id = $2 AND owner_id IS NULL")
-                .bind(oid)
-                .bind(airport.id)
-                .execute(pool)
-                .await?;
-        }
-    }
+    // Operator/owner mapping is now handled by scripts/seed-operators.sh
+    // using the deterministic data in european_airport_operators.json.
+    // The old fuzzy ILIKE matching against Wikipedia infobox text was unreliable.
 
     let total = pax_count + 1;
     info!(
