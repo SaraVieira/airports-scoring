@@ -14,7 +14,7 @@ FROM debian:bookworm-slim
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates libssl3 libpq5 postgresql-client \
-    python3 python3-pip python3-venv curl \
+    python3 python3-pip python3-venv curl jq \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -26,6 +26,7 @@ COPY --from=builder /app/target/release/airport-fetch .
 COPY python/ python/
 COPY migrations/ migrations/
 COPY data/ data/
+COPY scripts/ scripts/
 
 # Install Python dependencies in a venv
 RUN python3 -m venv /app/venv
