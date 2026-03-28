@@ -1,4 +1,3 @@
-import { Table } from "lucide-react";
 import { Card } from "../ui/card";
 import { Link } from "@tanstack/react-router";
 import { Button } from "../ui/button";
@@ -7,6 +6,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
+  Table,
   TableRow,
 } from "../ui/table";
 import { components } from "~/api/types";
