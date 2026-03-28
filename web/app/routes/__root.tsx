@@ -11,6 +11,7 @@ import "../styles.css";
 
 const SITE_NAME = "airports.report";
 const SITE_DESC = "Opinionated scoring and intelligence for European airports. Delays, sentiment, connectivity, and more — backed by data, delivered with snark.";
+const SITE_TITLE = "airports.report — European Airport Scores, Delays & Sentiment Rankings";
 const SITE_URL = "https://airports.report";
 
 export const Route = createRootRoute({
@@ -18,7 +19,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: SITE_NAME },
+      { title: SITE_TITLE },
       { name: "description", content: SITE_DESC },
       { name: "theme-color", content: "#0a0a0b" },
       // Open Graph

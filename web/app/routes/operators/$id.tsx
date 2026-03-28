@@ -75,9 +75,13 @@ function OperatorDetailPage() {
             </h1>
             <div className="flex items-center gap-3 mt-2">
               {op.countryCode && (
-                <span className="font-mono text-sm text-zinc-500">
+                <Link
+                  to="/countries/$code"
+                  params={{ code: op.countryCode }}
+                  className="font-mono text-sm text-zinc-500 hover:text-zinc-300 transition-colors underline underline-offset-2 decoration-zinc-700"
+                >
                   {op.countryCode}
-                </span>
+                </Link>
               )}
               <OwnershipBadge model={op.ownershipModel} />
               {op.publicSharePct != null && (

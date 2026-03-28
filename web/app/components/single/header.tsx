@@ -17,7 +17,18 @@ export const Header = ({
         {airport.name}
       </h1>
       <p className="font-mono text-[13px] text-zinc-500 tracking-[1.5px] uppercase">
-        {airport.city}, {airport.country?.name}
+        {airport.city},{" "}
+        {airport.countryCode ? (
+          <Link
+            to="/countries/$code"
+            params={{ code: airport.countryCode }}
+            className="hover:text-zinc-300 transition-colors underline underline-offset-2 decoration-zinc-700"
+          >
+            {airport.country?.name ?? airport.countryCode}
+          </Link>
+        ) : (
+          airport.country?.name
+        )}
       </p>
       {airport.operator && (
         <div className="flex items-center gap-2 mt-0.5">

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { Header } from "~/components/single/header";
 import { ScoreBar } from "~/components/single/score-bar";
@@ -112,7 +112,22 @@ function AirportDetail() {
         <Divider />
         <Backstory airport={airport} />
         <Divider />
-        <footer className="flex gap-6">
+        <footer className="flex gap-6 flex-wrap">
+          {airport.countryCode && (
+            <Link
+              to="/countries/$code"
+              params={{ code: airport.countryCode }}
+              className="font-grotesk text-[11px] font-bold text-zinc-500 tracking-wider hover:text-zinc-300 transition-colors"
+            >
+              ALL {airport.country?.name?.toUpperCase() ?? airport.countryCode} AIRPORTS →
+            </Link>
+          )}
+          <Link
+            to="/rankings"
+            className="font-grotesk text-[11px] font-bold text-zinc-500 tracking-wider hover:text-zinc-300 transition-colors"
+          >
+            FULL RANKINGS →
+          </Link>
           {airport.wikipediaUrl && (
             <a
               href={airport.wikipediaUrl}
