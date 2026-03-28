@@ -13,15 +13,18 @@ export const isCurrentYearPartial = (
 };
 
 export const findLatestPaxYear = (paxData: PaxYearly[]): PaxYearly => {
-  if (paxData.length < 2) return paxData[0];
+  if (paxData.length < 2) return paxData[paxData.length - 1];
+
+  const last = paxData[paxData.length - 1];
+  const secondLast = paxData[paxData.length - 2];
 
   const isPartial = isCurrentYearPartial(
-    paxData[0]?.year ?? null,
-    paxData[0]?.totalPax ?? null,
-    paxData[1]?.totalPax ?? null,
+    last?.year ?? null,
+    last?.totalPax ?? null,
+    secondLast?.totalPax ?? null,
   );
 
-  return isPartial ? paxData[1] : paxData[0];
+  return isPartial ? secondLast : last;
 };
 
 export const findPreviousPaxYear = (
@@ -29,7 +32,8 @@ export const findPreviousPaxYear = (
   latestPax: PaxYearly,
 ): PaxYearly | null => {
   const latestPaxIdx = paxData.indexOf(latestPax);
-  const prevCandidates = paxData.slice(latestPaxIdx + 1);
+  // Data is ascending by year, so previous years are before the latest index
+  const prevCandidates = paxData.slice(0, latestPaxIdx).reverse();
 
   return (
     prevCandidates.find((p) => p.year !== 2020 && p.year !== 2021) ??
@@ -55,9 +59,9 @@ export const calculateCapacityNum = (
 
 export const createPaxSparkData = (paxYearly: PaxYearly[]) => {
   return [...paxYearly]
+    .slice(-15)
     .reverse()
-    .map((p) => ({ year: p.year!, pax: p.totalPax ?? null }))
-    .slice(-15);
+    .map((p) => ({ year: p.year!, pax: p.totalPax ?? null }));
 };
 
 export const getYoyGrowthColor = (growth: number | null): string => {

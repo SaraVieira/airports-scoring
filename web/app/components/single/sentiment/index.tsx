@@ -4,7 +4,6 @@ import { useSingleAirport } from "~/hooks/use-single-airport";
 import { Stat } from "../stat";
 import { scoreColor } from "~/utils/scoring";
 import { fmt } from "~/utils/format";
-import { ReviewCard } from "./review.card";
 import { SentimentTimeline } from "./timeline";
 import { SentimentBar } from "./bar";
 
@@ -134,17 +133,6 @@ export const Sentiment = ({ airport }: { airport: Airport }) => {
                 </div>
               )}
           </div>
-
-          {airport.recentReviews.length > 0 && (
-            <div
-              className="flex gap-3 overflow-x-auto pb-2"
-              style={{ scrollbarWidth: "thin" }}
-            >
-              {airport.recentReviews.map((r, i) => (
-                <ReviewCard key={i} review={r} />
-              ))}
-            </div>
-          )}
 
           <SentimentTimeline snapshots={airport.sentimentSnapshots} />
 

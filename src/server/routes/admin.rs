@@ -101,14 +101,14 @@ pub async fn list_supported_airports(
     )
     .fetch_all(&state.pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let statuses = sqlx::query_as::<sqlx::Postgres, SourceStatus>(
         "SELECT * FROM source_status ORDER BY iata_code, source",
     )
     .fetch_all(&state.pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     // Group statuses by iata_code
     let mut status_map: std::collections::HashMap<String, Vec<SourceStatus>> =
@@ -232,7 +232,7 @@ pub async fn update_supported_airport(
     .bind(&iata)
     .fetch_all(&state.pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let has_score: bool = sqlx::query_scalar(
         "SELECT EXISTS(SELECT 1 FROM airport_scores s \
@@ -266,7 +266,7 @@ pub async fn delete_supported_airport(
         .bind(&iata)
         .execute(&state.pool)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     if result.rows_affected() == 0 {
         return Err(StatusCode::NOT_FOUND);
@@ -300,7 +300,7 @@ pub async fn data_gaps(
     )
     .fetch_all(&state.pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     // Airports with NO source_status rows at all
     let missing = sqlx::query_as::<sqlx::Postgres, (String, String)>(
@@ -314,7 +314,7 @@ pub async fn data_gaps(
     )
     .fetch_all(&state.pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let mut results: Vec<DataGapResponse> = stale
         .into_iter()
@@ -361,7 +361,7 @@ pub async fn start_job(
         .jobs
         .start_job(body)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
     Ok((StatusCode::ACCEPTED, Json(job)))
 }
 
@@ -446,7 +446,7 @@ pub async fn refresh_all(
         .jobs
         .start_job(request)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
     Ok((StatusCode::ACCEPTED, Json(job)))
 }
 
@@ -505,6 +505,8 @@ struct AllAirportRow {
     pub name: String,
     pub city: String,
     pub country: String,
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
 }
 
 /// Batch import airports by IATA codes, resolving from all_airports.
@@ -526,12 +528,12 @@ pub async fn batch_import(
 
     // 1) Single SELECT to resolve all IATA codes at once.
     let rows = sqlx::query_as::<sqlx::Postgres, AllAirportRow>(
-        "SELECT iata, icao, name, city, country FROM all_airports WHERE iata = ANY($1)",
+        "SELECT iata, icao, name, city, country, lat, lon FROM all_airports WHERE iata = ANY($1)",
     )
     .bind(&upper_codes)
     .fetch_all(&state.pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     // Partition into resolved vs failed.
     let found_set: std::collections::HashSet<String> = rows
@@ -569,13 +571,23 @@ pub async fn batch_import(
             .filter(|r| r.iata.is_some())
             .map(|r| r.city.as_str())
             .collect();
+        let lats: Vec<f64> = rows
+            .iter()
+            .filter(|r| r.iata.is_some())
+            .map(|r| r.lat.unwrap_or(0.0))
+            .collect();
+        let lons: Vec<f64> = rows
+            .iter()
+            .filter(|r| r.iata.is_some())
+            .map(|r| r.lon.unwrap_or(0.0))
+            .collect();
 
         // 2) & 3) Batch inserts inside a transaction.
         let mut tx = state
             .pool
             .begin()
             .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+            .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
         sqlx::query(
             r#"
@@ -589,12 +601,14 @@ pub async fn batch_import(
         .bind(&names)
         .execute(&mut *tx)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
         sqlx::query(
             r#"
-            INSERT INTO airports (iata_code, icao_code, name, city, country_code, airport_type, in_seed_set)
-            SELECT *, 'large_airport', true FROM UNNEST($1::text[], $2::text[], $3::text[], $4::text[], $5::text[])
+            INSERT INTO airports (iata_code, icao_code, name, city, country_code, airport_type, in_seed_set, location)
+            SELECT i, ic, n, ci, cc, 'large_airport', true, ST_SetSRID(ST_MakePoint(lo, la), 4326)
+            FROM UNNEST($1::text[], $2::text[], $3::text[], $4::text[], $5::text[], $6::float8[], $7::float8[])
+              AS t(i, ic, n, ci, cc, la, lo)
             ON CONFLICT (iata_code) DO UPDATE SET in_seed_set = true
             "#,
         )
@@ -603,13 +617,15 @@ pub async fn batch_import(
         .bind(&names)
         .bind(&cities)
         .bind(&country_codes)
+        .bind(&lats)
+        .bind(&lons)
         .execute(&mut *tx)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
         tx.commit()
             .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+            .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
     }
 
     // Optionally start a pipeline job for the resolved airports.

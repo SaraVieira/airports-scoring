@@ -143,14 +143,14 @@ CREATE TABLE runways (
     le_latitude_deg     DOUBLE PRECISION,
     le_longitude_deg    DOUBLE PRECISION,
     le_elevation_ft     INTEGER,
-    le_heading_degT     NUMERIC(6,2),
+    "le_heading_degT"   NUMERIC(6,2),
     le_displaced_threshold_ft INTEGER,
 
     -- High end
     he_latitude_deg     DOUBLE PRECISION,
     he_longitude_deg    DOUBLE PRECISION,
     he_elevation_ft     INTEGER,
-    he_heading_degT     NUMERIC(6,2),
+    "he_heading_degT"   NUMERIC(6,2),
     he_displaced_threshold_ft INTEGER,
 
     created_at          TIMESTAMPTZ DEFAULT NOW()
@@ -503,7 +503,7 @@ CREATE TABLE routes (
     first_observed      DATE,
     last_observed       DATE,
     data_source         TEXT NOT NULL           -- 'opdi', 'opensky', 'openflights'
-        CHECK (data_source IN ('opdi', 'opensky', 'openflights')),
+        CHECK (data_source IN ('opdi', 'opensky', 'openflights', 'jonty')),
     created_at          TIMESTAMPTZ DEFAULT NOW(),
     updated_at          TIMESTAMPTZ DEFAULT NOW()
 );
@@ -673,3 +673,53 @@ FROM (VALUES
 ) AS s(iata, source, slug)
 JOIN airports a ON a.iata_code = s.iata
 ON CONFLICT (airport_id, source) DO UPDATE SET slug = EXCLUDED.slug;
+
+-- ============================================================
+-- TABLES PREVIOUSLY MANAGED BY DRIZZLE (now part of base schema)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS ground_transport (
+    id              SERIAL PRIMARY KEY,
+    airport_id      INTEGER NOT NULL REFERENCES airports(id),
+    has_metro       BOOLEAN DEFAULT FALSE,
+    has_rail        BOOLEAN DEFAULT FALSE,
+    has_tram        BOOLEAN DEFAULT FALSE,
+    has_bus         BOOLEAN DEFAULT FALSE,
+    has_direct_rail BOOLEAN DEFAULT FALSE,
+    transport_modes_count SMALLINT DEFAULT 0,
+    raw_notes       TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    fetched_at      TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(airport_id)
+);
+
+CREATE TABLE IF NOT EXISTS hub_status (
+    id              SERIAL PRIMARY KEY,
+    airport_id      INTEGER NOT NULL REFERENCES airports(id),
+    airline_name    TEXT NOT NULL,
+    status_type     TEXT NOT NULL,
+    source          TEXT NOT NULL DEFAULT 'wikipedia',
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS lounges (
+    id              SERIAL PRIMARY KEY,
+    airport_id      INTEGER NOT NULL REFERENCES airports(id),
+    lounge_name     TEXT NOT NULL,
+    terminal        TEXT,
+    source          TEXT NOT NULL DEFAULT 'priority_pass',
+    opening_hours   TEXT,
+    amenities       TEXT,
+    source_url      TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS carbon_accreditation (
+    id              SERIAL PRIMARY KEY,
+    airport_id      INTEGER NOT NULL REFERENCES airports(id),
+    level           SMALLINT NOT NULL,
+    level_name      TEXT NOT NULL,
+    report_year     INTEGER,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(airport_id)
+);

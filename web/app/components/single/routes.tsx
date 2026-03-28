@@ -4,9 +4,18 @@ import { routeDisplayName, routeIata, routeRegion } from "~/utils/routes";
 import { Airport, RouteRow } from "~/utils/types";
 
 const HUB_STATUS_STYLES: Record<string, { color: string; label: string }> = {
-  hub: { color: "bg-yellow-500/10 text-yellow-400 ring-yellow-500/20", label: "Hub" },
-  focus_city: { color: "bg-blue-500/10 text-blue-400 ring-blue-500/20", label: "Focus City" },
-  operating_base: { color: "bg-zinc-500/10 text-zinc-400 ring-zinc-500/20", label: "Base" },
+  hub: {
+    color: "bg-yellow-500/10 text-yellow-400 ring-yellow-500/20",
+    label: "Hub",
+  },
+  focus_city: {
+    color: "bg-blue-500/10 text-blue-400 ring-blue-500/20",
+    label: "Focus City",
+  },
+  operating_base: {
+    color: "bg-zinc-500/10 text-zinc-400 ring-zinc-500/20",
+    label: "Base",
+  },
 };
 
 export function RouteSection({ airport }: { airport: Airport }) {
@@ -124,8 +133,8 @@ export function RouteSection({ airport }: { airport: Airport }) {
               return (
                 <div
                   key={r.destinationIata ?? idx}
-                  className={`flex justify-between items-center border-b border-white/5 last:border-0 ${
-                    isTop ? "py-3 px-4 bg-[#111113] -mx-4" : "py-1.5"
+                  className={`px-4 flex justify-between items-center border-b border-white/5 last:border-0 ${
+                    isTop ? "py-3  bg-[#111113]" : "py-1.5"
                   }`}
                 >
                   <span

@@ -116,6 +116,10 @@ export const adminBatchImport = createServerFn({ method: "POST" })
   .handler(async ({ data: { password, body } }) => {
     return adminFetch("/api/admin/batch-import", password, {
       method: "POST",
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        iataCodes: body.iata_codes,
+        runPipeline: body.run_pipeline ?? false,
+        score: body.score ?? false,
+      }),
     });
   });
