@@ -6,7 +6,7 @@ mod routes;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use axum::{middleware, routing::{get, patch, post}, Json, Router};
+use axum::{middleware, routing::{get, patch, post, put}, Json, Router};
 use sqlx::PgPool;
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
@@ -64,6 +64,12 @@ async fn health() -> Json<serde_json::Value> {
         routes::admin::refresh_all,
         routes::admin::trigger_scoring,
         routes::admin::batch_import,
+        routes::admin::list_admin_operators,
+        routes::admin::update_operator,
+        routes::admin::set_operator_airports,
+        routes::admin::delete_operator,
+        routes::admin::create_operator,
+        routes::admin::get_operator_airports,
         routes::cron::cron_full_refresh,
         routes::cron::cron_sentiment,
         routes::cron::cron_reviews,
@@ -112,6 +118,21 @@ pub async fn run(port: u16, log_sender: broadcast::Sender<LogEntry>) -> Result<(
         .route("/refresh", post(routes::admin::refresh_all))
         .route("/score", post(routes::admin::trigger_scoring))
         .route("/batch-import", post(routes::admin::batch_import))
+        .route(
+            "/operators",
+            get(routes::admin::list_admin_operators)
+                .post(routes::admin::create_operator),
+        )
+        .route(
+            "/operators/{id}",
+            put(routes::admin::update_operator)
+                .delete(routes::admin::delete_operator),
+        )
+        .route(
+            "/operators/{id}/airports",
+            get(routes::admin::get_operator_airports)
+                .post(routes::admin::set_operator_airports),
+        )
         .layer(middleware::from_fn(auth::require_admin));
 
     // SSE logs route — no middleware since EventSource can't send headers.

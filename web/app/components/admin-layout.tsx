@@ -1,12 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Button } from "~/components/ui/button";
-import { Separator } from "~/components/ui/separator";
 import { LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
   { to: "/admin", label: "Dashboard" },
   { to: "/admin/jobs", label: "Jobs" },
   { to: "/admin/airports", label: "Airports" },
+  { to: "/admin/operators", label: "Operators" },
 ] as const;
 
 export function AdminLayout({
@@ -37,7 +37,7 @@ export function AdminLayout({
             >
               airports.report
             </Link>
-            <Separator orientation="vertical" className="h-4" />
+            <div className="w-px h-4 bg-border" />
             <div className="flex items-center gap-1">
               {NAV_ITEMS.map((item) => {
                 const isActive = location.pathname === item.to;

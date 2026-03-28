@@ -123,3 +123,58 @@ export const adminBatchImport = createServerFn({ method: "POST" })
       }),
     });
   });
+
+// ── Operator admin ──────────────────────────────────────
+
+export const adminListOperators = createServerFn({ method: "GET" })
+  .inputValidator((password: string) => password)
+  .handler(async ({ data: password }) => {
+    return adminFetch("/api/admin/operators", password);
+  });
+
+export const adminGetOperatorAirports = createServerFn({ method: "GET" })
+  .inputValidator((d: { password: string; id: number }) => d)
+  .handler(async ({ data: { password, id } }) => {
+    return adminFetch(`/api/admin/operators/${id}/airports`, password);
+  });
+
+export const adminCreateOperator = createServerFn({ method: "POST" })
+  .inputValidator(
+    (d: { password: string; body: Record<string, unknown> }) => d,
+  )
+  .handler(async ({ data: { password, body } }) => {
+    return adminFetch("/api/admin/operators", password, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  });
+
+export const adminUpdateOperator = createServerFn({ method: "POST" })
+  .inputValidator(
+    (d: { password: string; id: number; body: Record<string, unknown> }) => d,
+  )
+  .handler(async ({ data: { password, id, body } }) => {
+    return adminFetch(`/api/admin/operators/${id}`, password, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+  });
+
+export const adminDeleteOperator = createServerFn({ method: "POST" })
+  .inputValidator((d: { password: string; id: number }) => d)
+  .handler(async ({ data: { password, id } }) => {
+    return adminFetch(`/api/admin/operators/${id}`, password, {
+      method: "DELETE",
+    });
+  });
+
+export const adminSetOperatorAirports = createServerFn({ method: "POST" })
+  .inputValidator(
+    (d: { password: string; id: number; iataCodes: string[] }) => d,
+  )
+  .handler(async ({ data: { password, id, iataCodes } }) => {
+    return adminFetch(`/api/admin/operators/${id}/airports`, password, {
+      method: "POST",
+      body: JSON.stringify({ iataCodes }),
+    });
+  });

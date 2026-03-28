@@ -5,6 +5,7 @@ use axum::{
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 use utoipa::ToSchema;
 
 use crate::models::{
@@ -649,4 +650,342 @@ pub async fn batch_import(
         failed,
         job_id,
     }))
+}
+
+// ── Operator CRUD ───────────────────────────────────────────────
+
+#[derive(Debug, Serialize, FromRow, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AdminOperatorItem {
+    pub id: i32,
+    pub name: String,
+    pub short_name: Option<String>,
+    pub country_code: Option<String>,
+    pub org_type: String,
+    pub ownership_model: Option<String>,
+    pub public_share_pct: Option<f64>,
+    pub notes: Option<String>,
+    pub airport_count: i64,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateOperatorRequest {
+    pub name: Option<String>,
+    pub short_name: Option<String>,
+    pub country_code: Option<String>,
+    pub org_type: Option<String>,
+    pub ownership_model: Option<String>,
+    pub public_share_pct: Option<f64>,
+    pub notes: Option<String>,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateOperatorRequest {
+    pub name: String,
+    pub short_name: Option<String>,
+    pub country_code: Option<String>,
+    pub org_type: String,
+    pub ownership_model: Option<String>,
+    pub public_share_pct: Option<f64>,
+    pub notes: Option<String>,
+    pub iata_codes: Option<Vec<String>>,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct SetOperatorAirportsRequest {
+    pub iata_codes: Vec<String>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateOperatorResponse {
+    pub id: i32,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct SetOperatorAirportsResponse {
+    pub mapped_count: u64,
+}
+
+/// List all operators with their airport mappings.
+#[utoipa::path(
+    get,
+    path = "/api/admin/operators",
+    responses(
+        (status = 200, description = "All operators with airport counts", body = Vec<AdminOperatorItem>),
+    ),
+    tag = "admin"
+)]
+pub async fn list_admin_operators(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<AdminOperatorItem>>, StatusCode> {
+    let operators = sqlx::query_as::<sqlx::Postgres, AdminOperatorItem>(
+        r#"
+        SELECT o.id, o.name, o.short_name, o.country_code, o.org_type,
+               o.ownership_model, o.public_share_pct::float8 as public_share_pct, o.notes,
+               (SELECT COUNT(*) FROM airports a WHERE a.operator_id = o.id)::int8 as airport_count
+        FROM organisations o
+        ORDER BY o.name
+        "#,
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("list_admin_operators error: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    Ok(Json(operators))
+}
+
+/// Update an operator's details.
+#[utoipa::path(
+    put,
+    path = "/api/admin/operators/{id}",
+    params(("id" = i32, Path, description = "Operator ID")),
+    request_body = UpdateOperatorRequest,
+    responses(
+        (status = 200, description = "Operator updated"),
+        (status = 404, description = "Operator not found"),
+    ),
+    tag = "admin"
+)]
+pub async fn update_operator(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+    Json(body): Json<UpdateOperatorRequest>,
+) -> Result<StatusCode, StatusCode> {
+    let result = sqlx::query(
+        r#"
+        UPDATE organisations SET
+            name = COALESCE($2, name),
+            short_name = COALESCE($3, short_name),
+            country_code = COALESCE($4, country_code),
+            org_type = COALESCE($5, org_type),
+            ownership_model = COALESCE($6, ownership_model),
+            public_share_pct = COALESCE($7, public_share_pct),
+            notes = COALESCE($8, notes)
+        WHERE id = $1
+        "#,
+    )
+    .bind(id)
+    .bind(&body.name)
+    .bind(&body.short_name)
+    .bind(&body.country_code)
+    .bind(&body.org_type)
+    .bind(&body.ownership_model)
+    .bind(&body.public_share_pct)
+    .bind(&body.notes)
+    .execute(&state.pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("update_operator error: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    if result.rows_affected() == 0 {
+        return Err(StatusCode::NOT_FOUND);
+    }
+
+    Ok(StatusCode::OK)
+}
+
+/// Set the airport mappings for an operator.
+#[utoipa::path(
+    post,
+    path = "/api/admin/operators/{id}/airports",
+    params(("id" = i32, Path, description = "Operator ID")),
+    request_body = SetOperatorAirportsRequest,
+    responses(
+        (status = 200, description = "Airports mapped", body = SetOperatorAirportsResponse),
+    ),
+    tag = "admin"
+)]
+pub async fn set_operator_airports(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+    Json(body): Json<SetOperatorAirportsRequest>,
+) -> Result<Json<SetOperatorAirportsResponse>, StatusCode> {
+    let mut tx = state.pool.begin().await.map_err(|e| {
+        tracing::error!("set_operator_airports tx error: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    // Clear existing mappings
+    sqlx::query("UPDATE airports SET operator_id = NULL WHERE operator_id = $1")
+        .bind(id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| {
+            tracing::error!("set_operator_airports clear error: {e}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    // Set new mappings
+    let result =
+        sqlx::query("UPDATE airports SET operator_id = $1 WHERE iata_code = ANY($2)")
+            .bind(id)
+            .bind(&body.iata_codes)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| {
+                tracing::error!("set_operator_airports set error: {e}");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?;
+
+    tx.commit().await.map_err(|e| {
+        tracing::error!("set_operator_airports commit error: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    Ok(Json(SetOperatorAirportsResponse {
+        mapped_count: result.rows_affected(),
+    }))
+}
+
+/// Delete an operator.
+#[utoipa::path(
+    delete,
+    path = "/api/admin/operators/{id}",
+    params(("id" = i32, Path, description = "Operator ID")),
+    responses(
+        (status = 204, description = "Operator deleted"),
+        (status = 404, description = "Operator not found"),
+    ),
+    tag = "admin"
+)]
+pub async fn delete_operator(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+) -> Result<StatusCode, StatusCode> {
+    let mut tx = state.pool.begin().await.map_err(|e| {
+        tracing::error!("delete_operator tx error: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    // Clear airport mappings first
+    sqlx::query("UPDATE airports SET operator_id = NULL WHERE operator_id = $1")
+        .bind(id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| {
+            tracing::error!("delete_operator clear error: {e}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    let result = sqlx::query("DELETE FROM organisations WHERE id = $1")
+        .bind(id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| {
+            tracing::error!("delete_operator delete error: {e}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    tx.commit().await.map_err(|e| {
+        tracing::error!("delete_operator commit error: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    if result.rows_affected() == 0 {
+        return Err(StatusCode::NOT_FOUND);
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Create a new operator.
+#[utoipa::path(
+    post,
+    path = "/api/admin/operators",
+    request_body = CreateOperatorRequest,
+    responses(
+        (status = 201, description = "Operator created", body = CreateOperatorResponse),
+        (status = 500, description = "Internal error"),
+    ),
+    tag = "admin"
+)]
+pub async fn create_operator(
+    State(state): State<AppState>,
+    Json(body): Json<CreateOperatorRequest>,
+) -> Result<(StatusCode, Json<CreateOperatorResponse>), StatusCode> {
+    let mut tx = state.pool.begin().await.map_err(|e| {
+        tracing::error!("create_operator tx error: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    let id: i32 = sqlx::query_scalar(
+        r#"
+        INSERT INTO organisations (name, short_name, country_code, org_type, ownership_model, public_share_pct, notes)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id
+        "#,
+    )
+    .bind(&body.name)
+    .bind(&body.short_name)
+    .bind(&body.country_code)
+    .bind(&body.org_type)
+    .bind(&body.ownership_model)
+    .bind(&body.public_share_pct)
+    .bind(&body.notes)
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(|e| {
+        tracing::error!("create_operator insert error: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    // Map airports if iata_codes provided
+    if let Some(ref iata_codes) = body.iata_codes {
+        if !iata_codes.is_empty() {
+            sqlx::query("UPDATE airports SET operator_id = $1 WHERE iata_code = ANY($2)")
+                .bind(id)
+                .bind(iata_codes)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| {
+                    tracing::error!("create_operator map airports error: {e}");
+                    StatusCode::INTERNAL_SERVER_ERROR
+                })?;
+        }
+    }
+
+    tx.commit().await.map_err(|e| {
+        tracing::error!("create_operator commit error: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    Ok((StatusCode::CREATED, Json(CreateOperatorResponse { id })))
+}
+
+/// Get the list of IATA codes currently mapped to an operator.
+#[utoipa::path(
+    get,
+    path = "/api/admin/operators/{id}/airports",
+    params(("id" = i32, Path, description = "Operator ID")),
+    responses(
+        (status = 200, description = "List of mapped IATA codes", body = Vec<String>),
+    ),
+    tag = "admin"
+)]
+pub async fn get_operator_airports(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+) -> Result<Json<Vec<String>>, StatusCode> {
+    let codes = sqlx::query_scalar::<_, String>(
+        "SELECT iata_code FROM airports WHERE operator_id = $1 AND iata_code IS NOT NULL ORDER BY iata_code",
+    )
+    .bind(id)
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("get_operator_airports error: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    Ok(Json(codes))
 }
