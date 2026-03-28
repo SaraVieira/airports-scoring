@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/api/admin/batch-import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Batch import airports by IATA codes, resolving from all_airports. */
+        post: operations["batch_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/data-gaps": {
         parameters: {
             query?: never;
@@ -160,6 +177,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/airports/best-reviewed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the top 10 best-reviewed airports by average rating. */
+        get: operations["get_best_reviewed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/airports/busiest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the top 10 busiest airports by latest year passenger count. */
+        get: operations["get_busiest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/airports/delays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get airports ranked by average delay percentage (last 12 months). */
+        get: operations["get_delay_rankings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/airports/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get all scored airports with lat/lng for map visualization. */
+        get: operations["get_map_airports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/airports/most-connected": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get all airports ordered by number of unique destination routes. */
+        get: operations["get_most_connected"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/airports/rankings": {
         parameters: {
             query?: never;
@@ -296,6 +398,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/operators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all operators with aggregate stats across their airports. */
+        get: operations["list_operators"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operators/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a single operator with full details and all their airports. */
+        get: operations["get_operator"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -359,12 +495,59 @@ export interface components {
             /** Format: double */
             scoreTotal?: number | null;
         };
+        BatchImportRequest: {
+            iataCodes: string[];
+            runPipeline?: boolean;
+            score?: boolean;
+        };
+        BatchImportResponse: {
+            failed: string[];
+            jobId?: string | null;
+            resolved: components["schemas"]["BatchResolvedAirport"][];
+        };
+        BatchResolvedAirport: {
+            countryCode: string;
+            iataCode: string;
+            icaoCode: string;
+            name: string;
+        };
+        /** @description Top 10 airports by average sentiment rating. */
+        BestReviewedItem: {
+            /** Format: double */
+            avgRating: number;
+            city: string;
+            countryCode: string;
+            iataCode: string;
+            name: string;
+            /** Format: int64 */
+            reviewCount: number;
+        };
+        /** @description Top 10 airports by latest passenger count. */
+        BusiestAirportItem: {
+            city: string;
+            countryCode: string;
+            iataCode: string;
+            name: string;
+            /** Format: int64 */
+            totalPax: number;
+            /** Format: int32 */
+            year: number;
+        };
         CarbonAccreditationResponse: {
             /** Format: int32 */
             level?: number | null;
             levelName?: string | null;
             /** Format: int32 */
             reportYear?: number | null;
+        };
+        /** @description Airport connectivity item with route count. */
+        ConnectivityItem: {
+            city: string;
+            countryCode: string;
+            iataCode: string;
+            name: string;
+            /** Format: int64 */
+            routeCount: number;
         };
         CountryResponse: {
             code: string;
@@ -411,6 +594,15 @@ export interface components {
             name: string;
             source: string;
         };
+        /** @description Airport delay ranking item. */
+        DelayRankingItem: {
+            /** Format: double */
+            avgDelayPct: number;
+            city: string;
+            countryCode: string;
+            iataCode: string;
+            name: string;
+        };
         GoogleAggResponse: {
             /** Format: int64 */
             count: number;
@@ -453,6 +645,19 @@ export interface components {
             source?: string | null;
             terminal?: string | null;
         };
+        /** @description Airport item with coordinates for map visualization. */
+        MapAirportItem: {
+            city: string;
+            countryCode: string;
+            iataCode: string;
+            /** Format: double */
+            lat?: number | null;
+            /** Format: double */
+            lng?: number | null;
+            name: string;
+            /** Format: double */
+            scoreTotal?: number | null;
+        };
         OperationalStatResponse: {
             /** Format: double */
             avgDelayMinutes?: number | null;
@@ -481,6 +686,50 @@ export interface components {
             source?: string | null;
             /** Format: int32 */
             totalFlights?: number | null;
+        };
+        OperatorAirportItem: {
+            /** Format: double */
+            avgDelayPct?: number | null;
+            city: string;
+            countryCode: string;
+            iataCode: string;
+            /** Format: int64 */
+            latestPax?: number | null;
+            name: string;
+            /** Format: double */
+            scoreTotal?: number | null;
+        };
+        OperatorDetail: {
+            airports: components["schemas"]["OperatorAirportItem"][];
+            countryCode?: string | null;
+            /** Format: int32 */
+            id: number;
+            name: string;
+            notes?: string | null;
+            orgType: string;
+            ownershipModel?: string | null;
+            /** Format: double */
+            publicSharePct?: number | null;
+            shortName?: string | null;
+        };
+        OperatorListItem: {
+            /** Format: int64 */
+            airportCount: number;
+            /** Format: double */
+            avgDelayPct?: number | null;
+            /** Format: double */
+            avgScore?: number | null;
+            countryCode?: string | null;
+            /** Format: int32 */
+            id: number;
+            name: string;
+            orgType: string;
+            ownershipModel?: string | null;
+            /** Format: double */
+            publicSharePct?: number | null;
+            shortName?: string | null;
+            /** Format: int64 */
+            totalPax?: number | null;
         };
         OrganisationResponse: {
             countryCode?: string | null;
@@ -673,6 +922,37 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    batch_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Batch import results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchImportResponse"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     data_gaps: {
         parameters: {
             query?: never;
@@ -987,6 +1267,106 @@ export interface operations {
             };
         };
     };
+    get_best_reviewed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Top 10 best-reviewed airports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BestReviewedItem"][];
+                };
+            };
+        };
+    };
+    get_busiest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Top 10 busiest airports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusiestAirportItem"][];
+                };
+            };
+        };
+    };
+    get_delay_rankings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Airports ranked by delay */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DelayRankingItem"][];
+                };
+            };
+        };
+    };
+    get_map_airports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All airports with coordinates */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapAirportItem"][];
+                };
+            };
+        };
+    };
+    get_most_connected: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Airports ordered by route count */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectivityItem"][];
+                };
+            };
+        };
+    };
     get_rankings: {
         parameters: {
             query?: never;
@@ -1160,6 +1540,56 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["JobInfo"];
                 };
+            };
+        };
+    };
+    list_operators: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All operators with aggregate stats */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperatorListItem"][];
+                };
+            };
+        };
+    };
+    get_operator: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organisation ID */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operator detail with airports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperatorDetail"];
+                };
+            };
+            /** @description Operator not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -1,5 +1,7 @@
+import { Link } from "@tanstack/react-router";
 import { fmt } from "~/utils/format";
 import { Airport } from "~/utils/types";
+import { OwnershipBadge } from "~/components/ownership-badge";
 
 export const Header = ({
   airport,
@@ -18,9 +20,21 @@ export const Header = ({
         {airport.city}, {airport.country?.name}
       </p>
       {airport.operator && (
-        <p className="font-mono text-[11px] text-zinc-600 tracking-wider uppercase">
-          Operated by {airport.operator.name}
-        </p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="font-mono text-[11px] text-zinc-600 tracking-wider uppercase">
+            Operated by{" "}
+            <Link
+              to="/operators/$id"
+              params={{ id: String(airport.operator.id) }}
+              className="text-zinc-400 hover:text-zinc-200 transition-colors underline underline-offset-2 decoration-zinc-700"
+            >
+              {airport.operator.name}
+            </Link>
+          </span>
+          {airport.operator.ownershipModel && (
+            <OwnershipBadge model={airport.operator.ownershipModel} />
+          )}
+        </div>
       )}
       <div className="flex gap-3 mt-3 flex-wrap">
         {airport.openedYear && (
@@ -57,3 +71,4 @@ function Badge({
     </span>
   );
 }
+

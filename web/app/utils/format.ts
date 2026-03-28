@@ -5,6 +5,12 @@ export function fmt(n: number | string | null | undefined): string {
   return num.toLocaleString("en-US");
 }
 
+export function cleanCity(city: string): string {
+  const parts = city.split(", ");
+  if (parts.length === 2 && parts[0] === parts[1]) return parts[0];
+  return city;
+}
+
 export function fmtM(n: number | string | null | undefined): string {
   if (n == null) return "—";
   const num = typeof n === "string" ? parseFloat(n) : n;

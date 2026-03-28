@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RankingsRouteImport } from './routes/rankings'
 import { Route as CountriesRouteImport } from './routes/countries'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OperatorsIndexRouteImport } from './routes/operators/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as OperatorsIdRouteImport } from './routes/operators/$id'
 import { Route as AirportIataRouteImport } from './routes/airport.$iata'
 import { Route as AdminJobsRouteImport } from './routes/admin/jobs'
 import { Route as AdminAirportsRouteImport } from './routes/admin/airports'
@@ -32,9 +34,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OperatorsIndexRoute = OperatorsIndexRouteImport.update({
+  id: '/operators/',
+  path: '/operators/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OperatorsIdRoute = OperatorsIdRouteImport.update({
+  id: '/operators/$id',
+  path: '/operators/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AirportIataRoute = AirportIataRouteImport.update({
@@ -60,7 +72,9 @@ export interface FileRoutesByFullPath {
   '/admin/airports': typeof AdminAirportsRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/airport/$iata': typeof AirportIataRoute
+  '/operators/$id': typeof OperatorsIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/operators/': typeof OperatorsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,7 +83,9 @@ export interface FileRoutesByTo {
   '/admin/airports': typeof AdminAirportsRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/airport/$iata': typeof AirportIataRoute
+  '/operators/$id': typeof OperatorsIdRoute
   '/admin': typeof AdminIndexRoute
+  '/operators': typeof OperatorsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -79,7 +95,9 @@ export interface FileRoutesById {
   '/admin/airports': typeof AdminAirportsRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/airport/$iata': typeof AirportIataRoute
+  '/operators/$id': typeof OperatorsIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/operators/': typeof OperatorsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -90,7 +108,9 @@ export interface FileRouteTypes {
     | '/admin/airports'
     | '/admin/jobs'
     | '/airport/$iata'
+    | '/operators/$id'
     | '/admin/'
+    | '/operators/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -99,7 +119,9 @@ export interface FileRouteTypes {
     | '/admin/airports'
     | '/admin/jobs'
     | '/airport/$iata'
+    | '/operators/$id'
     | '/admin'
+    | '/operators'
   id:
     | '__root__'
     | '/'
@@ -108,7 +130,9 @@ export interface FileRouteTypes {
     | '/admin/airports'
     | '/admin/jobs'
     | '/airport/$iata'
+    | '/operators/$id'
     | '/admin/'
+    | '/operators/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,7 +142,9 @@ export interface RootRouteChildren {
   AdminAirportsRoute: typeof AdminAirportsRoute
   AdminJobsRoute: typeof AdminJobsRoute
   AirportIataRoute: typeof AirportIataRoute
+  OperatorsIdRoute: typeof OperatorsIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  OperatorsIndexRoute: typeof OperatorsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -144,11 +170,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/operators/': {
+      id: '/operators/'
+      path: '/operators'
+      fullPath: '/operators/'
+      preLoaderRoute: typeof OperatorsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/operators/$id': {
+      id: '/operators/$id'
+      path: '/operators/$id'
+      fullPath: '/operators/$id'
+      preLoaderRoute: typeof OperatorsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/airport/$iata': {
@@ -182,7 +222,9 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAirportsRoute: AdminAirportsRoute,
   AdminJobsRoute: AdminJobsRoute,
   AirportIataRoute: AirportIataRoute,
+  OperatorsIdRoute: OperatorsIdRoute,
   AdminIndexRoute: AdminIndexRoute,
+  OperatorsIndexRoute: OperatorsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

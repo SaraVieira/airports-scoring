@@ -52,6 +52,12 @@ function RootComponent() {
                 >
                   All airports
                 </Link>
+                <Link
+                  to="/operators"
+                  className="text-xs font-medium text-zinc-500 hover:text-zinc-200 transition-colors"
+                >
+                  Operators
+                </Link>
               </div>
               <AirportSearch compact />
             </div>

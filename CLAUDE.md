@@ -90,7 +90,7 @@ cargo test                                   # Run Rust tests
 ```bash
 pnpm dev              # Dev server on http://localhost:3000
 pnpm build            # Production build
-pnpm db:seed          # Seed countries, regions, organisations
+pnpm generate-types   # Regenerate TS types from Rust OpenAPI spec (requires API on :3001)
 ```
 
 ### TypeScript checking
@@ -98,6 +98,18 @@ pnpm db:seed          # Seed countries, regions, organisations
 ```bash
 cd web && npx tsc --noEmit
 ```
+
+### OpenAPI Types
+
+API types in `web/app/api/types.ts` are auto-generated from the Rust OpenAPI spec (utoipa). After changing any Rust response struct:
+
+```bash
+# 1. Make sure the Rust API is running
+# 2. Regenerate types
+cd web && pnpm generate-types
+```
+
+All API client methods in `web/app/api/client.ts` use `import("./types").components["schemas"]["..."]` to reference these generated types. Never define API response types inline.
 
 ## Conventions
 

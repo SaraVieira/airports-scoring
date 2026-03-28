@@ -1,16 +1,5 @@
 import { Link } from "@tanstack/react-router";
-
-function cleanCity(city: string): string {
-  const parts = city.split(", ");
-  if (parts.length === 2 && parts[0] === parts[1]) return parts[0];
-  return city;
-}
-
-function formatPax(pax: number): string {
-  if (pax >= 1_000_000) return `${(pax / 1_000_000).toFixed(1)}M`;
-  if (pax >= 1_000) return `${(pax / 1_000).toFixed(0)}K`;
-  return String(pax);
-}
+import { cleanCity, fmtM } from "~/utils/format";
 
 export function BusiestColumn({
   airports,
@@ -59,7 +48,7 @@ export function BusiestColumn({
                 />
               </div>
               <span className="font-grotesk text-sm font-bold tabular-nums text-blue-400 w-12 text-right">
-                {formatPax(airport.totalPax)}
+                {fmtM(airport.totalPax)}
               </span>
             </div>
           </Link>

@@ -34,6 +34,7 @@ async fn health() -> Json<serde_json::Value> {
     info(title = "Airport Intelligence API", version = "1.0.0"),
     tags(
         (name = "airports", description = "Airport data endpoints"),
+        (name = "operators", description = "Operator data endpoints"),
         (name = "admin", description = "Admin management endpoints"),
         (name = "cron", description = "Cron job triggers"),
     ),
@@ -42,12 +43,15 @@ async fn health() -> Json<serde_json::Value> {
         routes::airports::list_airports,
         routes::airports::search_airports,
         routes::airports::get_rankings,
+        routes::airports::get_delay_rankings,
         routes::airports::airports_by_country,
         routes::airports::list_countries,
         routes::airports::get_busiest,
         routes::airports::get_best_reviewed,
         routes::airports::get_most_connected,
         routes::airports::get_map_airports,
+        routes::airports::list_operators,
+        routes::airports::get_operator,
         routes::admin::list_supported_airports,
         routes::admin::create_supported_airport,
         routes::admin::update_supported_airport,
@@ -138,6 +142,8 @@ pub async fn run(port: u16, log_sender: broadcast::Sender<LogEntry>) -> Result<(
             "/countries/{code}/airports",
             get(routes::airports::airports_by_country),
         )
+        .route("/operators", get(routes::airports::list_operators))
+        .route("/operators/{id}", get(routes::airports::get_operator))
         .nest("/admin", admin_routes)
         .nest("/admin", logs_route)
         .nest("/cron", cron_routes)

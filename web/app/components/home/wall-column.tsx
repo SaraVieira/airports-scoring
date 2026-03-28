@@ -1,10 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { cleanCity } from "~/utils/format";
 
-function cleanCity(city: string): string {
-  const parts = city.split(", ");
-  if (parts.length === 2 && parts[0] === parts[1]) return parts[0];
-  return city;
-}
 export function WallColumn({
   title,
   subtitle,

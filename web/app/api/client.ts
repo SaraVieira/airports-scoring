@@ -54,24 +54,32 @@ export const api = {
       `/api/airports/rankings`,
     ),
   getDelayRankings: () =>
-    apiFetch<{ iataCode: string; name: string; city: string; countryCode: string; avgDelayPct: number }[]>(
+    apiFetch<import("./types").components["schemas"]["DelayRankingItem"][]>(
       `/api/airports/delays`,
     ),
   getBusiest: () =>
-    apiFetch<{ iataCode: string; name: string; city: string; countryCode: string; year: number; totalPax: number }[]>(
+    apiFetch<import("./types").components["schemas"]["BusiestAirportItem"][]>(
       `/api/airports/busiest`,
     ),
   getBestReviewed: () =>
-    apiFetch<{ iataCode: string; name: string; city: string; countryCode: string; avgRating: number; reviewCount: number }[]>(
+    apiFetch<import("./types").components["schemas"]["BestReviewedItem"][]>(
       `/api/airports/best-reviewed`,
     ),
   getMostConnected: () =>
-    apiFetch<{ iataCode: string; name: string; city: string; countryCode: string; routeCount: number }[]>(
+    apiFetch<import("./types").components["schemas"]["ConnectivityItem"][]>(
       `/api/airports/most-connected`,
     ),
   getMapAirports: () =>
-    apiFetch<{ iataCode: string; name: string; city: string; countryCode: string; scoreTotal: number | null; lat: number; lng: number }[]>(
+    apiFetch<import("./types").components["schemas"]["MapAirportItem"][]>(
       `/api/airports/map`,
+    ),
+  listOperators: () =>
+    apiFetch<import("./types").components["schemas"]["OperatorListItem"][]>(
+      `/api/operators`,
+    ),
+  getOperator: (id: number) =>
+    apiFetch<import("./types").components["schemas"]["OperatorDetail"]>(
+      `/api/operators/${id}`,
     ),
   getCountryAirports: (code: string) =>
     apiFetch<import("./types").components["schemas"]["AirportListItem"][]>(

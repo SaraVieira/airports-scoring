@@ -1405,3 +1405,163 @@ pub async fn get_map_airports(
 
     Ok(Json(results))
 }
+
+// ── Operator types ──────────────────────────────────────────────
+
+#[derive(Debug, Serialize, FromRow, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct OperatorListItem {
+    pub id: i32,
+    pub name: String,
+    pub short_name: Option<String>,
+    pub country_code: Option<String>,
+    pub org_type: String,
+    pub ownership_model: Option<String>,
+    pub public_share_pct: Option<f64>,
+    pub airport_count: i64,
+    pub avg_score: Option<f64>,
+    pub total_pax: Option<i64>,
+    pub avg_delay_pct: Option<f64>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct OperatorDetail {
+    pub id: i32,
+    pub name: String,
+    pub short_name: Option<String>,
+    pub country_code: Option<String>,
+    pub org_type: String,
+    pub ownership_model: Option<String>,
+    pub public_share_pct: Option<f64>,
+    pub notes: Option<String>,
+    pub airports: Vec<OperatorAirportItem>,
+}
+
+#[derive(Debug, Serialize, FromRow, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct OperatorAirportItem {
+    pub iata_code: String,
+    pub name: String,
+    pub city: String,
+    pub country_code: String,
+    pub score_total: Option<f64>,
+    pub avg_delay_pct: Option<f64>,
+    pub latest_pax: Option<i64>,
+}
+
+#[derive(FromRow)]
+struct OperatorOrgRow {
+    id: i32,
+    name: String,
+    short_name: Option<String>,
+    country_code: Option<String>,
+    org_type: String,
+    ownership_model: Option<String>,
+    public_share_pct: Option<f64>,
+    notes: Option<String>,
+}
+
+/// List all operators with aggregate stats across their airports.
+#[utoipa::path(
+    get,
+    path = "/api/operators",
+    responses(
+        (status = 200, description = "All operators with aggregate stats", body = Vec<OperatorListItem>),
+    ),
+    tag = "operators"
+)]
+pub async fn list_operators(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<OperatorListItem>>, StatusCode> {
+    let results = sqlx::query_as::<_, OperatorListItem>(
+        "SELECT o.id, o.name, o.short_name, o.country_code, o.org_type,
+                o.ownership_model, o.public_share_pct::float8 as public_share_pct,
+                COUNT(DISTINCT a.id)::int8 as airport_count,
+                AVG(s.score_total)::float8 as avg_score,
+                (SELECT SUM(p.total_pax)::int8
+                 FROM pax_yearly p
+                 INNER JOIN airports a2 ON a2.id = p.airport_id
+                 WHERE a2.operator_id = o.id
+                   AND p.year = (SELECT MAX(p2.year) FROM pax_yearly p2 WHERE p2.airport_id = p.airport_id AND p2.total_pax IS NOT NULL)
+                ) as total_pax,
+                (SELECT AVG(os.delay_pct)::float8
+                 FROM operational_stats os
+                 INNER JOIN airports a3 ON a3.id = os.airport_id
+                 WHERE a3.operator_id = o.id
+                   AND os.delay_pct IS NOT NULL
+                   AND os.period_year >= EXTRACT(YEAR FROM NOW())::int - 1
+                ) as avg_delay_pct
+         FROM organisations o
+         INNER JOIN airports a ON a.operator_id = o.id AND a.in_seed_set = true
+         LEFT JOIN airport_scores s ON s.airport_id = a.id AND s.is_latest = true
+         GROUP BY o.id, o.name, o.short_name, o.country_code, o.org_type, o.ownership_model, o.public_share_pct
+         HAVING COUNT(DISTINCT a.id) > 0
+         ORDER BY avg_score DESC NULLS LAST",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|e| { tracing::error!("list_operators error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+
+    Ok(Json(results))
+}
+
+/// Get a single operator with full details and all their airports.
+#[utoipa::path(
+    get,
+    path = "/api/operators/{id}",
+    params(("id" = i32, Path, description = "Organisation ID")),
+    responses(
+        (status = 200, description = "Operator detail with airports", body = OperatorDetail),
+        (status = 404, description = "Operator not found"),
+    ),
+    tag = "operators"
+)]
+pub async fn get_operator(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+) -> Result<Json<OperatorDetail>, StatusCode> {
+    let pool = &state.pool;
+
+    let org = sqlx::query_as::<_, OperatorOrgRow>(
+        "SELECT id, name, short_name, country_code, org_type, ownership_model,
+                public_share_pct::float8 as public_share_pct, notes
+         FROM organisations WHERE id = $1",
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| { tracing::error!("get_operator org error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?
+    .ok_or(StatusCode::NOT_FOUND)?;
+
+    let airports = sqlx::query_as::<_, OperatorAirportItem>(
+        "SELECT a.iata_code, a.name, a.city, a.country_code,
+                s.score_total::float8 as score_total,
+                (SELECT AVG(os.delay_pct)::float8 FROM operational_stats os
+                 WHERE os.airport_id = a.id AND os.delay_pct IS NOT NULL
+                 AND os.period_year >= EXTRACT(YEAR FROM NOW())::int - 1) as avg_delay_pct,
+                (SELECT p.total_pax FROM pax_yearly p
+                 WHERE p.airport_id = a.id AND p.total_pax IS NOT NULL
+                 ORDER BY p.year DESC LIMIT 1) as latest_pax
+         FROM airports a
+         LEFT JOIN airport_scores s ON s.airport_id = a.id AND s.is_latest = true
+         WHERE a.operator_id = $1 AND a.in_seed_set = true
+         ORDER BY s.score_total DESC NULLS LAST",
+    )
+    .bind(id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| { tracing::error!("get_operator airports error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+
+    Ok(Json(OperatorDetail {
+        id: org.id,
+        name: org.name,
+        short_name: org.short_name,
+        country_code: org.country_code,
+        org_type: org.org_type,
+        ownership_model: org.ownership_model,
+        public_share_pct: org.public_share_pct,
+        notes: org.notes,
+        airports,
+    }))
+}

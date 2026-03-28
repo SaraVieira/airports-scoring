@@ -13,14 +13,14 @@ interface MapAirport {
   iataCode: string;
   name: string;
   city: string;
-  scoreTotal: number | null;
-  lat: number;
-  lng: number;
+  scoreTotal?: number | null;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
 
-function dotColor(score: number | null): string {
+function dotColor(score: number | null | undefined): string {
   if (score == null) return "#52525b";
   if (score >= 70) return "#22c55e";
   if (score >= 50) return "#eab308";
@@ -67,8 +67,8 @@ const EuropeMap = memo(function EuropeMap({
           ))
         }
       </Geographies>
-      {airports.map((a) => (
-        <Marker key={a.iataCode} coordinates={[a.lng, a.lat]}>
+      {airports.filter((a) => a.lat != null && a.lng != null).map((a) => (
+        <Marker key={a.iataCode} coordinates={[a.lng!, a.lat!]}>
           <Link to="/airport/$iata" params={{ iata: a.iataCode }}>
             <g
               onMouseEnter={() => setHovered(a)}
