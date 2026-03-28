@@ -1,0 +1,520 @@
+[
+  {
+    "name": "Groupe ADP (Aéroports de Paris)",
+    "short_name": "ADP",
+    "country_code": "FR",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 50.60,
+    "notes": "French state holds 50.6%; Vinci SA 8%; Dutch state (via Schiphol Group) 8%; free float ~33.4%. Listed on Euronext Paris. Owns 46.1% of TAV Airports Holding.",
+    "airports": ["CDG", "ORY", "LBG"]
+  },
+  {
+    "name": "VINCI Airports (incl. ANA Aeroportos de Portugal)",
+    "short_name": "VINCI Airports",
+    "country_code": "FR",
+    "org_type": "both",
+    "ownership_model": "private",
+    "public_share_pct": 0.00,
+    "notes": "100% subsidiary of VINCI SA (private). Operates 10 airports in Portugal via ANA Aeroportos de Portugal (acquired 2013); 10 airports in France; BEG (Serbia, 25-year concession); BUD (Hungary, 20% stake as platform operator since Jun 2024, Hungarian state Corvinus 80%); BFS (Northern Ireland); LGW (UK, majority stake); NYO (Sweden, Skavsta). ~154 million pax across European network.",
+    "airports": [
+      "LIS", "OPO", "FAO", "PDL", "HOR", "SMA", "FLW", "FNC", "PXO",
+      "LYS", "NTE", "GNB", "CMF", "NCY", "TLN", "RNS", "DNR", "CFE", "BZR",
+      "BEG", "BUD", "BFS", "LGW", "NYO"
+    ]
+  },
+  {
+    "name": "Aena SME SA",
+    "short_name": "AENA",
+    "country_code": "ES",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 51.00,
+    "notes": "ENAIRE (Spanish state) holds 51%; 49% free-float on Bolsa Madrid. World's largest airport group by passenger volume. Manages 46 airports and 2 heliports in Spain. International: LTN (London Luton, 51%); LBA (Leeds Bradford, 51% of controlling holdco, Dec 2025); NCL (Newcastle, holdco holds 49% of airport, Dec 2025). ~369m pax globally in 2024.",
+    "airports": [
+      "MAD", "BCN", "PMI", "AGP", "ALC", "TFS", "TFN", "LPA", "ACE", "FUE",
+      "IBZ", "MAH", "SVQ", "VLC", "BIO", "SDR", "SCQ", "VGO", "LCG", "OVD",
+      "ZAZ", "GRX", "XRY", "SPC", "VDE", "QGZ", "LEI", "GRO", "BJZ", "ODB",
+      "RGS", "HSK", "LEN", "RJL", "MLN", "REU", "EAS", "VIT", "PNA", "ABC",
+      "LTN", "LBA", "NCL"
+    ]
+  },
+  {
+    "name": "Fraport AG Frankfurt Airport Services Worldwide",
+    "short_name": "Fraport AG",
+    "country_code": "DE",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 52.23,
+    "notes": "State of Hesse 31.3%, City of Frankfurt (via Stadtwerke) 20.9%, Deutsche Lufthansa AG 8.4%, free float ~39.4%. Listed on Frankfurt Stock Exchange (MDAX). Parent of Fraport Greece (73.4%), Fraport Twin Star Bulgaria (60%), Fraport Slovenija (75.5%), and 50% JV for Antalya (AYT) with TAV. Directly operates Frankfurt Airport.",
+    "airports": ["FRA"]
+  },
+  {
+    "name": "Fraport Regional Airports of Greece Management Company SA",
+    "short_name": "Fraport Greece",
+    "country_code": "GR",
+    "org_type": "operator",
+    "ownership_model": "private",
+    "public_share_pct": 0.00,
+    "notes": "73.4% Fraport AG; 26.6% Copelouzos Group (Greece). 40-year concession (2016–2055) from Greek state covering 14 regional airports. Concession value approx. €1.23 billion upfront.",
+    "airports": ["SKG", "CFU", "EFL", "PVK", "ZTH", "KVA", "CHQ", "RHO", "SMI", "JSI", "MJT", "JMK", "JTR", "KGS"]
+  },
+  {
+    "name": "Fraport Twin Star Airport Management AD",
+    "short_name": "Fraport Twin Star",
+    "country_code": "BG",
+    "org_type": "operator",
+    "ownership_model": "private",
+    "public_share_pct": 0.00,
+    "notes": "60% Fraport AG; 40% Airport Services Bulgaria. 35-year concession (2006–2041) from Bulgarian state covering the two Black Sea coast airports.",
+    "airports": ["BOJ", "VAR"]
+  },
+  {
+    "name": "Fraport Slovenija d.o.o.",
+    "short_name": "Fraport Slovenija",
+    "country_code": "SI",
+    "org_type": "both",
+    "ownership_model": "private",
+    "public_share_pct": 0.00,
+    "notes": "75.5% Fraport AG; remainder Slovenian state-linked entities. Acquired through 2014 privatisation. Sole international airport in Slovenia.",
+    "airports": ["LJU"]
+  },
+  {
+    "name": "Royal Schiphol Group NV",
+    "short_name": "Schiphol Group",
+    "country_code": "NL",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 92.00,
+    "notes": "Dutch Ministry of Finance 69.77%; Municipality of Amsterdam 20.03%; Municipality of Rotterdam 2.2%; Groupe ADP 8.0%. 100% of AMS, RTM, LEY; 51% of EIN (Eindhoven); 40% of MST (Maastricht Aachen). Lelystad (LEY) is cargo/GA-focused.",
+    "airports": ["AMS", "RTM", "EIN", "MST"]
+  },
+  {
+    "name": "TAV Havalimanları Holding AŞ",
+    "short_name": "TAV Airports",
+    "country_code": "TR",
+    "org_type": "operator",
+    "ownership_model": "mixed",
+    "public_share_pct": 46.10,
+    "notes": "Groupe ADP 46.1%; free float ~47.6% on Borsa Istanbul; other ~6.3%. Listed on Istanbul exchange. Operates in Turkey, Georgia, North Macedonia and Croatia. Antalya (AYT) via 50/50 JV with Fraport. 107 million pax in 2024.",
+    "airports": ["ESB", "ADB", "GZP", "BJV", "AYT", "TBS", "BUS", "SKP", "OHD", "ZAG"]
+  },
+  {
+    "name": "iGA Havalimanı İşletmesi AŞ (Istanbul Grand Airport)",
+    "short_name": "iGA",
+    "country_code": "TR",
+    "org_type": "operator",
+    "ownership_model": "private",
+    "public_share_pct": 0.00,
+    "notes": "Kalyon Havacılık 55%; Cengiz İnşaat 45%. 25-year BOT concession from Turkish government (from 2018 opening). Concession value €26.1bn. IST is Europe's busiest and world's 3rd-busiest international airport.",
+    "airports": ["IST"]
+  },
+  {
+    "name": "İstanbul Sabiha Gökcen Uluslararası Havalimanı İşletmesi AŞ",
+    "short_name": "ISG / MAHB",
+    "country_code": "TR",
+    "org_type": "operator",
+    "ownership_model": "private",
+    "public_share_pct": 0.00,
+    "notes": "Sabiha Gökcen operated under BOT concession; Malaysia Airports Holdings Berhad (MAHB) holds a majority stake in the operating company (ISG) with Turkish partners. Concession expires 2032.",
+    "airports": ["SAW"]
+  },
+  {
+    "name": "Devlet Hava Meydanları İşletmesi Genel Müdürlüğü",
+    "short_name": "DHMİ",
+    "country_code": "TR",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Turkish state (Ministry of Transport). Manages all Turkish airports not under private concession. List is representative of major passenger airports; total network is larger.",
+    "airports": ["ADA", "GZT", "TZX", "ERZ", "VAN", "SZF", "GNY", "MQM", "KYA", "MLX", "KSY", "DIY", "ERC", "BAL"]
+  },
+  {
+    "name": "Flughafen München GmbH",
+    "short_name": "FMG / MUC",
+    "country_code": "DE",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "Free State of Bavaria 51%; Federal Republic of Germany 26%; City of Munich 23%. Fully publicly owned. Germany's second-busiest airport.",
+    "airports": ["MUC"]
+  },
+  {
+    "name": "Flughafen Berlin Brandenburg GmbH",
+    "short_name": "FBB / BER",
+    "country_code": "DE",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "State of Berlin 37%; State of Brandenburg 37%; Federal Republic of Germany 26%. Opened October 2020, consolidating TXL and SXF traffic. Fully publicly owned.",
+    "airports": ["BER"]
+  },
+  {
+    "name": "Flughafen Hamburg GmbH",
+    "short_name": "HAM Airport",
+    "country_code": "DE",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 51.00,
+    "notes": "City of Hamburg (Free and Hanseatic City) 51%; AviAlliance GmbH (PSP Investments, Canada) 49%. Germany's fifth-busiest airport.",
+    "airports": ["HAM"]
+  },
+  {
+    "name": "Flughafen Düsseldorf GmbH",
+    "short_name": "DUS Airport",
+    "country_code": "DE",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 50.00,
+    "notes": "City of Düsseldorf 50%; AviAlliance (PSP Investments) 30%; daa International (Ireland) 20%. Germany's third-busiest airport.",
+    "airports": ["DUS"]
+  },
+  {
+    "name": "Aeroporti di Roma SpA",
+    "short_name": "ADR",
+    "country_code": "IT",
+    "org_type": "both",
+    "ownership_model": "private",
+    "public_share_pct": 0.61,
+    "notes": "Mundys SpA 99.39% (Edizione/Benetton ~57%, Blackstone ~37.8%, Fondazione CRT ~5%); local authorities per DPCM decree ~0.61%. Mundys is the renamed Atlantia post-2022 takeover. FCO is Europe's 4th-busiest airport.",
+    "airports": ["FCO", "CIA"]
+  },
+  {
+    "name": "SEA Aeroporti di Milano SpA",
+    "short_name": "SEA",
+    "country_code": "IT",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 84.56,
+    "notes": "Municipality of Milan ~84.56%; F2i SGR ~9.89%; other ~5.55%. Directly operates MXP (Malpensa) and LIN (Linate). Holds 31% minority stake in SACBO (operator of BGY, Bergamo).",
+    "airports": ["MXP", "LIN"]
+  },
+  {
+    "name": "SACBO SpA",
+    "short_name": "SACBO",
+    "country_code": "IT",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 69.00,
+    "notes": "Bergamo Province ~28%, Bergamo Chamber of Commerce ~21%, Bergamo Municipality ~20%, SEA SpA 31%. Consortium of local public and private entities. Operates Milan Bergamo, Italy's third-busiest airport.",
+    "airports": ["BGY"]
+  },
+  {
+    "name": "Gesac SpA",
+    "short_name": "Gesac",
+    "country_code": "IT",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 13.00,
+    "notes": "2i Aeroporti SpA (F2i Third Fund 51% + Asterion Industrial Partners 49%) holds 87%; local authorities (Campania Region, Naples municipality) ~13%. F2i has held majority since 2010; Asterion acquired 49% of 2i Aeroporti in 2024. Operates Naples International Airport.",
+    "airports": ["NAP"]
+  },
+  {
+    "name": "Save SpA (Aeroporto di Venezia)",
+    "short_name": "Save",
+    "country_code": "IT",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 55.00,
+    "notes": "Venice Municipality and related public entities ~55%; institutional investors ~45%. Listed on Borsa Italiana. Operates Venice Marco Polo and Treviso Antonio Canova airports.",
+    "airports": ["VCE", "TSF"]
+  },
+  {
+    "name": "Toscana Aeroporti SpA",
+    "short_name": "Toscana Aeroporti",
+    "country_code": "IT",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 29.00,
+    "notes": "Corporación América Italia SpA (CAAP 100%) 62.28%; Toscana Aeroporti Investimenti (local public entities incl. Tuscany Region, Florence/Pisa municipalities) ~29%; free float ~8.7%. Listed on Borsa Italiana (TYA.MI). Formed 2015 merger of SAT (Pisa) and AdF (Florence). CAAP increased stake to 100% of CAI in 2025.",
+    "airports": ["PSA", "FLR"]
+  },
+  {
+    "name": "Aeroporti di Puglia SpA",
+    "short_name": "AdP",
+    "country_code": "IT",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 99.00,
+    "notes": "Puglia Regional Government ~99%. Operates four commercial airports across the Apulia region. FOG (Foggia) and TAR (Grottaglie) have limited scheduled service.",
+    "airports": ["BRI", "BDS", "FOG", "TAR"]
+  },
+  {
+    "name": "Aéroports de la Côte d'Azur SA",
+    "short_name": "ACA",
+    "country_code": "FR",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 36.00,
+    "notes": "Azzurra Aeroporti (Mundys 52.51%, EDF Invest 24.99%, Principality of Monaco 12.5%, ADR 10%) holds 64%; CCI Nice Côte d'Azur 25%; Région PACA and other public bodies ~11%. NCE is France's 2nd-busiest airport. CEQ (Cannes Mandelieu) and LTT (La Môle Saint-Tropez) are seasonal/charter focused.",
+    "airports": ["NCE", "CEQ", "LTT"]
+  },
+  {
+    "name": "Manchester Airports Group plc",
+    "short_name": "MAG",
+    "country_code": "GB",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 64.50,
+    "notes": "Manchester City Council 35.5%; nine other Greater Manchester local authorities 29%; IFM Global Infrastructure Fund (Australia) 35.5%. Operates UK's 2nd, 4th, and 8th busiest airports.",
+    "airports": ["MAN", "STN", "EMA"]
+  },
+  {
+    "name": "Heathrow Airport Holdings Limited",
+    "short_name": "HAH",
+    "country_code": "GB",
+    "org_type": "both",
+    "ownership_model": "private",
+    "public_share_pct": 0.00,
+    "notes": "Ardian (France) 32.61%; Qatar Investment Authority 20%; Saudi PIF 15.01%; GIC (Singapore) 11.2%; Australian Retirement Trust 11.18%; China Investment Corporation 10%. PIF and Ardian acquired their stakes from Ferrovial in Dec 2024. Operates only LHR following divestment of all other BAA airports post-2012. LHR is Europe's busiest airport.",
+    "airports": ["LHR"]
+  },
+  {
+    "name": "Edinburgh Airport Limited",
+    "short_name": "Edinburgh Airport",
+    "country_code": "GB",
+    "org_type": "both",
+    "ownership_model": "private",
+    "public_share_pct": 0.00,
+    "notes": "Global Infrastructure Partners (GIP, now BlackRock) 100%. Acquired from BAA in 2012. Scotland's busiest airport, handling ~12 million pax in 2024.",
+    "airports": ["EDI"]
+  },
+  {
+    "name": "AGS Airports Limited",
+    "short_name": "AGS Airports",
+    "country_code": "GB",
+    "org_type": "both",
+    "ownership_model": "private",
+    "public_share_pct": 0.00,
+    "notes": "AviAlliance (PSP Investments, Canada) 78%; Blackstone 22%. AviAlliance completed £1.53bn acquisition from Ferrovial/Macquarie in Jan 2024, then sold 22% stake to Blackstone. Operates Glasgow, Aberdeen and Southampton airports.",
+    "airports": ["GLA", "ABZ", "SOU"]
+  },
+  {
+    "name": "daa plc",
+    "short_name": "daa",
+    "country_code": "IE",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Irish state (semi-state commercial entity). Formerly Dublin Airport Authority. Operates Dublin (Ireland's largest, 34.6m pax in 2024) and Cork airports. International arm daa International holds 20% stake in Düsseldorf Airport.",
+    "airports": ["DUB", "ORK"]
+  },
+  {
+    "name": "Copenhagen Airports A/S",
+    "short_name": "CPH",
+    "country_code": "DK",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 98.00,
+    "notes": "Danish state acquired ~98% in Dec 2024 deal (Ministry of Finance pre-existing ~38.75% + ATP pension fund purchase of 59.4%). State plans to divest to a ~51% majority long-term. Copenhagen is the Nordic countries' largest airport (~30m pax in 2024).",
+    "airports": ["CPH"]
+  },
+  {
+    "name": "Billund Airport A/S",
+    "short_name": "Billund Airport",
+    "country_code": "DK",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 49.00,
+    "notes": "Billund Municipality ~49%; KIRKBI AS (LEGO family) ~26%; Midtjylland Region ~25%. Denmark's second-largest airport, hub for South Jutland.",
+    "airports": ["BLL"]
+  },
+  {
+    "name": "Société de l'Aéroport de Luxembourg SA (lux-Airport)",
+    "short_name": "lux-Airport",
+    "country_code": "LU",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Luxembourg state owned. Operates the Grand Duchy's sole commercial airport.",
+    "airports": ["LUX"]
+  },
+  {
+    "name": "Malta International Airport plc",
+    "short_name": "MIA",
+    "country_code": "MT",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 20.00,
+    "notes": "Malta Mediterranean Link Consortium (Flughafen Wien AG 96% stake) 40%; Government of Malta 20%; VIE Malta Limited (Flughafen Wien separately) 10.1%; free float on Malta Stock Exchange ~29.9%. Flughafen Wien AG effectively controls ~48.5% of MIA in total. Privatised 2002; sole commercial airport in Malta.",
+    "airports": ["MLA"]
+  },
+  {
+    "name": "Avinor AS",
+    "short_name": "Avinor",
+    "country_code": "NO",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Norwegian state (Ministry of Transport). Operates 43 commercial passenger airports and 1 heliport. Includes Oslo Gardermoen, the country's main hub, and an extensive network of regional/remote airports. 51.4 million pax in 2024.",
+    "airports": [
+      "OSL", "BGO", "TRD", "SVG", "TRF", "BOO", "TOS", "AES", "KRS", "HAU",
+      "MOL", "EVE", "ALF", "LKN", "SKN", "ANX", "KKN", "LYR", "SDN", "SOG",
+      "FRO", "VAW", "BJF", "MJF", "MQN", "BVG", "HFT", "BNN", "SSJ", "FDE",
+      "HOV", "RRS", "VRY", "MEH", "HVG", "VDS", "OSY", "RVK", "FSE"
+    ]
+  },
+  {
+    "name": "Swedavia AB",
+    "short_name": "Swedavia",
+    "country_code": "SE",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Swedish state. Operates Sweden's ten busiest airports. Stockholm Arlanda (ARN) handles ~26m pax annually. BMA (Bromma) primarily serves domestic routes.",
+    "airports": ["ARN", "GOT", "BMA", "MMX", "LLA", "UME", "OSD", "VBY", "KRN", "RNB"]
+  },
+  {
+    "name": "Finavia Oyj",
+    "short_name": "Finavia",
+    "country_code": "FI",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Finnish state (Prime Minister's Office). Successor to the Civil Aviation Administration. Operates 20 airports total, 18 serving commercial flights. Helsinki-Vantaa (HEL) accounts for ~80% of network traffic. Note: ENF (Enontekiö) has no scheduled service; serves seasonal winter charter flights only.",
+    "airports": [
+      "HEL", "OUL", "TMP", "TKU", "RVN", "KTT", "IVL", "KUO", "JOE", "JYV",
+      "KAJ", "KEM", "LPP", "MHQ", "SJY", "KOK", "VAA", "ENF"
+    ]
+  },
+  {
+    "name": "Flughafen Zürich AG",
+    "short_name": "Zurich Airport",
+    "country_code": "CH",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 38.33,
+    "notes": "Canton of Zurich 33.33% + 1 share; City of Zurich 5%; free float ~61.67% on SIX Swiss Exchange (ticker: FHZN). Switzerland's largest airport and main hub. International arm Flughafen Zürich International operates concessions in Brazil, Chile, Colombia and Curaçao.",
+    "airports": ["ZRH"]
+  },
+  {
+    "name": "Aéroport International de Genève (Genève Aéroport)",
+    "short_name": "GVA / AIG",
+    "country_code": "CH",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Canton of Geneva. Operates under a special public law statute. Unique bilateral status with France; some facilities are on French territory. Switzerland's second-largest airport.",
+    "airports": ["GVA"]
+  },
+  {
+    "name": "Isavia ohf.",
+    "short_name": "Isavia",
+    "country_code": "IS",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Icelandic state. Formed 2010 from merger of Keflavik International Airport and Flugstodir. Operates 12 scheduled passenger airports and ~30 landing strips. KEF handles ~9m pax annually.",
+    "airports": ["KEF", "RKV", "AEY", "EGS", "IFJ", "VEY", "HFN", "GRY"]
+  },
+  {
+    "name": "Przedsiębiorstwo Państwowe Porty Lotnicze",
+    "short_name": "PPL",
+    "country_code": "PL",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Polish state (Ministry of Infrastructure). Directly operates Warsaw Chopin (WAW). Holds majority/minority stakes in other Polish airports: KRK (76.2%), RZE (48%), POZ (39%), SZZ (36.9%), GDN (26.1%), WMI/Modlin (27.4%), WRO and BZG. WAW handled a record 21.3m pax in 2024.",
+    "airports": ["WAW", "KRK", "GDN", "WRO", "POZ", "SZZ", "RZE", "BZG", "WMI"]
+  },
+  {
+    "name": "Letiště Praha as",
+    "short_name": "Prague Airport",
+    "country_code": "CZ",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Czech state (Ministry of Finance). Operates Václav Havel Airport Prague (formerly Ruzyně). Sole major hub for the Czech Republic; ~16 million pax in 2024.",
+    "airports": ["PRG"]
+  },
+  {
+    "name": "Flughafen Wien AG",
+    "short_name": "Vienna Airport",
+    "country_code": "AT",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 40.00,
+    "notes": "Airports Group Europe (IFM Investors, Australia) 38.16%; Province of Lower Austria 20%; City of Vienna 20%; Employee Foundation 10%; free float ~11.84%. Listed on Vienna Stock Exchange (Prime Market, ATX). Primarily operates VIE; also holds minority stake in Klagenfurt Airport (KLU).",
+    "airports": ["VIE"]
+  },
+  {
+    "name": "Brussels Airport Company NV/SA",
+    "short_name": "BAC",
+    "country_code": "BE",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 25.00,
+    "notes": "Belgian federal government (SFPI/FPIM) 25%; BAISA consortium 75% (Macquarie ~39%, Ontario Teachers' Pension Plan ~30%, Japanese/Australian institutional investors remainder). Belgium's main international hub.",
+    "airports": ["BRU"]
+  },
+  {
+    "name": "Brussels South Charleroi Airport SA (BSCA)",
+    "short_name": "BSCA",
+    "country_code": "BE",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 75.00,
+    "notes": "Walloon Region of Belgium ~75%; SCA (SOWAER) ~25%. Low-cost hub, primary base for Ryanair in Belgium. Processes ~8 million pax annually.",
+    "airports": ["CRL"]
+  },
+  {
+    "name": "Athens International Airport SA",
+    "short_name": "AIA",
+    "country_code": "GR",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 25.00,
+    "notes": "AviAlliance (PSP Investments) acquired majority, holding just over 50% following 2024 IPO of 30% stake; Greek state (Hellenic Republic Asset Development Fund) ~25%; remainder free float. Concession extended to 2046. Handles ~30m pax annually.",
+    "airports": ["ATH"]
+  },
+  {
+    "name": "CN Aeroporturi București SA",
+    "short_name": "CNAB",
+    "country_code": "RO",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Romanian state (Ministry of Transport). Operates both Bucharest-area airports. OTP (Henri Coandă) is Romania's main international gateway; BBU (Băneasa Aurel Vlaicu) serves limited charter/business traffic.",
+    "airports": ["OTP", "BBU"]
+  },
+  {
+    "name": "SOF Connect AD",
+    "short_name": "SOF Connect",
+    "country_code": "BG",
+    "org_type": "operator",
+    "ownership_model": "private",
+    "public_share_pct": 0.00,
+    "notes": "Meridiam (France) holds ~99% of SOF Connect AD; Munich Airport acts as operational/technical partner. 35-year concession from Bulgarian state, operational from April 2021. Includes €615m investment commitment. Sofia Airport (SOF) is Bulgaria's main international gateway, handling ~6.5m pax annually. Plovdiv Airport (PDV) is a separate state-owned entity (Plovdiv Airport EAD) not included here.",
+    "airports": ["SOF"]
+  },
+  {
+    "name": "Riga International Airport (Starptautiskā lidosta Rīga)",
+    "short_name": "Riga Airport",
+    "country_code": "LV",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Latvian state. Largest airport in the Baltic states, handling ~7.8 million pax in 2024.",
+    "airports": ["RIX"]
+  },
+  {
+    "name": "Tallinna Lennujaam AS (Tallinn Airport)",
+    "short_name": "Tallinn Airport",
+    "country_code": "EE",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Estonian state (via state-owned Tallinna Lennujaam AS). Estonia's sole international airport of significance.",
+    "airports": ["TLL"]
+  },
+  {
+    "name": "UAB Oro Uostai (Lithuanian Airports)",
+    "short_name": "Lithuanian Airports",
+    "country_code": "LT",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "100% Lithuanian state (Ministry of Transport). Operates three commercial passenger airports under one management entity.",
+    "airports": ["VNO", "KUN", "PLQ"]
+  }
+]

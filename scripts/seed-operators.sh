@@ -10,7 +10,8 @@ if [ -f .env ]; then
 fi
 
 DB="${DATABASE_URL:?DATABASE_URL not set}"
-JSON_FILE="european_airport_operators.json"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+JSON_FILE="${SCRIPT_DIR}/../data/european_airport_operators.json"
 
 if [ ! -f "$JSON_FILE" ]; then
   echo "Error: $JSON_FILE not found in current directory"
