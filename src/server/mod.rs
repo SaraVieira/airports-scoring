@@ -114,11 +114,10 @@ pub async fn run(port: u16, log_sender: broadcast::Sender<LogEntry>) -> Result<(
         .route("/batch-import", post(routes::admin::batch_import))
         .layer(middleware::from_fn(auth::require_admin));
 
-    // SSE logs route — outside admin middleware since EventSource can't send headers.
-    // Auth is checked via query param inside the handler.
+    // SSE logs route — no middleware since EventSource can't send headers.
+    // Auth is checked via query param (admin password) inside the handler.
     let logs_route = Router::new()
-        .route("/logs/stream", get(logs::stream_logs))
-        .layer(middleware::from_fn(auth::require_api_key));
+        .route("/logs/stream", get(logs::stream_logs));
 
     // Cron routes: API key only (called by Coolify scheduler).
     let cron_routes = Router::new()
