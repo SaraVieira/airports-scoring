@@ -14,6 +14,16 @@ const getRankingsData = createServerFn({ method: "GET" }).handler(async () => {
 
 export const Route = createFileRoute("/rankings")({
   loader: () => getRankingsData(),
+  head: () => ({
+    meta: [
+      { title: "Airport Rankings — airports.report" },
+      { name: "description", content: "All European airports ranked by composite score. Infrastructure, delays, passenger sentiment, connectivity, and more." },
+      { property: "og:title", content: "Airport Rankings — airports.report" },
+      { property: "og:description", content: "All European airports ranked by composite score." },
+      { property: "og:url", content: "https://airports.report/rankings" },
+    ],
+    links: [{ rel: "canonical", href: "https://airports.report/rankings" }],
+  }),
   component: RankingsPage,
 });
 

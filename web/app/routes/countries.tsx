@@ -38,6 +38,16 @@ const getCountries = createServerFn({ method: "GET" }).handler(async () => {
 
 export const Route = createFileRoute("/countries")({
   loader: () => getCountries(),
+  head: () => ({
+    meta: [
+      { title: "Countries — airports.report" },
+      { name: "description", content: "Compare European countries by airport quality. Average scores, passenger volumes, sentiment, and on-time performance by country." },
+      { property: "og:title", content: "Countries — airports.report" },
+      { property: "og:description", content: "Compare European countries by airport quality." },
+      { property: "og:url", content: "https://airports.report/countries" },
+    ],
+    links: [{ rel: "canonical", href: "https://airports.report/countries" }],
+  }),
   component: CountriesPage,
 });
 

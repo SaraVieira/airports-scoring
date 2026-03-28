@@ -20,6 +20,30 @@ import type { Airport } from "~/utils/types";
 
 export const Route = createFileRoute("/airport/$iata")({
   loader: ({ params }) => getAirport({ data: params.iata! }),
+  head: ({ loaderData: airport }) => {
+    const score = airport?.scores?.[0]?.scoreTotal;
+    const scoreText = score != null ? ` — Score: ${Math.round(Number(score))}/100` : "";
+    const title = airport
+      ? `${airport.iataCode} ${airport.name} — airports.report`
+      : "Airport — airports.report";
+    const description = airport
+      ? `${airport.name} (${airport.iataCode}) in ${airport.city}, ${airport.country?.name ?? airport.countryCode}${scoreText}. Delays, sentiment, routes, and more.`
+      : "Airport intelligence and scoring.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: `https://airports.report/airport/${airport?.iataCode}` },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+      ],
+      links: [
+        { rel: "canonical", href: `https://airports.report/airport/${airport?.iataCode}` },
+      ],
+    };
+  },
   component: AirportDetail,
 });
 

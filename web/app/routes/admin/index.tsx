@@ -15,7 +15,14 @@ import {
   TableHead,
   TableCell,
 } from "~/components/ui/table";
-import { RefreshCw, Calculator, Plane, AlertTriangle, CheckCircle, Activity } from "lucide-react";
+import {
+  RefreshCw,
+  Calculator,
+  Plane,
+  AlertTriangle,
+  CheckCircle,
+  Activity,
+} from "lucide-react";
 import {
   adminListAirports,
   adminDataGaps,
@@ -31,7 +38,6 @@ type JobInfo = components["schemas"]["JobInfo"];
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
 });
-
 
 function LoginForm({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState("");
@@ -106,9 +112,7 @@ function StatCard({
         >
           {value}
         </span>
-        {sub && (
-          <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
-        )}
+        {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
       </CardContent>
     </Card>
   );
@@ -215,7 +219,10 @@ function Dashboard() {
             Run Scoring
           </Button>
           <Link to="/admin/jobs">
-            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+            <Button
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
               New Job
             </Button>
           </Link>
@@ -255,8 +262,10 @@ function Dashboard() {
       </div>
 
       {/* Main content: jobs table + log panel */}
-      <div className="grid grid-cols-[1fr_420px] gap-4" style={{ height: "calc(100vh - 320px)" }}>
-        {/* Jobs table */}
+      <div
+        className="grid sm:grid-cols-[1fr_420px] gap-4"
+        style={{ height: "calc(100vh - 320px)" }}
+      >
         <Card className="overflow-hidden flex flex-col">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">

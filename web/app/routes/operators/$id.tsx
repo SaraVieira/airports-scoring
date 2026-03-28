@@ -13,6 +13,26 @@ const getOperator = createServerFn({ method: "GET" })
 
 export const Route = createFileRoute("/operators/$id")({
   loader: ({ params }) => getOperator({ data: params.id }),
+  head: ({ loaderData: op }) => {
+    const title = op
+      ? `${op.shortName || op.name} — Airport Operator — airports.report`
+      : "Operator — airports.report";
+    const description = op
+      ? `${op.name} operates ${op.airports.length} airport${op.airports.length !== 1 ? "s" : ""} across Europe. ${op.ownershipModel ? `Ownership: ${op.ownershipModel}.` : ""} See scores, delays, and passenger data.`
+      : "Airport operator details.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: `https://airports.report/operators/${op?.id}` },
+      ],
+      links: [
+        { rel: "canonical", href: `https://airports.report/operators/${op?.id}` },
+      ],
+    };
+  },
   component: OperatorDetailPage,
 });
 

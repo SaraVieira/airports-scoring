@@ -144,7 +144,6 @@ pub async fn run(port: u16, log_sender: broadcast::Sender<LogEntry>) -> Result<(
         .route("/operators", get(routes::airports::list_operators))
         .route("/operators/{id}", get(routes::airports::get_operator))
         .nest("/admin", admin_routes)
-        .nest("/admin", logs_route)
         .nest("/cron", cron_routes)
         .layer(middleware::from_fn(auth::require_api_key));
 
@@ -153,6 +152,8 @@ pub async fn run(port: u16, log_sender: broadcast::Sender<LogEntry>) -> Result<(
         .route("/health", get(health))
         // OpenAPI spec endpoint (no auth).
         .route("/openapi.json", get(openapi_spec))
+        // SSE logs — outside API key middleware since EventSource can't send headers.
+        .nest("/api/admin", logs_route)
         // All API routes nested under /api.
         .nest("/api", api_routes)
         .with_state(state)

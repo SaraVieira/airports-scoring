@@ -9,12 +9,48 @@ import {
 import { AirportSearch } from "../components/airport-search";
 import "../styles.css";
 
+const SITE_NAME = "airports.report";
+const SITE_DESC = "Opinionated scoring and intelligence for European airports. Delays, sentiment, connectivity, and more — backed by data, delivered with snark.";
+const SITE_URL = "https://airports.report";
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "airports.report" },
+      { title: SITE_NAME },
+      { name: "description", content: SITE_DESC },
+      { name: "theme-color", content: "#0a0a0b" },
+      // Open Graph
+      { property: "og:type", content: "website" },
+      { property: "og:site_name", content: SITE_NAME },
+      { property: "og:title", content: SITE_NAME },
+      { property: "og:description", content: SITE_DESC },
+      { property: "og:url", content: SITE_URL },
+      // Twitter
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: SITE_NAME },
+      { name: "twitter:description", content: SITE_DESC },
+    ],
+    links: [
+      { rel: "canonical", href: SITE_URL },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: SITE_NAME,
+          url: SITE_URL,
+          description: SITE_DESC,
+          potentialAction: {
+            "@type": "SearchAction",
+            target: `${SITE_URL}/airport/{search_term_string}`,
+            "query-input": "required name=search_term_string",
+          },
+        }),
+      },
     ],
   }),
   component: RootComponent,

@@ -11,6 +11,16 @@ const getOperators = createServerFn({ method: "GET" }).handler(async () => {
 
 export const Route = createFileRoute("/operators/")({
   loader: () => getOperators(),
+  head: () => ({
+    meta: [
+      { title: "Airport Operators — airports.report" },
+      { name: "description", content: "Who runs Europe's airports? Ownership models, public share, average scores, passenger volumes, and delay rates for every major operator." },
+      { property: "og:title", content: "Airport Operators — airports.report" },
+      { property: "og:description", content: "Who runs Europe's airports? Ownership, scores, and performance data." },
+      { property: "og:url", content: "https://airports.report/operators" },
+    ],
+    links: [{ rel: "canonical", href: "https://airports.report/operators" }],
+  }),
   component: OperatorsPage,
 });
 
