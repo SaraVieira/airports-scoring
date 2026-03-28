@@ -57,10 +57,6 @@ export const SCORE_EXPLANATIONS: Record<
     plain: "Route network breadth",
     technical: "OPDI + FlightRadar24 route data, destination count",
   },
-  Operator: {
-    plain: "Managing company track record",
-    technical: "Cross-airport operator performance average",
-  },
 };
 
 export const SENTIMENT_EXPLANATIONS: Record<

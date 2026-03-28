@@ -39,7 +39,7 @@ function AirportDetail() {
           <ScoreBar
             label="Operational"
             score={score?.scoreOperational}
-            weight="25%"
+            weight="30%"
             explanation={SCORE_EXPLANATIONS["Operational"]}
           />
           <ScoreBar
@@ -63,14 +63,8 @@ function AirportDetail() {
           <ScoreBar
             label="Connectivity"
             score={score?.scoreConnectivity}
-            weight="10%"
+            weight="15%"
             explanation={SCORE_EXPLANATIONS["Connectivity"]}
-          />
-          <ScoreBar
-            label="Operator"
-            score={score?.scoreOperator}
-            weight="10%"
-            explanation={SCORE_EXPLANATIONS["Operator"]}
           />
         </div>
 

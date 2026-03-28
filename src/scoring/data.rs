@@ -34,10 +34,6 @@ pub(crate) struct ScoringData {
     pub airline_count: i64,
     pub international_pax: Option<i64>,
     pub total_pax: Option<i64>,
-    // Operator portfolio
-    pub operator_avg_sentiment: Option<f64>,
-    pub operator_avg_operational: Option<f64>,
-    pub operator_airport_count: i64,
     // Ground transport
     pub transport_modes_count: i16,
     pub has_direct_rail: bool,
@@ -178,17 +174,6 @@ pub(crate) async fn gather_scoring_data(
     .fetch_optional(pool)
     .await?;
 
-    // Operator portfolio
-    let operator_portfolio: Option<(Option<Decimal>, Option<Decimal>, i64)> = sqlx::query_as(
-        "SELECT AVG(s.score_sentiment), AVG(s.score_operational), COUNT(DISTINCT a.id) \
-         FROM airport_scores s \
-         JOIN airports a ON a.id = s.airport_id \
-         WHERE a.operator_id = $1 AND s.is_latest = TRUE",
-    )
-    .bind(airport.operator_id)
-    .fetch_optional(pool)
-    .await?;
-
     // Ground transport
     let transport: Option<(i16, bool)> = sqlx::query_as(
         "SELECT transport_modes_count, has_direct_rail \
@@ -256,18 +241,6 @@ pub(crate) async fn gather_scoring_data(
         airline_count: connectivity.1,
         international_pax: pax.as_ref().and_then(|p| p.0),
         total_pax: pax.as_ref().and_then(|p| p.1),
-        operator_avg_sentiment: operator_portfolio
-            .as_ref()
-            .and_then(|o| o.0.as_ref())
-            .and_then(|d| d.to_f64()),
-        operator_avg_operational: operator_portfolio
-            .as_ref()
-            .and_then(|o| o.1.as_ref())
-            .and_then(|d| d.to_f64()),
-        operator_airport_count: operator_portfolio
-            .as_ref()
-            .map(|o| o.2)
-            .unwrap_or(0),
         transport_modes_count: transport.as_ref().map(|t| t.0).unwrap_or(0),
         has_direct_rail: transport.as_ref().map(|t| t.1).unwrap_or(false),
         hub_airline_count: hub_counts.0,

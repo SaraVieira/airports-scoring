@@ -185,23 +185,3 @@ pub(crate) fn score_connectivity(data: &ScoringData) -> f64 {
 
     score.clamp(0.0, 100.0)
 }
-
-/// Operator score (weight: 10%)
-///
-/// Average of sentiment + operational scores across all airports
-/// the same operator manages in the dataset.
-/// If only 1 airport for this operator, weight 50% with neutral baseline of 50.
-pub(crate) fn score_operator(data: &ScoringData) -> f64 {
-    match (data.operator_avg_sentiment, data.operator_avg_operational) {
-        (Some(sentiment), Some(operational)) => {
-            let portfolio_avg = (sentiment + operational) / 2.0;
-            if data.operator_airport_count <= 1 {
-                // Single airport: blend 50/50 with neutral baseline
-                (portfolio_avg * 0.5) + (50.0 * 0.5)
-            } else {
-                portfolio_avg
-            }
-        }
-        _ => 50.0,
-    }
-}

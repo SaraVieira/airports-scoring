@@ -16,12 +16,12 @@ use dimensions::*;
 pub use persist::upsert_score;
 
 /// Default v1 weights for scoring dimensions.
+/// Redistributed after removing operator score (was 10%).
 const W_INFRASTRUCTURE: f64 = 0.15;
-const W_OPERATIONAL: f64 = 0.25;
+const W_OPERATIONAL: f64 = 0.30;
 const W_SENTIMENT: f64 = 0.25;
 const W_SENTIMENT_VELOCITY: f64 = 0.15;
-const W_CONNECTIVITY: f64 = 0.10;
-const W_OPERATOR: f64 = 0.10;
+const W_CONNECTIVITY: f64 = 0.15;
 
 /// Result of a score computation for one airport.
 #[derive(Debug, Clone)]
@@ -32,7 +32,6 @@ pub struct ScoreOutput {
     pub score_sentiment: f64,
     pub score_sentiment_velocity: f64,
     pub score_connectivity: f64,
-    pub score_operator: f64,
     pub score_total: f64,
     /// Free-text snarky commentary from the local ML pipeline.
     pub commentary: Option<String>,
@@ -52,14 +51,12 @@ pub async fn compute_score(
     let sentiment = score_sentiment(&data);
     let velocity = score_sentiment_velocity(&data);
     let connectivity = score_connectivity(&data);
-    let operator = score_operator(&data);
 
     let total = infra * W_INFRASTRUCTURE
         + operational * W_OPERATIONAL
         + sentiment * W_SENTIMENT
         + velocity * W_SENTIMENT_VELOCITY
-        + connectivity * W_CONNECTIVITY
-        + operator * W_OPERATOR;
+        + connectivity * W_CONNECTIVITY;
 
     Ok(ScoreOutput {
         airport_id: airport.id,
@@ -68,7 +65,6 @@ pub async fn compute_score(
         score_sentiment: sentiment,
         score_sentiment_velocity: velocity,
         score_connectivity: connectivity,
-        score_operator: operator,
         score_total: total,
         commentary: None,
     })
@@ -94,7 +90,6 @@ pub async fn score_airports(
             sentiment = format!("{:.1}", score.score_sentiment),
             velocity = format!("{:.1}", score.score_sentiment_velocity),
             connectivity = format!("{:.1}", score.score_connectivity),
-            operator = format!("{:.1}", score.score_operator),
             "Score computed"
         );
     }

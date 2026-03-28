@@ -29,9 +29,6 @@ fn empty_data() -> ScoringData {
         airline_count: 0,
         international_pax: None,
         total_pax: None,
-        operator_avg_sentiment: None,
-        operator_avg_operational: None,
-        operator_airport_count: 0,
         transport_modes_count: 0,
         has_direct_rail: false,
         hub_airline_count: 0,
@@ -237,38 +234,6 @@ fn connectivity_small_airport() {
 }
 
 #[test]
-fn operator_multi_airport() {
-    let data = ScoringData {
-        operator_avg_sentiment: Some(75.0),
-        operator_avg_operational: Some(85.0),
-        operator_airport_count: 5,
-        ..empty_data()
-    };
-    let score = score_operator(&data);
-    assert!((score - 80.0).abs() < 0.01, "got {}", score);
-}
-
-#[test]
-fn operator_single_airport_blending() {
-    let data = ScoringData {
-        operator_avg_sentiment: Some(90.0),
-        operator_avg_operational: Some(80.0),
-        operator_airport_count: 1,
-        ..empty_data()
-    };
-    let score = score_operator(&data);
-    // (90+80)/2 = 85, blended: 85*0.5 + 50*0.5 = 67.5
-    assert!((score - 67.5).abs() < 0.01, "got {}", score);
-}
-
-#[test]
-fn operator_no_data_returns_neutral() {
-    let data = empty_data();
-    let score = score_operator(&data);
-    assert!((score - 50.0).abs() < 0.01, "got {}", score);
-}
-
-#[test]
 fn all_scores_clamped_0_to_100() {
     let extreme = ScoringData {
         runway_count: 100,
@@ -292,9 +257,6 @@ fn all_scores_clamped_0_to_100() {
         airline_count: 9999,
         international_pax: Some(999_999_999),
         total_pax: Some(1),
-        operator_avg_sentiment: Some(100.0),
-        operator_avg_operational: Some(100.0),
-        operator_airport_count: 100,
         transport_modes_count: 5,
         has_direct_rail: true,
         hub_airline_count: 10,
@@ -309,7 +271,6 @@ fn all_scores_clamped_0_to_100() {
         ("sent", score_sentiment(&extreme)),
         ("vel", score_sentiment_velocity(&extreme)),
         ("conn", score_connectivity(&extreme)),
-        ("oper", score_operator(&extreme)),
     ] {
         assert!(val >= 0.0 && val <= 100.0, "{} = {} out of bounds", name, val);
     }
