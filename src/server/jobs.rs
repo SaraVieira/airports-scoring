@@ -59,15 +59,17 @@ pub struct JobManager {
     semaphore: Arc<Semaphore>,
     jobs: Arc<RwLock<HashMap<String, JobInfo>>>,
     cancel_tokens: Arc<RwLock<HashMap<String, watch::Sender<bool>>>>,
+    scraper_pool: Option<crate::scraper_pool::ScraperPool>,
 }
 
 impl JobManager {
-    pub fn new(pool: PgPool, max_concurrency: usize) -> Self {
+    pub fn new(pool: PgPool, max_concurrency: usize, scraper_pool: Option<crate::scraper_pool::ScraperPool>) -> Self {
         Self {
             pool,
             semaphore: Arc::new(Semaphore::new(max_concurrency)),
             jobs: Arc::new(RwLock::new(HashMap::new())),
             cancel_tokens: Arc::new(RwLock::new(HashMap::new())),
+            scraper_pool,
         }
     }
 
@@ -144,6 +146,7 @@ impl JobManager {
         let semaphore = self.semaphore.clone();
         let jobs_map = self.jobs.clone();
         let cancel_tokens_map = self.cancel_tokens.clone();
+        let scraper_pool = self.scraper_pool.clone();
 
         tokio::spawn(async move {
             run_job(
@@ -157,6 +160,7 @@ impl JobManager {
                 full_refresh,
                 score,
                 cancel_rx,
+                scraper_pool,
             )
             .await;
         });
@@ -224,6 +228,7 @@ async fn run_job(
     full_refresh: bool,
     score: bool,
     cancel_rx: watch::Receiver<bool>,
+    scraper_pool: Option<crate::scraper_pool::ScraperPool>,
 ) {
     // Mark running.
     update_job_status(&jobs_map, &job_id, "running", None).await;
@@ -240,7 +245,8 @@ async fn run_job(
         }
     };
 
-    let seed_iata_codes: Vec<&str> = seed_airports.iter().map(|a| a.iata.as_str()).collect();
+    let seed_iata_codes: Vec<String> = seed_airports.iter().map(|a| a.iata.clone()).collect();
+    let seed_airports = Arc::new(seed_airports);
 
     // Run OurAirports bootstrap if this is a full run (all airports, all sources)
     // or if wikipedia is in the source list (needs wikipedia_url populated).
@@ -252,7 +258,8 @@ async fn run_job(
     if needs_ourairports {
         info!(job_id = %job_id, "Running OurAirports bootstrap");
         update_job_progress(&jobs_map, &job_id, 0, airport_iatas.len(), None, Some("ourairports".to_string())).await;
-        if let Err(e) = crate::fetchers::ourairports::fetch_all(&pool, full_refresh, &seed_iata_codes).await {
+        let seed_refs: Vec<&str> = seed_iata_codes.iter().map(|s| &**s).collect();
+        if let Err(e) = crate::fetchers::ourairports::fetch_all(&pool, full_refresh, &seed_refs).await {
             warn!(job_id = %job_id, error = %e, "OurAirports bootstrap failed, continuing anyway");
         } else {
             info!(job_id = %job_id, "OurAirports bootstrap complete");
@@ -261,6 +268,9 @@ async fn run_job(
 
     let mut airports_completed = 0;
     let mut had_errors = false;
+    // Collect review work to run in parallel after non-review sources complete.
+    let mut review_work: Vec<(String, crate::models::Airport, Vec<String>)> = Vec::new();
+    let mut post_review_work: Vec<(String, crate::models::Airport, Vec<String>)> = Vec::new();
 
     for iata in &airport_iatas {
         // Check cancellation.
@@ -315,9 +325,24 @@ async fn run_job(
             }
         };
 
-        // Run each source.
-        for source in &sources {
-            // Check cancellation before each source.
+        // Split sources into:
+        // - non-review: run sequentially now
+        // - review: run in parallel later via scraper pool
+        // - post-review: sentiment runs after all reviews are ingested
+        let review_source_names = ["reviews", "google_reviews", "skytrax"];
+        let post_review_names = ["sentiment"];
+        let review_sources: Vec<&String> = sources.iter()
+            .filter(|s| review_source_names.contains(&s.as_str()))
+            .collect();
+        let post_review_sources: Vec<&String> = sources.iter()
+            .filter(|s| post_review_names.contains(&s.as_str()))
+            .collect();
+        let non_review_sources: Vec<&String> = sources.iter()
+            .filter(|s| !review_source_names.contains(&s.as_str()) && !post_review_names.contains(&s.as_str()))
+            .collect();
+
+        // Run non-review sources sequentially.
+        for source in &non_review_sources {
             if *cancel_rx.borrow() {
                 info!(job_id = %job_id, "Job cancelled during source processing");
                 update_job_status(&jobs_map, &job_id, "cancelled", None).await;
@@ -326,70 +351,155 @@ async fn run_job(
             }
 
             update_job_progress(
-                &jobs_map,
-                &job_id,
-                airports_completed,
-                airport_iatas.len(),
-                Some(iata.clone()),
-                Some(source.clone()),
-            )
-            .await;
+                &jobs_map, &job_id, airports_completed, airport_iatas.len(),
+                Some(iata.clone()), Some(source.to_string()),
+            ).await;
 
             info!(job_id = %job_id, iata = %iata, source = %source, "Running fetcher");
 
+            let seed_refs: Vec<&str> = seed_iata_codes.iter().map(|s| &**s).collect();
             let mut cancel_watch = cancel_rx.clone();
             let result = tokio::select! {
-                r = pipeline::dispatch_fetcher(
-                    &pool,
-                    &airport,
-                    source,
-                    full_refresh,
-                    &seed_iata_codes,
-                    &seed_airports,
-                ) => r,
+                r = pipeline::dispatch_fetcher(&pool, &airport, source, full_refresh, &seed_refs, &seed_airports) => r,
                 _ = async {
                     while !*cancel_watch.borrow_and_update() {
-                        if cancel_watch.changed().await.is_err() {
-                            std::future::pending::<()>().await;
-                        }
+                        if cancel_watch.changed().await.is_err() { std::future::pending::<()>().await; }
                     }
                 } => {
-                    info!(job_id = %job_id, iata = %iata, source = %source, "Fetcher interrupted by cancellation");
-                    // If this was a google_reviews or reviews source, cancel active scraper jobs.
-                    if source == "google_reviews" || source == "reviews" {
-                        cancel_scraper_jobs().await;
-                    }
                     update_job_status(&jobs_map, &job_id, "cancelled", None).await;
                     cleanup_cancel_token(&cancel_tokens_map, &job_id).await;
                     return;
                 }
             };
 
-            // Update source_status table.
             let (status_str, record_count, error_msg) = match &result {
                 Ok(r) => ("success", r.records_processed, None),
-                Err(e) => {
-                    had_errors = true;
-                    ("failed", 0i32, Some(e.to_string()))
-                }
+                Err(e) => { had_errors = true; ("failed", 0i32, Some(e.to_string())) }
             };
-
             if let Err(e) = update_source_status(&pool, iata, source, status_str, record_count, error_msg.as_deref()).await {
                 error!(job_id = %job_id, iata = %iata, source = %source, error = %e, "Failed to update source_status");
             }
-
             match result {
-                Ok(r) => {
-                    info!(job_id = %job_id, iata = %iata, source = %source, records = r.records_processed, "Fetch completed");
-                }
-                Err(e) => {
-                    error!(job_id = %job_id, iata = %iata, source = %source, error = %e, "Fetch failed");
-                }
+                Ok(r) => info!(job_id = %job_id, iata = %iata, source = %source, records = r.records_processed, "Fetch completed"),
+                Err(e) => error!(job_id = %job_id, iata = %iata, source = %source, error = %e, "Fetch failed"),
             }
+        }
+
+        // Collect review work for this airport (will be run in parallel after all airports' non-review sources).
+        if !review_sources.is_empty() {
+            review_work.push((iata.clone(), airport.clone(), review_sources.iter().map(|s| s.to_string()).collect::<Vec<_>>()));
+        }
+        if !post_review_sources.is_empty() {
+            post_review_work.push((iata.clone(), airport.clone(), post_review_sources.iter().map(|s| s.to_string()).collect::<Vec<_>>()));
         }
 
         airports_completed += 1;
         update_job_progress(&jobs_map, &job_id, airports_completed, airport_iatas.len(), None, None).await;
+    }
+
+    // ── Phase 2: Run review sources in parallel across scraper pool ──
+    if !review_work.is_empty() {
+        info!(job_id = %job_id, airports = review_work.len(), "Starting parallel review phase");
+        update_job_progress(&jobs_map, &job_id, airports_completed, airport_iatas.len(), None, Some("reviews (parallel)".to_string())).await;
+
+        let mut join_set = tokio::task::JoinSet::new();
+
+        for (iata, airport, review_srcs) in review_work {
+            let pool = pool.clone();
+            let seed_iata_codes = seed_iata_codes.clone();
+            let seed_airports = seed_airports.clone();
+            let scraper_pool = scraper_pool.clone();
+            let job_id = job_id.clone();
+
+            join_set.spawn(async move {
+                // Acquire a scraper from the pool (blocks until one is free).
+                let scraper_guard = if let Some(ref sp) = scraper_pool {
+                    Some(sp.acquire().await)
+                } else {
+                    None
+                };
+                let scraper_url = scraper_guard.as_ref().map(|g| g.url.as_str());
+
+                for source in &review_srcs {
+                    info!(job_id = %job_id, iata = %iata, source = %source, scraper = ?scraper_url, "Running review fetcher");
+
+                    let result = if source == "google_reviews" || source == "reviews" {
+                        // For google_reviews (or the combined "reviews" which includes google),
+                        // use the pool-assigned scraper URL.
+                        if source == "google_reviews" {
+                            crate::fetchers::google_reviews::fetch_with_url(
+                                &pool, &airport, false, &seed_airports, scraper_url,
+                            ).await
+                        } else {
+                            // "reviews" = skytrax + google. Run skytrax first (no scraper needed),
+                            // then google with the pool scraper.
+                            let skytrax_result = crate::fetchers::skytrax::fetch(&pool, &airport, false, &seed_airports).await;
+                            if let Err(e) = &skytrax_result {
+                                warn!(iata = %iata, error = %e, "Skytrax fetch failed");
+                            }
+                            // Then google
+                            crate::fetchers::google_reviews::fetch_with_url(
+                                &pool, &airport, false, &seed_airports, scraper_url,
+                            ).await
+                        }
+                    } else {
+                        // skytrax only — no scraper needed
+                        pipeline::dispatch_fetcher(
+                            &pool, &airport, source, false,
+                            &seed_iata_codes.iter().map(|s| &**s).collect::<Vec<_>>(),
+                            &seed_airports,
+                        ).await
+                    };
+
+                    let (status_str, record_count, error_msg) = match &result {
+                        Ok(r) => ("success", r.records_processed, None),
+                        Err(e) => ("failed", 0i32, Some(e.to_string())),
+                    };
+                    let _ = update_source_status(&pool, &iata, source, status_str, record_count, error_msg.as_deref()).await;
+
+                    match result {
+                        Ok(r) => info!(job_id = %job_id, iata = %iata, source = %source, records = r.records_processed, "Review fetch completed"),
+                        Err(e) => error!(job_id = %job_id, iata = %iata, source = %source, error = %e, "Review fetch failed"),
+                    }
+                }
+
+                iata
+            });
+        }
+
+        // Wait for all review tasks to complete.
+        while let Some(result) = join_set.join_next().await {
+            match result {
+                Ok(iata) => info!(job_id = %job_id, iata = %iata, "Review phase completed for airport"),
+                Err(e) => error!(job_id = %job_id, error = %e, "Review task panicked"),
+            }
+        }
+
+        info!(job_id = %job_id, "Parallel review phase complete");
+    }
+
+    // ── Phase 3: Run post-review sources (sentiment) sequentially ──
+    if !post_review_work.is_empty() {
+        info!(job_id = %job_id, airports = post_review_work.len(), "Running post-review sources (sentiment)");
+        for (iata, airport, srcs) in &post_review_work {
+            for source in srcs {
+                update_job_progress(&jobs_map, &job_id, airports_completed, airport_iatas.len(), Some(iata.clone()), Some(source.clone())).await;
+                info!(job_id = %job_id, iata = %iata, source = %source, "Running post-review fetcher");
+                let seed_refs: Vec<&str> = seed_iata_codes.iter().map(|s| &**s).collect();
+                let result = pipeline::dispatch_fetcher(&pool, airport, source, full_refresh, &seed_refs, &seed_airports).await;
+                let (status_str, record_count, error_msg) = match &result {
+                    Ok(r) => ("success", r.records_processed, None),
+                    Err(e) => { had_errors = true; ("failed", 0i32, Some(e.to_string())) }
+                };
+                if let Err(e) = update_source_status(&pool, iata, source, status_str, record_count, error_msg.as_deref()).await {
+                    error!(job_id = %job_id, iata = %iata, source = %source, error = %e, "Failed to update source_status");
+                }
+                match result {
+                    Ok(r) => info!(job_id = %job_id, iata = %iata, source = %source, records = r.records_processed, "Post-review fetch completed"),
+                    Err(e) => error!(job_id = %job_id, iata = %iata, source = %source, error = %e, "Post-review fetch failed"),
+                }
+            }
+        }
     }
 
     // Run scoring if requested.
@@ -525,6 +635,7 @@ async fn load_seed_from_db(pool: &PgPool) -> Result<Vec<SeedAirport>, sqlx::Erro
 }
 
 /// Cancel all running jobs on the Google Reviews scraper service.
+#[allow(dead_code)]
 async fn cancel_scraper_jobs() {
     let base_url =
         std::env::var("GOOGLE_SCRAPER_URL").unwrap_or_else(|_| "http://localhost:8000".to_string());

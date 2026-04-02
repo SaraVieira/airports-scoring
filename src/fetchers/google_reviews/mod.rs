@@ -36,6 +36,17 @@ pub async fn fetch(
     full_refresh: bool,
     seed_airports: &[SeedAirport],
 ) -> Result<FetchResult> {
+    fetch_with_url(pool, airport, full_refresh, seed_airports, None).await
+}
+
+/// Fetch with an explicit scraper URL (used by the pool-based job runner).
+pub async fn fetch_with_url(
+    pool: &PgPool,
+    airport: &Airport,
+    full_refresh: bool,
+    seed_airports: &[SeedAirport],
+    scraper_url: Option<&str>,
+) -> Result<FetchResult> {
     let iata = airport
         .iata_code
         .as_deref()
@@ -56,9 +67,10 @@ pub async fn fetch(
         }
     };
 
-    // Read scraper config from env
-    let base_url =
-        std::env::var("GOOGLE_SCRAPER_URL").unwrap_or_else(|_| "http://localhost:8000".to_string());
+    // Read scraper config from param or env
+    let base_url = scraper_url
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| std::env::var("GOOGLE_SCRAPER_URL").unwrap_or_else(|_| "http://localhost:8000".to_string()));
     let api_key = std::env::var("GOOGLE_SCRAPER_API_KEY").unwrap_or_default();
 
     // Health check

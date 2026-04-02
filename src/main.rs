@@ -5,6 +5,7 @@ mod fetchers;
 mod models;
 mod pipeline;
 mod scoring;
+pub mod scraper_pool;
 mod server;
 
 use anyhow::{bail, Result};

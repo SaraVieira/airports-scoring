@@ -18,13 +18,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      google-scraper:
+      google-scraper-1:
+        condition: service_started
+      google-scraper-2:
+        condition: service_started
+      google-scraper-3:
         condition: service_started
     environment:
       DATABASE_URL: postgres://airports:airports-internal-only@postgres:5432/airports
       API_KEY: ${API_KEY}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      GOOGLE_SCRAPER_URL: http://google-scraper:8000
+      GOOGLE_SCRAPER_URLS: http://google-scraper-1:8000,http://google-scraper-2:8000,http://google-scraper-3:8000
       HF_TOKEN: ${HF_TOKEN}
       OPENSKY_ID: ${OPENSKY_ID:-}
       OPENSKY_SECRET: ${OPENSKY_SECRET:-}
@@ -44,7 +48,7 @@ services:
     environment:
       NODE_ENV: production
 
-  google-scraper:
+  google-scraper-1:
     build:
       context: .
       dockerfile: google-scraper.Dockerfile
@@ -52,7 +56,24 @@ services:
       USE_MONGODB: "false"
       MAX_REVIEWS: "1500"
       DOWNLOAD_IMAGES: "false"
-    # No exposed ports — internal only
+
+  google-scraper-2:
+    build:
+      context: .
+      dockerfile: google-scraper.Dockerfile
+    environment:
+      USE_MONGODB: "false"
+      MAX_REVIEWS: "1500"
+      DOWNLOAD_IMAGES: "false"
+
+  google-scraper-3:
+    build:
+      context: .
+      dockerfile: google-scraper.Dockerfile
+    environment:
+      USE_MONGODB: "false"
+      MAX_REVIEWS: "1500"
+      DOWNLOAD_IMAGES: "false"
 
 volumes:
   pg_data:

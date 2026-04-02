@@ -93,7 +93,8 @@ pub async fn run(port: u16, log_sender: broadcast::Sender<LogEntry>) -> Result<(
         .context("Failed to run database migrations")?;
     info!("Migrations complete");
 
-    let jobs = Arc::new(JobManager::new(pool.clone(), 3));
+    let scraper_pool = crate::scraper_pool::ScraperPool::from_env();
+    let jobs = Arc::new(JobManager::new(pool.clone(), 3, scraper_pool.clone()));
     let state = AppState { pool, jobs, log_sender };
 
     // Admin routes: require both API key and admin password.
