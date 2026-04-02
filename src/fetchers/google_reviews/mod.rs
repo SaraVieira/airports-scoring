@@ -13,6 +13,9 @@ use types::*;
 const POLL_MIN_INTERVAL_SECS: u64 = 5;
 const POLL_MAX_INTERVAL_SECS: u64 = 30;
 
+/// Maximum reviews to fetch per airport from the scraper API.
+const MAX_REVIEWS_PER_AIRPORT: u32 = 1500;
+
 /// Page size when fetching reviews from the scraper API.
 const REVIEWS_PAGE_SIZE: u32 = 200;
 
@@ -125,14 +128,19 @@ pub async fn fetch(
         .await
         .context("Failed to parse scrape response")?;
 
-    info!(airport = iata, job_id = %job.job_id, "Scrape job submitted, polling...");
+    info!(airport = iata, job_id = %job.job_id, "Scrape job submitted, polling and ingesting reviews as they arrive...");
 
-    // Poll for completion (with retry on transient errors)
+    // Poll for completion, ingesting reviews on each poll cycle.
     let mut poll_interval = std::time::Duration::from_secs(POLL_MIN_INTERVAL_SECS);
     let max_interval = std::time::Duration::from_secs(POLL_MAX_INTERVAL_SECS);
     let start = tokio::time::Instant::now();
     let mut consecutive_errors = 0u32;
     const MAX_POLL_ERRORS: u32 = 10;
+    // Track how many reviews we've already ingested so we only process new ones.
+    let mut ingested_offset: u32 = 0;
+
+    // We need the place_id to fetch reviews. Try to find it early.
+    let mut place_id: Option<String> = None;
 
     loop {
         tokio::time::sleep(poll_interval).await;
@@ -140,9 +148,10 @@ pub async fn fetch(
 
         let elapsed = start.elapsed().as_secs();
         if elapsed % 60 < POLL_MAX_INTERVAL_SECS {
-            info!(airport = iata, elapsed_secs = elapsed, "Still waiting for scraper...");
+            info!(airport = iata, elapsed_secs = elapsed, ingested = ingested_offset, "Polling scraper...");
         }
 
+        // Check job status
         let status_resp = match client
             .get(format!("{}/jobs/{}", base_url, job.job_id))
             .header("X-API-Key", &api_key)
@@ -152,17 +161,9 @@ pub async fn fetch(
             Ok(r) => r,
             Err(e) => {
                 consecutive_errors += 1;
-                warn!(
-                    airport = iata,
-                    error = %e,
-                    attempt = consecutive_errors,
-                    "Failed to poll scraper, retrying..."
-                );
+                warn!(airport = iata, error = %e, attempt = consecutive_errors, "Failed to poll scraper, retrying...");
                 if consecutive_errors >= MAX_POLL_ERRORS {
-                    anyhow::bail!(
-                        "Scraper unreachable after {} attempts for {}: {}",
-                        MAX_POLL_ERRORS, iata, e
-                    );
+                    anyhow::bail!("Scraper unreachable after {} attempts for {}: {}", MAX_POLL_ERRORS, iata, e);
                 }
                 continue;
             }
@@ -179,59 +180,118 @@ pub async fn fetch(
                 continue;
             }
         };
+        consecutive_errors = 0;
 
-        consecutive_errors = 0; // Reset on success
+        let is_done = matches!(status.status.as_str(), "completed" | "failed");
 
-        match status.status.as_str() {
-            "completed" => break,
-            "failed" => {
-                anyhow::bail!("Google Reviews scrape job failed for {}", iata);
+        // Try to resolve place_id if we don't have it yet
+        if place_id.is_none() {
+            if let Ok(resp) = client
+                .get(format!("{}/places", base_url))
+                .header("X-API-Key", &api_key)
+                .send()
+                .await
+            {
+                if let Ok(places) = resp.json::<Vec<Place>>().await {
+                    place_id = places
+                        .iter()
+                        .find(|p| p.original_url.as_deref().map_or(false, |u| u == google_maps_url))
+                        .map(|p| p.place_id.clone());
+                }
             }
-            _ => {}
+        }
+
+        // Ingest any new reviews if we have the place_id
+        if let Some(ref pid) = place_id {
+            if ingested_offset < MAX_REVIEWS_PER_AIRPORT {
+                if let Ok(page) = client
+                    .get(format!("{}/reviews/{}?limit={}&offset={}", base_url, pid, REVIEWS_PAGE_SIZE, ingested_offset))
+                    .header("X-API-Key", &api_key)
+                    .send()
+                    .await
+                    .and_then(|r| Ok(r))
+                {
+                    if let Ok(page) = page.json::<ReviewsPage>().await {
+                        if !page.reviews.is_empty() {
+                            let mut batch_count = 0;
+                            for review in &page.reviews {
+                                let review_date = review.review_date.as_deref().and_then(parse_review_date);
+                                if let (Some(rd), Some(cutoff)) = (review_date, last_record_date) {
+                                    if rd <= cutoff { continue; }
+                                }
+                                let source_url = format!("google://{}/{}", iata, review.review_id);
+                                let overall_rating = review.rating.map(|r| (r * 2.0).round() as i16);
+                                let review_text = review.text();
+                                let _ = sqlx::query(
+                                    r#"INSERT INTO reviews_raw (airport_id, source, review_date, overall_rating, review_text, source_url)
+                                       VALUES ($1, 'google', $2, $3, $4, $5)
+                                       ON CONFLICT (source_url) DO UPDATE SET overall_rating = EXCLUDED.overall_rating, review_text = EXCLUDED.review_text"#,
+                                )
+                                .bind(airport.id).bind(review_date).bind(overall_rating).bind(review_text).bind(&source_url)
+                                .execute(pool).await;
+                                batch_count += 1;
+                            }
+                            ingested_offset += page.reviews.len() as u32;
+                            if batch_count > 0 {
+                                info!(airport = iata, batch = batch_count, total = ingested_offset, "Ingested reviews batch");
+                            }
+                        }
+
+                        if ingested_offset >= MAX_REVIEWS_PER_AIRPORT {
+                            info!(airport = iata, max = MAX_REVIEWS_PER_AIRPORT, "Hit review cap, stopping");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if is_done {
+            if status.status == "failed" {
+                warn!(airport = iata, "Scraper job failed, using reviews collected so far");
+            }
+            break;
         }
     }
 
-    // ── Step 2: Find place_id matching our URL ───────────────
+    // Final pass: ingest any remaining reviews we missed during polling
+    // (the scraper may have added more between our last poll and completion).
 
-    let places_resp: Vec<Place> = client
-        .get(format!("{}/places", base_url))
-        .header("X-API-Key", &api_key)
-        .send()
-        .await
-        .context("Failed to fetch places")?
-        .json()
-        .await
-        .context("Failed to parse places")?;
+    // ── Final pass: pick up any remaining reviews ─────────────
 
-    let place = places_resp
-        .iter()
-        .find(|p| {
-            p.original_url
-                .as_deref()
-                .map_or(false, |u| u == google_maps_url)
-        })
-        .context(format!(
-            "No place found matching URL {} for {}",
-            google_maps_url, iata
-        ))?;
+    // Resolve place_id if we still don't have it
+    if place_id.is_none() {
+        let places_resp: Vec<Place> = client
+            .get(format!("{}/places", base_url))
+            .header("X-API-Key", &api_key)
+            .send()
+            .await
+            .context("Failed to fetch places")?
+            .json()
+            .await
+            .context("Failed to parse places")?;
 
-    info!(
-        airport = iata,
-        place_id = %place.place_id,
-        "Found place, fetching reviews..."
-    );
+        place_id = places_resp
+            .iter()
+            .find(|p| p.original_url.as_deref().map_or(false, |u| u == google_maps_url))
+            .map(|p| p.place_id.clone());
+    }
 
-    // ── Step 3: Paginate reviews ─────────────────────────────
+    let final_place_id = place_id.context(format!(
+        "No place found matching URL {} for {}",
+        google_maps_url, iata
+    ))?;
 
-    let mut records: i32 = 0;
+    let mut records: i32 = ingested_offset as i32;
     let mut latest_date: Option<NaiveDate> = None;
-    let mut offset: u32 = 0;
+    let mut offset: u32 = ingested_offset;
 
+    // Continue from where streaming left off
     loop {
         let page: ReviewsPage = client
             .get(format!(
                 "{}/reviews/{}?limit={}&offset={}",
-                base_url, place.place_id, REVIEWS_PAGE_SIZE, offset
+                base_url, final_place_id, REVIEWS_PAGE_SIZE, offset
             ))
             .header("X-API-Key", &api_key)
             .send()
@@ -314,7 +374,10 @@ pub async fn fetch(
         }
 
         offset += page.reviews.len() as u32;
-        if offset >= page.total {
+        if offset >= page.total || offset >= MAX_REVIEWS_PER_AIRPORT {
+            if offset >= MAX_REVIEWS_PER_AIRPORT {
+                info!(airport = iata, max = MAX_REVIEWS_PER_AIRPORT, "Hit review cap, stopping pagination");
+            }
             break;
         }
     }

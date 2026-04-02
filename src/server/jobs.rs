@@ -242,6 +242,23 @@ async fn run_job(
 
     let seed_iata_codes: Vec<&str> = seed_airports.iter().map(|a| a.iata.as_str()).collect();
 
+    // Run OurAirports bootstrap if this is a full run (all airports, all sources)
+    // or if wikipedia is in the source list (needs wikipedia_url populated).
+    // Run ourairports if: running all sources (wikipedia will need it),
+    // or wikipedia is explicitly selected.
+    let running_all_sources = sources.iter().any(|s| s == "wikipedia")
+        || sources == pipeline::ALL_SOURCES.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+    let needs_ourairports = running_all_sources;
+    if needs_ourairports {
+        info!(job_id = %job_id, "Running OurAirports bootstrap");
+        update_job_progress(&jobs_map, &job_id, 0, airport_iatas.len(), None, Some("ourairports".to_string())).await;
+        if let Err(e) = crate::fetchers::ourairports::fetch_all(&pool, full_refresh, &seed_iata_codes).await {
+            warn!(job_id = %job_id, error = %e, "OurAirports bootstrap failed, continuing anyway");
+        } else {
+            info!(job_id = %job_id, "OurAirports bootstrap complete");
+        }
+    }
+
     let mut airports_completed = 0;
     let mut had_errors = false;
 

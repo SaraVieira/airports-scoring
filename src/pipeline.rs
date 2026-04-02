@@ -19,11 +19,10 @@ const COUNTRIES_WITH_PAX_FETCHER: &[&str] = &[
 const PAX_SOURCES: &[&str] = &["aena", "eurostat", "wikipedia"];
 
 /// Data sources run by the Rust CLI per-airport.
-/// ourairports runs first to populate airport metadata (runways, frequencies, wikipedia_url).
+/// ourairports is run once at the start of every job (bulk bootstrap).
 /// "reviews" runs both Skytrax + Google reviews scrapers.
 /// "sentiment" runs the ML pipeline on unprocessed reviews.
 pub const ALL_SOURCES: &[&str] = &[
-    "ourairports",
     "eurocontrol",
     "metar",
     "opensky",
