@@ -1,3 +1,4 @@
+import { useAuthStore } from "~/stores/admin";
 import { useState, useMemo } from "react";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
@@ -129,7 +130,7 @@ export function NewJobDialog({
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const password = localStorage.getItem("admin_password") || "";
+      const password = useAuthStore.getState().password || "";
       await adminStartJob({
         data: {
           password,

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAdminAuth } from "~/hooks/use-admin-auth";
 import { AdminLayout } from "~/components/admin-layout";
@@ -13,12 +13,12 @@ import {
 } from "~/components/ui/table";
 import { JobStatusBadge } from "~/components/admin/job-status-badge";
 import { NewJobDialog } from "~/components/admin/new-job-dialog";
-import { adminListJobs, adminListAirports, adminCancelJob } from "~/server/admin";
+import { adminCancelJob } from "~/server/admin";
+import { useAdminStore, useAuthStore } from "~/stores/admin";
 import type { components } from "~/api/types";
 import { Plus, X } from "lucide-react";
 
 type JobInfo = components["schemas"]["JobInfo"];
-type SupportedAirport = components["schemas"]["SupportedAirportWithStatus"];
 
 export const Route = createFileRoute("/admin/jobs")({
   component: AdminJobs,
@@ -52,30 +52,15 @@ function ProgressBar({ progress }: { progress: JobInfo["progress"] }) {
 
 function AdminJobs() {
   const { authenticated } = useAdminAuth();
-  const [jobs, setJobs] = useState<JobInfo[]>([]);
-  const [airports, setAirports] = useState<SupportedAirport[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { airports, jobs, fetchJobs, fetchAirports } = useAdminStore();
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const password = localStorage.getItem("admin_password") || "";
-      const [j, a] = await Promise.all([
-        adminListJobs({ data: password }),
-        adminListAirports({ data: password }),
-      ]);
-      setJobs(j);
-      setAirports(a);
-    } catch (err) {
-      console.error("Failed to fetch jobs data", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    if (authenticated) fetchData();
-  }, [authenticated, fetchData]);
+    if (authenticated) {
+      fetchJobs();
+      fetchAirports();
+    }
+  }, [authenticated, fetchJobs, fetchAirports]);
 
   // Auto-refresh every 5s if active jobs
   useEffect(() => {
@@ -84,15 +69,15 @@ function AdminJobs() {
       (j) => j.status === "running" || j.status === "queued",
     );
     if (!hasActive) return;
-    const interval = setInterval(fetchData, 5000);
+    const interval = setInterval(fetchJobs, 5000);
     return () => clearInterval(interval);
-  }, [jobs, authenticated, fetchData]);
+  }, [jobs, authenticated, fetchJobs]);
 
   const handleCancel = async (jobId: string) => {
     try {
-      const password = localStorage.getItem("admin_password") || "";
+      const password = useAuthStore.getState().password || "";
       await adminCancelJob({ data: { password, id: jobId } });
-      await fetchData();
+      await fetchJobs();
     } catch (err) {
       console.error("Failed to cancel job", err);
     }
@@ -124,7 +109,7 @@ function AdminJobs() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         airports={airports}
-        onStarted={fetchData}
+        onStarted={fetchJobs}
       />
 
       <Table>

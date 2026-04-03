@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Button } from "~/components/ui/button";
 import { LogOut } from "lucide-react";
+import { useAuthStore } from "~/stores/admin";
 
 const NAV_ITEMS = [
   { to: "/admin", label: "Dashboard" },
@@ -20,11 +21,7 @@ export function AdminLayout({
   actions?: React.ReactNode;
 }) {
   const { location } = useRouterState();
-
-  const handleLogout = () => {
-    localStorage.removeItem("admin_password");
-    window.location.reload();
-  };
+  const logout = useAuthStore((s) => s.logout);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -59,7 +56,7 @@ export function AdminLayout({
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleLogout}
+            onClick={() => { logout(); window.location.href = "/admin"; }}
             className="text-xs text-muted-foreground"
           >
             <LogOut className="size-3" />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAdminAuth } from "~/hooks/use-admin-auth";
 import { AdminLayout } from "~/components/admin-layout";
@@ -26,14 +26,8 @@ import {
   Loader2,
   Search,
 } from "lucide-react";
-import {
-  adminListAirports,
-  adminDeleteAirport,
-  adminStartJob,
-} from "~/server/admin";
-import type { components } from "~/api/types";
-
-type SupportedAirport = components["schemas"]["SupportedAirportWithStatus"];
+import { adminDeleteAirport, adminStartJob } from "~/server/admin";
+import { useAdminStore, useAuthStore } from "~/stores/admin";
 
 export const Route = createFileRoute("/admin/airports")({
   component: AdminAirports,
@@ -41,8 +35,7 @@ export const Route = createFileRoute("/admin/airports")({
 
 function AdminAirports() {
   const { authenticated } = useAdminAuth();
-  const [airports, setAirports] = useState<SupportedAirport[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { airports, loading, fetchAirports } = useAdminStore();
   const [editingIata, setEditingIata] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [fetchingIata, setFetchingIata] = useState<string | null>(null);
@@ -50,28 +43,16 @@ function AdminAirports() {
   const [batchOpen, setBatchOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const password = localStorage.getItem("admin_password") || "";
-      const a = await adminListAirports({ data: password });
-      setAirports(a);
-    } catch (err) {
-      console.error("Failed to fetch airports", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    if (authenticated) fetchData();
-  }, [authenticated, fetchData]);
+    if (authenticated) fetchAirports();
+  }, [authenticated, fetchAirports]);
 
   const handleDelete = async (iata: string) => {
     try {
-      const password = localStorage.getItem("admin_password") || "";
+      const password = useAuthStore.getState().password || "";
       await adminDeleteAirport({ data: { password, iata } });
       setDeleteConfirm(null);
-      await fetchData();
+      await fetchAirports();
     } catch (err) {
       console.error("Failed to delete", err);
     }
@@ -80,7 +61,7 @@ function AdminAirports() {
   const handleFetchNow = async (iata: string) => {
     setFetchingIata(iata);
     try {
-      const password = localStorage.getItem("admin_password") || "";
+      const password = useAuthStore.getState().password || "";
       await adminStartJob({
         data: { password, body: { airports: [iata] } },
       });
@@ -152,12 +133,12 @@ function AdminAirports() {
       <AddAirportDialog
         open={addOpen}
         onOpenChange={setAddOpen}
-        onCreated={fetchData}
+        onCreated={fetchAirports}
       />
       <BatchImportModal
         open={batchOpen}
         onOpenChange={setBatchOpen}
-        onComplete={fetchData}
+        onComplete={fetchAirports}
       />
 
       {/* Filter */}
@@ -215,7 +196,7 @@ function AdminAirports() {
                 airport={airport}
                 onSaved={() => {
                   setEditingIata(null);
-                  fetchData();
+                  fetchAirports();
                 }}
                 onCancel={() => setEditingIata(null)}
               />

@@ -1,3 +1,4 @@
+import { useAuthStore } from "~/stores/admin";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -31,7 +32,7 @@ export function EditRow({
   const handleSave = async () => {
     setLoading(true);
     try {
-      const password = localStorage.getItem("admin_password") || "";
+      const password = useAuthStore.getState().password || "";
       await adminUpdateAirport({
         data: {
           password,

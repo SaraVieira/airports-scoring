@@ -1,3 +1,4 @@
+import { useAuthStore } from "~/stores/admin";
 import { useEffect, useRef, useState } from "react";
 import { Card } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
@@ -53,7 +54,7 @@ export function LogTerminal() {
       import.meta.env.VITE_PUBLIC_API_URL ||
       import.meta.env.VITE_API_URL ||
       "http://localhost:3001";
-    const password = localStorage.getItem("admin_password") || "";
+    const password = useAuthStore.getState().password || "";
     const url = `${apiUrl}/api/admin/logs/stream?password=${encodeURIComponent(password)}`;
 
     const es = new EventSource(url);

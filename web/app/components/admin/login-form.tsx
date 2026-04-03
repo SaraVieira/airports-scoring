@@ -1,9 +1,9 @@
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "../ui/card";
 import { useState } from "react";
-import { adminListAirports } from "~/server/admin";
+import { useAuthStore } from "~/stores/admin";
 
-export function LoginForm({ onLogin }: { onLogin: () => void }) {
+export function LoginForm({ onLogin }: { onLogin: (password: string) => void }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -12,12 +12,16 @@ export function LoginForm({ onLogin }: { onLogin: () => void }) {
     e.preventDefault();
     setLoading(true);
     setError("");
-    localStorage.setItem("admin_password", password);
     try {
-      await adminListAirports({ data: password });
-      onLogin();
+      // Set password in store first, then verify via store
+      useAuthStore.getState().setPassword(password);
+      const valid = await useAuthStore.getState().verify();
+      if (valid) {
+        onLogin(password);
+      } else {
+        setError("Invalid password");
+      }
     } catch {
-      localStorage.removeItem("admin_password");
       setError("Invalid password");
     } finally {
       setLoading(false);

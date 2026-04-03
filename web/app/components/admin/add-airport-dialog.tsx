@@ -1,3 +1,4 @@
+import { useAuthStore } from "~/stores/admin";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -37,7 +38,7 @@ export function AddAirportDialog({
     setLoading(true);
     setError("");
     try {
-      const password = localStorage.getItem("admin_password") || "";
+      const password = useAuthStore.getState().password || "";
       await adminCreateAirport({
         data: {
           password,

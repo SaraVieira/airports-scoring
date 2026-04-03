@@ -1,3 +1,4 @@
+import { useAuthStore } from "~/stores/admin";
 import { useState, useMemo } from "react";
 import {
   Dialog,
@@ -71,7 +72,7 @@ export function BatchImportModal({
     if (parsedCodes.length === 0) return;
     setImporting(true);
     try {
-      const password = localStorage.getItem("admin_password") || "";
+      const password = useAuthStore.getState().password || "";
       const res = await adminBatchImport({
         data: {
           password,
@@ -116,7 +117,7 @@ export function BatchImportModal({
 
   const handleSave = async () => {
     setSaving(true);
-    const password = localStorage.getItem("admin_password") || "";
+    const password = useAuthStore.getState().password || "";
     try {
       for (const config of configs) {
         const body: Record<string, string | null> = {};

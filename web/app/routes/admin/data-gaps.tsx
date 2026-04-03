@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAdminAuth } from "~/hooks/use-admin-auth";
+import { useAdminStore, useAuthStore } from "~/stores/admin";
 import { AdminLayout } from "~/components/admin-layout";
 import { Button } from "~/components/ui/button";
 import {
@@ -14,7 +15,7 @@ import {
 import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
 import { Loader2, Search, Play } from "lucide-react";
-import { adminDataGaps, adminStartJob } from "~/server/admin";
+import { adminStartJob } from "~/server/admin";
 
 interface DataGap {
   iataCode: string;
@@ -58,33 +59,20 @@ function statusBadge(status: string) {
 
 function AdminDataGaps() {
   const { authenticated } = useAdminAuth();
-  const [gaps, setGaps] = useState<DataGap[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { dataGaps: gaps, loading, fetchDataGaps } = useAdminStore();
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "failed" | "stale" | "never">("all");
   const [fetchingKey, setFetchingKey] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const password = localStorage.getItem("admin_password") || "";
-      const data = await adminDataGaps({ data: password });
-      setGaps(data);
-    } catch (err) {
-      console.error("Failed to fetch data gaps", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    if (authenticated) fetchData();
-  }, [authenticated, fetchData]);
+    if (authenticated) fetchDataGaps();
+  }, [authenticated, fetchDataGaps]);
 
   const handleFetch = async (iata: string, source: string) => {
     const key = `${iata}:${source}`;
     setFetchingKey(key);
     try {
-      const password = localStorage.getItem("admin_password") || "";
+      const password = useAuthStore.getState().password || "";
       await adminStartJob({
         data: {
           password,

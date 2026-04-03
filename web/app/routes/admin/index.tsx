@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useAdminAuth } from "~/hooks/use-admin-auth";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import type { components } from "~/api/types";
 import { AdminLayout } from "~/components/admin-layout";
 import { LogTerminal } from "~/components/admin/log-terminal";
 import { Button } from "~/components/ui/button";
@@ -12,68 +11,40 @@ import {
   CheckCircle,
   Activity,
 } from "lucide-react";
-import {
-  adminListAirports,
-  adminDataGaps,
-  adminListJobs,
-  adminTriggerScoring,
-} from "~/server/admin";
+import { adminTriggerScoring } from "~/server/admin";
+import { useAdminStore, useAuthStore } from "~/stores/admin";
 import { StatCard } from "~/components/admin/stat-card";
 import { LoginForm } from "~/components/admin/login-form";
 import { RecentJobs } from "~/components/admin/recent-jobs";
-
-type SupportedAirport = components["schemas"]["SupportedAirportWithStatus"];
-type DataGap = components["schemas"]["DataGapResponse"];
-type JobInfo = components["schemas"]["JobInfo"];
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
 });
 
 function Dashboard() {
-  const [airports, setAirports] = useState<SupportedAirport[]>([]);
-  const [dataGaps, setDataGaps] = useState<DataGap[]>([]);
-  const [jobs, setJobs] = useState<JobInfo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { airports, jobs, dataGaps, loading, fetchAll, fetchJobs } = useAdminStore();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
-    const password = localStorage.getItem("admin_password") || "";
-    try {
-      const [a, g, j] = await Promise.all([
-        adminListAirports({ data: password }),
-        adminDataGaps({ data: password }),
-        adminListJobs({ data: password }),
-      ]);
-      setAirports(a);
-      setDataGaps(g);
-      setJobs(j);
-    } catch (err) {
-      console.error("Failed to fetch admin data", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchAll();
+  }, [fetchAll]);
 
+  // Auto-refresh jobs every 5s if active
   useEffect(() => {
     const hasActive = jobs.some(
       (j) => j.status === "running" || j.status === "queued",
     );
     if (!hasActive) return;
-    const interval = setInterval(fetchData, 5000);
+    const interval = setInterval(fetchJobs, 5000);
     return () => clearInterval(interval);
-  }, [jobs, fetchData]);
+  }, [jobs, fetchJobs]);
 
   const handleScoring = async () => {
-    const password = localStorage.getItem("admin_password") || "";
+    const password = useAuthStore.getState().password || "";
     setActionLoading("scoring");
     try {
       await adminTriggerScoring({ data: password });
-      await fetchData();
+      await fetchAll();
     } finally {
       setActionLoading(null);
     }
@@ -85,7 +56,7 @@ function Dashboard() {
   ).length;
   const scoredCount = airports.filter((a) => a.hasScore).length;
 
-  if (loading) {
+  if (loading && airports.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-sm text-muted-foreground">Loading...</p>
@@ -163,7 +134,7 @@ function Dashboard() {
 }
 
 function AdminDashboard() {
-  const { authenticated, setAuthenticated } = useAdminAuth();
+  const { authenticated, setPassword } = useAdminAuth();
 
   if (authenticated === null) {
     return (
@@ -174,7 +145,7 @@ function AdminDashboard() {
   }
 
   if (!authenticated) {
-    return <LoginForm onLogin={() => setAuthenticated(true)} />;
+    return <LoginForm onLogin={(pw: string) => setPassword(pw)} />;
   }
 
   return <Dashboard />;

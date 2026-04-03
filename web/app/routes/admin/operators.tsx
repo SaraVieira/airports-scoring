@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAdminAuth } from "~/hooks/use-admin-auth";
 import { AdminLayout } from "~/components/admin-layout";
@@ -21,7 +21,8 @@ import {
   type Operator,
 } from "~/components/admin/operator-dialogs";
 import { Plus, Pencil, Trash2, Link2, Loader2, Search } from "lucide-react";
-import { adminListOperators, adminDeleteOperator } from "~/server/admin";
+import { adminDeleteOperator } from "~/server/admin";
+import { useAdminStore, useAuthStore } from "~/stores/admin";
 
 export const Route = createFileRoute("/admin/operators")({
   component: AdminOperators,
@@ -29,28 +30,15 @@ export const Route = createFileRoute("/admin/operators")({
 
 function AdminOperators() {
   const { authenticated } = useAdminAuth();
-  const [operators, setOperators] = useState<Operator[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { operators, loading, fetchOperators } = useAdminStore();
   const [filter, setFilter] = useState("");
   const [editOp, setEditOp] = useState<Operator | null>(null);
   const [airportsOp, setAirportsOp] = useState<Operator | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const password = localStorage.getItem("admin_password") || "";
-      const data = await adminListOperators({ data: password });
-      setOperators(data);
-    } catch (err) {
-      console.error("Failed to fetch operators", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    if (authenticated) fetchData();
-  }, [authenticated, fetchData]);
+    if (authenticated) fetchOperators();
+  }, [authenticated, fetchOperators]);
 
   if (!authenticated) {
     return (
@@ -174,11 +162,11 @@ function AdminOperators() {
                       if (!confirm(`Delete ${op.shortName || op.name}?`))
                         return;
                       const password =
-                        localStorage.getItem("admin_password") || "";
+                        useAuthStore.getState().password || "";
                       await adminDeleteOperator({
                         data: { password, id: op.id },
                       });
-                      fetchData();
+                      fetchOperators();
                     }}
                   >
                     <Trash2 className="size-3" />
@@ -194,20 +182,20 @@ function AdminOperators() {
         <EditOperatorDialog
           operator={editOp}
           onClose={() => setEditOp(null)}
-          onSaved={fetchData}
+          onSaved={fetchOperators}
         />
       )}
       {airportsOp && (
         <AirportMappingDialog
           operator={airportsOp}
           onClose={() => setAirportsOp(null)}
-          onSaved={fetchData}
+          onSaved={fetchOperators}
         />
       )}
       {createOpen && (
         <CreateOperatorDialog
           onClose={() => setCreateOpen(false)}
-          onSaved={fetchData}
+          onSaved={fetchOperators}
         />
       )}
     </AdminLayout>

@@ -1,3 +1,4 @@
+import { useAuthStore } from "~/stores/admin";
 import type { components } from "./types";
 
 export type CountrySummary = components["schemas"]["CountrySummary"];
@@ -25,7 +26,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 async function adminFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const password =
     typeof window !== "undefined"
-      ? localStorage.getItem("admin_password") || ""
+      ? useAuthStore.getState().password || ""
       : "";
   return apiFetch<T>(path, {
     ...options,

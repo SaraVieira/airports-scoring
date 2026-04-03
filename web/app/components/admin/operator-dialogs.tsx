@@ -1,3 +1,4 @@
+import { useAuthStore } from "~/stores/admin";
 import { useState, useEffect } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -168,7 +169,7 @@ export function EditOperatorDialog({
   const handleSave = async () => {
     setSaving(true);
     try {
-      const password = localStorage.getItem("admin_password") || "";
+      const password = useAuthStore.getState().password || "";
       await adminUpdateOperator({
         data: {
           password,
@@ -241,7 +242,7 @@ export function CreateOperatorDialog({ onClose, onSaved }: DialogProps) {
     if (!name.trim()) return;
     setSaving(true);
     try {
-      const password = localStorage.getItem("admin_password") || "";
+      const password = useAuthStore.getState().password || "";
       await adminCreateOperator({
         data: {
           password,
@@ -310,7 +311,7 @@ export function AirportMappingDialog({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const password = localStorage.getItem("admin_password") || "";
+    const password = useAuthStore.getState().password || "";
     adminGetOperatorAirports({ data: { password, id: operator.id } })
       .then((data: string[]) => setCodes(data.join("\n")))
       .catch(console.error)
@@ -320,7 +321,7 @@ export function AirportMappingDialog({
   const handleSave = async () => {
     setSaving(true);
     try {
-      const password = localStorage.getItem("admin_password") || "";
+      const password = useAuthStore.getState().password || "";
       const iataCodes = codes
         .split(/[\n,\s]+/)
         .map((s) => s.trim().toUpperCase())
