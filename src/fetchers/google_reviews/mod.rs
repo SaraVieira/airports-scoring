@@ -213,48 +213,58 @@ pub async fn fetch_with_url(
             }
         }
 
-        // Ingest any new reviews if we have the place_id
+        // Ingest latest reviews from the scraper (always from offset 0).
+        // The scraper is still adding reviews so offset-based pagination shifts;
+        // instead we grab the latest batch each cycle and let ON CONFLICT dedup.
         if let Some(ref pid) = place_id {
-            if ingested_offset < MAX_REVIEWS_PER_AIRPORT {
-                if let Ok(page) = client
-                    .get(format!("{}/reviews/{}?limit={}&offset={}", base_url, pid, REVIEWS_PAGE_SIZE, ingested_offset))
+            // Paginate through everything currently available
+            let mut page_offset: u32 = 0;
+            loop {
+                let page = match client
+                    .get(format!("{}/reviews/{}?limit={}&offset={}", base_url, pid, REVIEWS_PAGE_SIZE, page_offset))
                     .header("X-API-Key", &api_key)
-                    .send()
-                    .await
-                    .and_then(|r| Ok(r))
+                    .send().await.and_then(|r| Ok(r))
                 {
-                    if let Ok(page) = page.json::<ReviewsPage>().await {
-                        if !page.reviews.is_empty() {
-                            let mut batch_count = 0;
-                            for review in &page.reviews {
-                                let review_date = review.review_date.as_deref().and_then(parse_review_date);
-                                if let (Some(rd), Some(cutoff)) = (review_date, last_record_date) {
-                                    if rd <= cutoff { continue; }
-                                }
-                                let source_url = format!("google://{}/{}", iata, review.review_id);
-                                let overall_rating = review.rating.map(|r| (r * 2.0).round() as i16);
-                                let review_text = review.text();
-                                let _ = sqlx::query(
-                                    r#"INSERT INTO reviews_raw (airport_id, source, review_date, overall_rating, review_text, source_url)
-                                       VALUES ($1, 'google', $2, $3, $4, $5)
-                                       ON CONFLICT (source_url) DO UPDATE SET overall_rating = EXCLUDED.overall_rating, review_text = EXCLUDED.review_text"#,
-                                )
-                                .bind(airport.id).bind(review_date).bind(overall_rating).bind(review_text).bind(&source_url)
-                                .execute(pool).await;
-                                batch_count += 1;
-                            }
-                            ingested_offset += page.reviews.len() as u32;
-                            if batch_count > 0 {
-                                info!(airport = iata, batch = batch_count, total = ingested_offset, "Ingested reviews batch");
-                            }
-                        }
+                    Ok(r) => match r.json::<ReviewsPage>().await { Ok(p) => p, Err(_) => break },
+                    Err(_) => break,
+                };
 
-                        if ingested_offset >= MAX_REVIEWS_PER_AIRPORT {
-                            info!(airport = iata, max = MAX_REVIEWS_PER_AIRPORT, "Hit review cap, stopping");
-                            break;
-                        }
+                if page.reviews.is_empty() { break; }
+
+                let mut batch_count = 0;
+                for review in &page.reviews {
+                    let review_date = review.review_date.as_deref().and_then(parse_review_date);
+                    if let (Some(rd), Some(cutoff)) = (review_date, last_record_date) {
+                        if rd <= cutoff { continue; }
                     }
+                    let source_url = format!("google://{}/{}", iata, review.review_id);
+                    let overall_rating = review.rating.map(|r| (r * 2.0).round() as i16);
+                    let review_text = review.text();
+                    let _ = sqlx::query(
+                        r#"INSERT INTO reviews_raw (airport_id, source, review_date, overall_rating, review_text, source_url)
+                           VALUES ($1, 'google', $2, $3, $4, $5)
+                           ON CONFLICT (source_url) DO UPDATE SET overall_rating = EXCLUDED.overall_rating, review_text = EXCLUDED.review_text"#,
+                    )
+                    .bind(airport.id).bind(review_date).bind(overall_rating).bind(review_text).bind(&source_url)
+                    .execute(pool).await;
+                    batch_count += 1;
                 }
+
+                page_offset += page.reviews.len() as u32;
+                ingested_offset = page_offset;
+
+                if batch_count > 0 {
+                    info!(airport = iata, batch = batch_count, total = ingested_offset, "Ingested reviews batch");
+                }
+
+                if page_offset >= page.total || page_offset >= MAX_REVIEWS_PER_AIRPORT {
+                    break;
+                }
+            }
+
+            if ingested_offset >= MAX_REVIEWS_PER_AIRPORT {
+                info!(airport = iata, max = MAX_REVIEWS_PER_AIRPORT, "Hit review cap, stopping");
+                break;
             }
         }
 
