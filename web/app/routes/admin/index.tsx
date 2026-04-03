@@ -132,13 +132,15 @@ function Dashboard() {
           icon={Activity}
           color={activeJobs > 0 ? "text-yellow-500" : undefined}
         />
-        <StatCard
-          label="Data Gaps"
-          value={dataGaps.length}
-          sub={`across ${new Set(dataGaps.map((g) => g.iataCode)).size} airports`}
-          icon={AlertTriangle}
-          color={dataGaps.length > 0 ? "text-destructive" : undefined}
-        />
+        <Link to="/admin/data-gaps" className="hover:opacity-80 transition-opacity cursor-pointer">
+          <StatCard
+            label="Data Gaps"
+            value={dataGaps.length}
+            sub={`across ${new Set(dataGaps.map((g) => g.iataCode)).size} airports`}
+            icon={AlertTriangle}
+            color={dataGaps.length > 0 ? "text-destructive" : undefined}
+          />
+        </Link>
         <StatCard
           label="Scored"
           value={`${scoredCount}/${enabledCount}`}

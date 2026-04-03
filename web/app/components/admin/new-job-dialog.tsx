@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,19 @@ import { ALL_SOURCES } from "~/utils/constants";
 import type { components } from "~/api/types";
 
 type SupportedAirport = components["schemas"]["SupportedAirportWithStatus"];
+
+type AirportGapStatus = "ok" | "failed" | "stale" | "never";
+
+function getAirportStatus(a: SupportedAirport): AirportGapStatus {
+  if (a.sources.length === 0) return "never";
+  if (a.sources.some((s) => s.lastStatus === "failed")) return "failed";
+  const now = Date.now();
+  if (a.sources.some((s) => {
+    if (!s.lastFetchedAt) return true;
+    return (now - new Date(s.lastFetchedAt).getTime()) / (1000 * 60 * 60 * 24) > 7;
+  })) return "stale";
+  return "ok";
+}
 
 const SOURCE_DESCRIPTIONS: Record<string, string> = {
   ourairports:
@@ -56,15 +70,47 @@ export function NewJobDialog({
   const [score, setScore] = useState(false);
   const [loading, setLoading] = useState(false);
   const [airportFilter, setAirportFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "gaps" | "failed" | "never">("all");
+  const [sortBy, setSortBy] = useState<"name" | "newest">("name");
 
-  const filteredAirports = airports
-    .filter((a) => a.enabled)
-    .filter(
-      (a) =>
-        !airportFilter ||
-        a.iataCode.toLowerCase().includes(airportFilter.toLowerCase()) ||
-        a.name.toLowerCase().includes(airportFilter.toLowerCase()),
-    );
+  const filteredAirports = useMemo(() => {
+    let result = airports.filter((a) => a.enabled);
+
+    if (statusFilter === "gaps") {
+      result = result.filter((a) => getAirportStatus(a) !== "ok");
+    } else if (statusFilter === "failed") {
+      result = result.filter((a) => getAirportStatus(a) === "failed");
+    } else if (statusFilter === "never") {
+      result = result.filter((a) => getAirportStatus(a) === "never");
+    }
+
+    if (airportFilter) {
+      const q = airportFilter.toLowerCase();
+      result = result.filter(
+        (a) =>
+          a.iataCode.toLowerCase().includes(q) ||
+          a.name.toLowerCase().includes(q),
+      );
+    }
+
+    if (sortBy === "newest") {
+      result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else {
+      result.sort((a, b) => a.iataCode.localeCompare(b.iataCode));
+    }
+
+    return result;
+  }, [airports, airportFilter, statusFilter, sortBy]);
+
+  const gapCounts = useMemo(() => {
+    const enabled = airports.filter((a) => a.enabled);
+    return {
+      all: enabled.length,
+      gaps: enabled.filter((a) => getAirportStatus(a) !== "ok").length,
+      failed: enabled.filter((a) => getAirportStatus(a) === "failed").length,
+      never: enabled.filter((a) => getAirportStatus(a) === "never").length,
+    };
+  }, [airports]);
 
   const toggleAirport = (iata: string) => {
     setSelectedAirports((prev) =>
@@ -126,12 +172,33 @@ export function NewJobDialog({
         <div className="flex-1 min-h-0 grid grid-cols-[1fr_1.2fr] gap-6 py-2">
           {/* Left: Airport selection */}
           <div className="flex flex-col min-h-0">
-            <label className="text-sm font-medium mb-2 block">
+            <label className="text-sm font-medium mb-1 block">
               Airports{" "}
               <span className="text-muted-foreground font-normal">
                 (empty = all enabled)
               </span>
             </label>
+            <div className="flex items-center gap-1 mb-2">
+              <Button variant={statusFilter === "all" ? "secondary" : "ghost"} size="xs" onClick={() => setStatusFilter("all")}>
+                All ({gapCounts.all})
+              </Button>
+              <Button variant={statusFilter === "gaps" ? "secondary" : "ghost"} size="xs" onClick={() => setStatusFilter("gaps")} className={statusFilter !== "gaps" ? "text-yellow-500" : ""}>
+                Gaps ({gapCounts.gaps})
+              </Button>
+              <Button variant={statusFilter === "failed" ? "secondary" : "ghost"} size="xs" onClick={() => setStatusFilter("failed")} className={statusFilter !== "failed" ? "text-destructive" : ""}>
+                Failed ({gapCounts.failed})
+              </Button>
+              <Button variant={statusFilter === "never" ? "secondary" : "ghost"} size="xs" onClick={() => setStatusFilter("never")}>
+                New ({gapCounts.never})
+              </Button>
+              <div className="w-px h-4 bg-border mx-1" />
+              <Button variant={sortBy === "name" ? "secondary" : "ghost"} size="xs" onClick={() => setSortBy("name")}>
+                A-Z
+              </Button>
+              <Button variant={sortBy === "newest" ? "secondary" : "ghost"} size="xs" onClick={() => setSortBy("newest")}>
+                Newest
+              </Button>
+            </div>
             <Input
               value={airportFilter}
               onChange={(e) => setAirportFilter(e.target.value)}
@@ -139,27 +206,40 @@ export function NewJobDialog({
               className="mb-2"
             />
             <div className="flex-1 overflow-y-auto border rounded-md bg-muted/20 p-1 min-h-0">
-              {filteredAirports.map((a) => (
-                <label
-                  key={a.iataCode}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors ${
-                    selectedAirports.includes(a.iataCode)
-                      ? "bg-green-500/10"
-                      : "hover:bg-muted"
-                  }`}
-                >
-                  <Checkbox
-                    checked={selectedAirports.includes(a.iataCode)}
-                    onCheckedChange={() => toggleAirport(a.iataCode)}
-                  />
-                  <span className="text-sm font-mono font-medium">
-                    {a.iataCode}
-                  </span>
-                  <span className="text-sm text-muted-foreground truncate">
-                    {a.name}
-                  </span>
-                </label>
-              ))}
+              {filteredAirports.map((a) => {
+                const status = getAirportStatus(a);
+                const failedCount = a.sources.filter((s) => s.lastStatus === "failed").length;
+                return (
+                  <label
+                    key={a.iataCode}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors ${
+                      selectedAirports.includes(a.iataCode)
+                        ? "bg-green-500/10"
+                        : "hover:bg-muted"
+                    }`}
+                  >
+                    <Checkbox
+                      checked={selectedAirports.includes(a.iataCode)}
+                      onCheckedChange={() => toggleAirport(a.iataCode)}
+                    />
+                    <span className="text-sm font-mono font-medium">
+                      {a.iataCode}
+                    </span>
+                    <span className="text-sm text-muted-foreground truncate flex-1">
+                      {a.name}
+                    </span>
+                    {status === "never" && (
+                      <Badge variant="secondary" className="text-[10px] shrink-0">new</Badge>
+                    )}
+                    {status === "failed" && (
+                      <Badge variant="destructive" className="text-[10px] shrink-0">{failedCount} failed</Badge>
+                    )}
+                    {status === "stale" && (
+                      <Badge variant="outline" className="text-[10px] shrink-0 border-yellow-500/30 text-yellow-500 bg-yellow-500/10">stale</Badge>
+                    )}
+                  </label>
+                );
+              })}
             </div>
             {selectedAirports.length > 0 && (
               <p className="text-xs text-muted-foreground mt-2">

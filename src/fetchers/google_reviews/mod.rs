@@ -223,7 +223,7 @@ pub async fn fetch_with_url(
                 let page = match client
                     .get(format!("{}/reviews/{}?limit={}&offset={}", base_url, pid, REVIEWS_PAGE_SIZE, page_offset))
                     .header("X-API-Key", &api_key)
-                    .send().await.and_then(|r| Ok(r))
+                    .send().await
                 {
                     Ok(r) => match r.json::<ReviewsPage>().await { Ok(p) => p, Err(_) => break },
                     Err(_) => break,

@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: "/admin/jobs", label: "Jobs" },
   { to: "/admin/airports", label: "Airports" },
   { to: "/admin/operators", label: "Operators" },
+  { to: "/admin/data-gaps", label: "Gaps" },
 ] as const;
 
 export function AdminLayout({

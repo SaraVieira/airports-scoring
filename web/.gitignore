@@ -9,3 +9,4 @@ dist
 backups/
 web/dist/
 web/.output/
+public/sitemap.xml

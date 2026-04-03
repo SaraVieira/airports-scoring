@@ -102,14 +102,14 @@ pub async fn list_supported_airports(
     )
     .fetch_all(&state.pool)
     .await
-    .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+    .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let statuses = sqlx::query_as::<sqlx::Postgres, SourceStatus>(
         "SELECT * FROM source_status ORDER BY iata_code, source",
     )
     .fetch_all(&state.pool)
     .await
-    .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+    .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     // Group statuses by iata_code
     let mut status_map: std::collections::HashMap<String, Vec<SourceStatus>> =
@@ -233,7 +233,7 @@ pub async fn update_supported_airport(
     .bind(&iata)
     .fetch_all(&state.pool)
     .await
-    .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+    .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let has_score: bool = sqlx::query_scalar(
         "SELECT EXISTS(SELECT 1 FROM airport_scores s \
@@ -267,7 +267,7 @@ pub async fn delete_supported_airport(
         .bind(&iata)
         .execute(&state.pool)
         .await
-        .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+        .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     if result.rows_affected() == 0 {
         return Err(StatusCode::NOT_FOUND);
@@ -301,7 +301,7 @@ pub async fn data_gaps(
     )
     .fetch_all(&state.pool)
     .await
-    .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+    .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     // Airports with NO source_status rows at all
     let missing = sqlx::query_as::<sqlx::Postgres, (String, String)>(
@@ -315,7 +315,7 @@ pub async fn data_gaps(
     )
     .fetch_all(&state.pool)
     .await
-    .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+    .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let mut results: Vec<DataGapResponse> = stale
         .into_iter()
@@ -362,7 +362,7 @@ pub async fn start_job(
         .jobs
         .start_job(body)
         .await
-        .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+        .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
     Ok((StatusCode::ACCEPTED, Json(job)))
 }
 
@@ -447,7 +447,7 @@ pub async fn refresh_all(
         .jobs
         .start_job(request)
         .await
-        .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+        .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
     Ok((StatusCode::ACCEPTED, Json(job)))
 }
 
@@ -534,7 +534,7 @@ pub async fn batch_import(
     .bind(&upper_codes)
     .fetch_all(&state.pool)
     .await
-    .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+    .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     // Partition into resolved vs failed.
     let found_set: std::collections::HashSet<String> = rows
@@ -588,7 +588,7 @@ pub async fn batch_import(
             .pool
             .begin()
             .await
-            .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+            .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
         sqlx::query(
             r#"
@@ -602,7 +602,7 @@ pub async fn batch_import(
         .bind(&names)
         .execute(&mut *tx)
         .await
-        .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+        .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
         sqlx::query(
             r#"
@@ -622,11 +622,11 @@ pub async fn batch_import(
         .bind(&lons)
         .execute(&mut *tx)
         .await
-        .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+        .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
         tx.commit()
             .await
-            .map_err(|e| { tracing::error!("batch_import error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+            .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
     }
 
     // Optionally start a pipeline job for the resolved airports.

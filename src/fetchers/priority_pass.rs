@@ -52,6 +52,15 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
     }
 
     if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        // "No lounge links found" is not an error — the airport just has no Priority Pass lounges.
+        if stderr.contains("No lounge links found") {
+            info!(airport = iata, "No Priority Pass lounges found (not an error)");
+            return Ok(FetchResult {
+                records_processed: 0,
+                last_record_date: None,
+            });
+        }
         anyhow::bail!(
             "Priority Pass scraper exited with status {} for {}",
             output.status,

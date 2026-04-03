@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "npx tsx scripts/generate-sitemap.ts && vite build",
     "start": "node .output/server/index.mjs",
     "generate-types": "openapi-typescript http://localhost:3001/openapi.json -o app/api/types.ts"
   },

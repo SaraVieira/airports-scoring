@@ -19,6 +19,7 @@ import { Route as CountriesCodeRouteImport } from './routes/countries_.$code'
 import { Route as AirportIataRouteImport } from './routes/airport.$iata'
 import { Route as AdminOperatorsRouteImport } from './routes/admin/operators'
 import { Route as AdminJobsRouteImport } from './routes/admin/jobs'
+import { Route as AdminDataGapsRouteImport } from './routes/admin/data-gaps'
 import { Route as AdminAirportsRouteImport } from './routes/admin/airports'
 
 const RankingsRoute = RankingsRouteImport.update({
@@ -71,6 +72,11 @@ const AdminJobsRoute = AdminJobsRouteImport.update({
   path: '/admin/jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDataGapsRoute = AdminDataGapsRouteImport.update({
+  id: '/admin/data-gaps',
+  path: '/admin/data-gaps',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminAirportsRoute = AdminAirportsRouteImport.update({
   id: '/admin/airports',
   path: '/admin/airports',
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/countries': typeof CountriesRoute
   '/rankings': typeof RankingsRoute
   '/admin/airports': typeof AdminAirportsRoute
+  '/admin/data-gaps': typeof AdminDataGapsRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/operators': typeof AdminOperatorsRoute
   '/airport/$iata': typeof AirportIataRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/countries': typeof CountriesRoute
   '/rankings': typeof RankingsRoute
   '/admin/airports': typeof AdminAirportsRoute
+  '/admin/data-gaps': typeof AdminDataGapsRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/operators': typeof AdminOperatorsRoute
   '/airport/$iata': typeof AirportIataRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/countries': typeof CountriesRoute
   '/rankings': typeof RankingsRoute
   '/admin/airports': typeof AdminAirportsRoute
+  '/admin/data-gaps': typeof AdminDataGapsRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/operators': typeof AdminOperatorsRoute
   '/airport/$iata': typeof AirportIataRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/countries'
     | '/rankings'
     | '/admin/airports'
+    | '/admin/data-gaps'
     | '/admin/jobs'
     | '/admin/operators'
     | '/airport/$iata'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/countries'
     | '/rankings'
     | '/admin/airports'
+    | '/admin/data-gaps'
     | '/admin/jobs'
     | '/admin/operators'
     | '/airport/$iata'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/countries'
     | '/rankings'
     | '/admin/airports'
+    | '/admin/data-gaps'
     | '/admin/jobs'
     | '/admin/operators'
     | '/airport/$iata'
@@ -164,6 +176,7 @@ export interface RootRouteChildren {
   CountriesRoute: typeof CountriesRoute
   RankingsRoute: typeof RankingsRoute
   AdminAirportsRoute: typeof AdminAirportsRoute
+  AdminDataGapsRoute: typeof AdminDataGapsRoute
   AdminJobsRoute: typeof AdminJobsRoute
   AdminOperatorsRoute: typeof AdminOperatorsRoute
   AirportIataRoute: typeof AirportIataRoute
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminJobsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/data-gaps': {
+      id: '/admin/data-gaps'
+      path: '/admin/data-gaps'
+      fullPath: '/admin/data-gaps'
+      preLoaderRoute: typeof AdminDataGapsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/airports': {
       id: '/admin/airports'
       path: '/admin/airports'
@@ -260,6 +280,7 @@ const rootRouteChildren: RootRouteChildren = {
   CountriesRoute: CountriesRoute,
   RankingsRoute: RankingsRoute,
   AdminAirportsRoute: AdminAirportsRoute,
+  AdminDataGapsRoute: AdminDataGapsRoute,
   AdminJobsRoute: AdminJobsRoute,
   AdminOperatorsRoute: AdminOperatorsRoute,
   AirportIataRoute: AirportIataRoute,
