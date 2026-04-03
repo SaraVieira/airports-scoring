@@ -1,9 +1,8 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { api, type CountrySummary } from "~/api/client";
 import { scoreHex } from "~/utils/scoring";
-import { fmtM } from "~/utils/format";
 import { HeadToHead } from "~/components/countries/head-to-head";
 import { CountryPicker } from "~/components/countries/country-picker";
 import { CountryDetailPanel } from "~/components/countries/country-detail";
@@ -41,9 +40,16 @@ export const Route = createFileRoute("/countries")({
   head: () => ({
     meta: [
       { title: "Countries — airports.report" },
-      { name: "description", content: "Compare European countries by airport quality. Average scores, passenger volumes, sentiment, and on-time performance by country." },
+      {
+        name: "description",
+        content:
+          "Compare European countries by airport quality. Average scores, passenger volumes, sentiment, and on-time performance by country.",
+      },
       { property: "og:title", content: "Countries — airports.report" },
-      { property: "og:description", content: "Compare European countries by airport quality." },
+      {
+        property: "og:description",
+        content: "Compare European countries by airport quality.",
+      },
       { property: "og:url", content: "https://airports.report/countries" },
     ],
     links: [{ rel: "canonical", href: "https://airports.report/countries" }],

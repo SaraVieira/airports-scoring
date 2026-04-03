@@ -1,11 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { useMemo, useState, memo } from "react";
+import { useState, memo } from "react";
 import {
   ComposableMap,
   Geographies,
   Geography,
   Marker,
-  ZoomableGroup,
 } from "react-simple-maps";
 import { scoreColor } from "~/utils/scoring";
 
@@ -67,41 +66,43 @@ const EuropeMap = memo(function EuropeMap({
           ))
         }
       </Geographies>
-      {airports.filter((a) => a.lat != null && a.lng != null).map((a) => (
-        <Marker key={a.iataCode} coordinates={[a.lng!, a.lat!]}>
-          <Link to="/airport/$iata" params={{ iata: a.iataCode }}>
-            <g
-              onMouseEnter={() => setHovered(a)}
-              onMouseLeave={() => setHovered(null)}
-              className="cursor-pointer"
-            >
-              {/* Glow */}
-              <circle
-                r={hovered?.iataCode === a.iataCode ? 10 : 6}
-                fill={dotColor(a.scoreTotal)}
-                opacity={0.2}
-              />
-              {/* Dot */}
-              <circle
-                r={hovered?.iataCode === a.iataCode ? 4.5 : 3}
-                fill={dotColor(a.scoreTotal)}
-                className="transition-all duration-150"
-              />
-              {/* Label on hover */}
-              {hovered?.iataCode === a.iataCode && (
-                <text
-                  y={-10}
-                  textAnchor="middle"
-                  className="text-[10px] font-bold fill-zinc-200"
-                  style={{ fontFamily: "Space Grotesk, sans-serif" }}
-                >
-                  {a.iataCode}
-                </text>
-              )}
-            </g>
-          </Link>
-        </Marker>
-      ))}
+      {airports
+        .filter((a) => a.lat != null && a.lng != null)
+        .map((a) => (
+          <Marker key={a.iataCode} coordinates={[a.lng!, a.lat!]}>
+            <Link to="/airport/$iata" params={{ iata: a.iataCode }}>
+              <g
+                onMouseEnter={() => setHovered(a)}
+                onMouseLeave={() => setHovered(null)}
+                className="cursor-pointer"
+              >
+                {/* Glow */}
+                <circle
+                  r={hovered?.iataCode === a.iataCode ? 10 : 6}
+                  fill={dotColor(a.scoreTotal)}
+                  opacity={0.2}
+                />
+                {/* Dot */}
+                <circle
+                  r={hovered?.iataCode === a.iataCode ? 4.5 : 3}
+                  fill={dotColor(a.scoreTotal)}
+                  className="transition-all duration-150"
+                />
+                {/* Label on hover */}
+                {hovered?.iataCode === a.iataCode && (
+                  <text
+                    y={-10}
+                    textAnchor="middle"
+                    className="text-[10px] font-bold fill-zinc-200"
+                    style={{ fontFamily: "Space Grotesk, sans-serif" }}
+                  >
+                    {a.iataCode}
+                  </text>
+                )}
+              </g>
+            </Link>
+          </Marker>
+        ))}
     </ComposableMap>
   );
 });

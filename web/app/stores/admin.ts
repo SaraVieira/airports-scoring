@@ -102,7 +102,7 @@ function getPassword(): string {
   return useAuthStore.getState().password || "";
 }
 
-export const useAdminStore = create<AdminState>()((set, get) => ({
+export const useAdminStore = create<AdminState>()((set) => ({
   airports: [],
   jobs: [],
   dataGaps: [],

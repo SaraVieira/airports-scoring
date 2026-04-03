@@ -8,7 +8,7 @@ export const useSingleAirport = ({ airport }: { airport: Airport }) => {
   const score = airport.scores[0];
   const totalNum = score?.scoreTotal ?? null;
 
-  const { recentOps, opsAgg, opsTrend } = useMemo(() => {
+  const { opsAgg, opsTrend } = useMemo(() => {
     const recent = airport.operationalStats.slice(-12);
     return {
       recentOps: recent,
@@ -66,9 +66,7 @@ export const useSingleAirport = ({ airport }: { airport: Airport }) => {
         hasYear = true;
       }
     }
-    return hasYear
-      ? `Based on data from ${minYear}\u2013${maxYear}`
-      : null;
+    return hasYear ? `Based on data from ${minYear}\u2013${maxYear}` : null;
   }, [airport.paxYearly, airport.operationalStats, airport.sentimentSnapshots]);
 
   // Source breakdown for sentiment

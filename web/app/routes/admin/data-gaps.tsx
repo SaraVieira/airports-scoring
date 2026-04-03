@@ -17,14 +17,6 @@ import { Badge } from "~/components/ui/badge";
 import { Loader2, Search, Play } from "lucide-react";
 import { adminStartJob } from "~/server/admin";
 
-interface DataGap {
-  iataCode: string;
-  name: string;
-  source: string;
-  lastFetchedAt: string | null;
-  lastStatus: string;
-}
-
 export const Route = createFileRoute("/admin/data-gaps")({
   component: AdminDataGaps,
 });
@@ -41,10 +33,7 @@ function timeAgo(dateStr: string | null): string {
 function statusBadge(status: string) {
   if (status === "never_fetched")
     return <Badge variant="secondary">never fetched</Badge>;
-  if (status === "failed")
-    return (
-      <Badge variant="destructive">failed</Badge>
-    );
+  if (status === "failed") return <Badge variant="destructive">failed</Badge>;
   if (status === "success")
     return (
       <Badge
@@ -61,7 +50,9 @@ function AdminDataGaps() {
   const { authenticated } = useAdminAuth();
   const { dataGaps: gaps, loading, fetchDataGaps } = useAdminStore();
   const [filter, setFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "failed" | "stale" | "never">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "failed" | "stale" | "never"
+  >("all");
   const [fetchingKey, setFetchingKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -113,13 +104,16 @@ function AdminDataGaps() {
     return result;
   }, [gaps, filter, statusFilter]);
 
-  const counts = useMemo(() => ({
-    all: gaps.length,
-    failed: gaps.filter((g) => g.lastStatus === "failed").length,
-    stale: gaps.filter((g) => g.lastStatus === "success").length,
-    never: gaps.filter((g) => g.lastStatus === "never_fetched").length,
-    airports: new Set(gaps.map((g) => g.iataCode)).size,
-  }), [gaps]);
+  const counts = useMemo(
+    () => ({
+      all: gaps.length,
+      failed: gaps.filter((g) => g.lastStatus === "failed").length,
+      stale: gaps.filter((g) => g.lastStatus === "success").length,
+      never: gaps.filter((g) => g.lastStatus === "never_fetched").length,
+      airports: new Set(gaps.map((g) => g.iataCode)).size,
+    }),
+    [gaps],
+  );
 
   if (!authenticated) {
     return (
@@ -182,7 +176,8 @@ function AdminDataGaps() {
           </Button>
         </div>
         <span className="text-xs text-muted-foreground">
-          {filtered.length} gaps across {new Set(filtered.map((g) => g.iataCode)).size} airports
+          {filtered.length} gaps across{" "}
+          {new Set(filtered.map((g) => g.iataCode)).size} airports
         </span>
       </div>
 
@@ -226,9 +221,7 @@ function AdminDataGaps() {
                     <Button
                       variant="ghost"
                       size="xs"
-                      onClick={() =>
-                        handleFetch(gap.iataCode, gap.source)
-                      }
+                      onClick={() => handleFetch(gap.iataCode, gap.source)}
                       disabled={fetchingKey === key}
                     >
                       {fetchingKey === key ? (

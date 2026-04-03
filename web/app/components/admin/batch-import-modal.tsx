@@ -57,7 +57,6 @@ export function BatchImportModal({
   const [importing, setImporting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<BatchResult | null>(null);
   const [configs, setConfigs] = useState<AirportConfig[]>([]);
   const [failed, setFailed] = useState<string[]>([]);
 
@@ -85,7 +84,6 @@ export function BatchImportModal({
       });
 
       const batchResult = res as BatchResult;
-      setResult(batchResult);
       setFailed(batchResult.failed || []);
       setConfigs(
         (batchResult.resolved || []).map((a: ResolvedAirport) => ({
@@ -146,7 +144,6 @@ export function BatchImportModal({
   const handleClose = () => {
     setState("paste");
     setText("");
-    setResult(null);
     setConfigs([]);
     setFailed([]);
     setError(null);
