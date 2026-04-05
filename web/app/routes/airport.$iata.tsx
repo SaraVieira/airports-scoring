@@ -23,7 +23,8 @@ export const Route = createFileRoute("/airport/$iata")({
   loader: ({ params }) => getAirport({ data: params.iata! }),
   head: ({ loaderData: airport }) => {
     const score = airport?.scores?.[0]?.scoreTotal;
-    const scoreText = score != null ? ` — Score: ${Math.round(Number(score))}/100` : "";
+    const scoreText =
+      score != null ? ` — Score: ${Math.round(Number(score))}/100` : "";
     const title = airport
       ? `${airport.iataCode} ${airport.name} — airports.report`
       : "Airport — airports.report";
@@ -36,12 +37,18 @@ export const Route = createFileRoute("/airport/$iata")({
         { name: "description", content: description },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
-        { property: "og:url", content: `https://airports.report/airport/${airport?.iataCode}` },
+        {
+          property: "og:url",
+          content: `https://airports.report/airport/${airport?.iataCode}`,
+        },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
       ],
       links: [
-        { rel: "canonical", href: `https://airports.report/airport/${airport?.iataCode}` },
+        {
+          rel: "canonical",
+          href: `https://airports.report/airport/${airport?.iataCode}`,
+        },
       ],
     };
   },
@@ -57,8 +64,6 @@ function AirportDetail() {
       <div className="max-w-5xl mx-auto px-16 pt-20 pb-12 flex flex-col gap-9">
         <Divider />
         <Header airport={airport} />
-
-        {airport.iataCode && <LivePulse iata={airport.iataCode} />}
 
         <Verdict airport={airport} />
 
@@ -111,6 +116,12 @@ function AirportDetail() {
         <RouteSection airport={airport} />
         <GroundTransport airport={airport} />
         <Divider />
+        {airport.iataCode && (
+          <>
+            <LivePulse iata={airport.iataCode} />
+            <Divider />
+          </>
+        )}
         <Runways airport={airport} />
         <Divider />
         <Backstory airport={airport} />
@@ -122,7 +133,8 @@ function AirportDetail() {
               params={{ code: airport.countryCode }}
               className="font-grotesk text-[11px] font-bold text-zinc-500 tracking-wider hover:text-zinc-300 transition-colors"
             >
-              ALL {airport.country?.name?.toUpperCase() ?? airport.countryCode} AIRPORTS →
+              ALL {airport.country?.name?.toUpperCase() ?? airport.countryCode}{" "}
+              AIRPORTS →
             </Link>
           )}
           <Link
