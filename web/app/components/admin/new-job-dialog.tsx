@@ -27,7 +27,7 @@ function getAirportStatus(a: SupportedAirport): AirportGapStatus {
   const now = Date.now();
   if (a.sources.some((s) => {
     if (!s.lastFetchedAt) return true;
-    return (now - new Date(s.lastFetchedAt).getTime()) / (1000 * 60 * 60 * 24) > 7;
+    return (now - new Date(s.lastFetchedAt).getTime()) / (1000 * 60 * 60 * 24) > 30;
   })) return "stale";
   return "ok";
 }

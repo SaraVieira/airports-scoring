@@ -112,7 +112,7 @@ export function AirportMap({ airports }: { airports: MapAirport[] }) {
 
   return (
     <section className="py-12 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="sm:flex items-center justify-between">
         <div>
           <h2 className="font-grotesk text-[13px] font-bold text-yellow-400 tracking-[2px] uppercase">
             The Map

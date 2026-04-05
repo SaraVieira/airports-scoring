@@ -10,8 +10,10 @@ import { AirportSearch } from "../components/airport-search";
 import "../styles.css";
 
 const SITE_NAME = "airports.report";
-const SITE_DESC = "Opinionated scoring and intelligence for European airports. Delays, sentiment, connectivity, and more — backed by data, delivered with snark.";
-const SITE_TITLE = "airports.report — European Airport Scores, Delays & Sentiment Rankings";
+const SITE_DESC =
+  "Opinionated scoring and intelligence for European airports. Delays, sentiment, connectivity, and more — backed by data, delivered with snark.";
+const SITE_TITLE =
+  "airports.report — European Airport Scores, Delays & Sentiment Rankings";
 const SITE_URL = "https://airports.report";
 
 export const Route = createRootRoute({
@@ -33,9 +35,7 @@ export const Route = createRootRoute({
       { name: "twitter:title", content: SITE_NAME },
       { name: "twitter:description", content: SITE_DESC },
     ],
-    links: [
-      { rel: "canonical", href: SITE_URL },
-    ],
+    links: [{ rel: "canonical", href: SITE_URL }],
     scripts: [
       {
         type: "application/ld+json",
@@ -68,15 +68,17 @@ function RootComponent() {
       </head>
       <body className="dark bg-background text-foreground">
         {!isAdmin && (
-          <nav className="fixed top-0 left-0 right-0 z-50 h-12 bg-[#0a0a0b]/90 backdrop-blur-sm border-b border-white/[0.05]">
-            <div className="max-w-5xl mx-auto px-16 h-full flex items-center justify-between">
-              <div className="flex items-center gap-6">
+          <nav className="fixed top-0 left-0 right-0 z-50  sm:h-12 bg-[#0a0a0b]/90 backdrop-blur-sm border-b border-white/[0.05] pb-4 sm:pb-0">
+            <div className="max-w-5xl mx-auto px-16 h-full flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0 mt-2 sm:mt-0">
+              <div className="flex items-center mr-6">
                 <Link
                   to="/"
                   className="font-grotesk text-sm font-bold text-zinc-400 tracking-wider hover:text-zinc-100 transition-colors"
                 >
                   airports.report
                 </Link>
+              </div>
+              <div className="flex items-center gap-6">
                 <Link
                   to="/countries"
                   className="text-xs font-medium text-zinc-500 hover:text-zinc-200 transition-colors"

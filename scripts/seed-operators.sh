@@ -21,6 +21,13 @@ fi
 COUNT=$(jq length "$JSON_FILE")
 echo "Seeding $COUNT operators from $JSON_FILE..."
 
+# Clean slate: clear operator references then delete all organisations
+echo "Clearing existing operator data..."
+psql "$DB" -q -c "UPDATE airports SET operator_id = NULL, owner_id = NULL;"
+psql "$DB" -q -c "DELETE FROM operator_scores;"
+psql "$DB" -q -c "DELETE FROM organisations;"
+psql "$DB" -q -c "ALTER SEQUENCE organisations_id_seq RESTART WITH 1;"
+
 # Process each operator
 jq -c '.[]' "$JSON_FILE" | while IFS= read -r org; do
   NAME=$(echo "$org" | jq -r '.name')
@@ -31,23 +38,15 @@ jq -c '.[]' "$JSON_FILE" | while IFS= read -r org; do
   PUBLIC_PCT=$(echo "$org" | jq -r '.public_share_pct')
   NOTES=$(echo "$org" | jq -r '.notes')
 
-  # Upsert organisation — use head -1 to grab just the ID, not the INSERT tag
+  # Insert organisation
   ORG_ID=$(psql "$DB" -tA -c "
     INSERT INTO organisations (name, short_name, country_code, org_type, ownership_model, public_share_pct, notes)
     VALUES (\$\$${NAME}\$\$, \$\$${SHORT}\$\$, '${COUNTRY}', '${ORG_TYPE}', '${OWNERSHIP}', ${PUBLIC_PCT}, \$\$${NOTES}\$\$)
-    ON CONFLICT DO NOTHING
     RETURNING id;
   " 2>/dev/null | head -1)
 
-  # If no insert (already exists), look it up
   if [ -z "$ORG_ID" ]; then
-    ORG_ID=$(psql "$DB" -tA -c "
-      SELECT id FROM organisations WHERE name = \$\$${NAME}\$\$ LIMIT 1;
-    " 2>/dev/null | head -1)
-  fi
-
-  if [ -z "$ORG_ID" ]; then
-    echo "  SKIP: Could not find/create org: $SHORT"
+    echo "  SKIP: Could not create org: $SHORT"
     continue
   fi
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAdminAuth } from "~/hooks/use-admin-auth";
 import { AdminLayout } from "~/components/admin-layout";
@@ -16,7 +16,7 @@ import { NewJobDialog } from "~/components/admin/new-job-dialog";
 import { adminCancelJob } from "~/server/admin";
 import { useAdminStore, useAuthStore } from "~/stores/admin";
 import type { components } from "~/api/types";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Eye, EyeOff } from "lucide-react";
 
 type JobInfo = components["schemas"]["JobInfo"];
 
@@ -54,6 +54,15 @@ function AdminJobs() {
   const { authenticated } = useAdminAuth();
   const { airports, jobs, fetchJobs, fetchAirports } = useAdminStore();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [hiddenJobIds, setHiddenJobIds] = useState<Set<string>>(() => {
+    try {
+      const stored = sessionStorage.getItem("hidden-job-ids");
+      return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+  const [showFilter, setShowFilter] = useState<"all" | "active" | "completed">("all");
 
   useEffect(() => {
     if (authenticated) {
@@ -61,6 +70,35 @@ function AdminJobs() {
       fetchAirports();
     }
   }, [authenticated, fetchJobs, fetchAirports]);
+
+  const visibleJobs = useMemo(() => {
+    return jobs
+      .filter((j) => !hiddenJobIds.has(j.id))
+      .filter((j) => {
+        if (showFilter === "active") return j.status === "running" || j.status === "queued";
+        if (showFilter === "completed") return j.status !== "running" && j.status !== "queued";
+        return true;
+      });
+  }, [jobs, hiddenJobIds, showFilter]);
+
+  const isActive = (j: JobInfo) => j.status === "running" || j.status === "queued";
+
+  const activeCount = useMemo(() => jobs.filter(isActive).length, [jobs]);
+  const completedCount = useMemo(() => jobs.filter((j) => !isActive(j)).length, [jobs]);
+
+  const updateHidden = (next: Set<string>) => {
+    setHiddenJobIds(next);
+    sessionStorage.setItem("hidden-job-ids", JSON.stringify([...next]));
+  };
+
+  const hideJob = (id: string) => {
+    updateHidden(new Set([...hiddenJobIds, id]));
+  };
+
+  const hideAllCompleted = () => {
+    const completedIds = jobs.filter((j) => !isActive(j)).map((j) => j.id);
+    updateHidden(new Set([...hiddenJobIds, ...completedIds]));
+  };
 
   // Auto-refresh every 5s if active jobs
   useEffect(() => {
@@ -112,6 +150,46 @@ function AdminJobs() {
         onStarted={fetchJobs}
       />
 
+      <div className="flex items-center gap-2 mb-4">
+        {(["all", "active", "completed"] as const).map((f) => (
+          <Button
+            key={f}
+            variant={showFilter === f ? "default" : "outline"}
+            size="xs"
+            onClick={() => setShowFilter(f)}
+          >
+            {f === "all" && `All (${jobs.length})`}
+            {f === "active" && `Active (${activeCount})`}
+            {f === "completed" && `Completed (${completedCount})`}
+          </Button>
+        ))}
+        {completedCount > 0 && (
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={hideAllCompleted}
+            className="ml-auto text-muted-foreground"
+          >
+            <EyeOff className="size-3" />
+            Hide all completed
+          </Button>
+        )}
+        {hiddenJobIds.size > 0 && (
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={() => updateHidden(new Set())}
+            className="text-muted-foreground"
+          >
+            <Eye className="size-3" />
+            Show {hiddenJobIds.size} hidden
+          </Button>
+        )}
+        <span className="text-xs text-muted-foreground ml-2">
+          {visibleJobs.length} jobs shown
+        </span>
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -125,7 +203,7 @@ function AdminJobs() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {jobs.map((job) => (
+          {visibleJobs.map((job) => (
             <TableRow key={job.id}>
               <TableCell className="font-mono text-xs">
                 {job.id.slice(0, 8)}
@@ -148,16 +226,29 @@ function AdminJobs() {
                   : "—"}
               </TableCell>
               <TableCell>
-                {(job.status === "running" || job.status === "queued") && (
-                  <Button
-                    variant="destructive"
-                    size="xs"
-                    onClick={() => handleCancel(job.id)}
-                  >
-                    <X className="size-3" />
-                    Cancel
-                  </Button>
-                )}
+                <div className="flex items-center gap-1">
+                  {(job.status === "running" || job.status === "queued") && (
+                    <Button
+                      variant="destructive"
+                      size="xs"
+                      onClick={() => handleCancel(job.id)}
+                    >
+                      <X className="size-3" />
+                      Cancel
+                    </Button>
+                  )}
+                  {job.status !== "running" && job.status !== "queued" && (
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => hideJob(job.id)}
+                      className="text-muted-foreground"
+                    >
+                      <EyeOff className="size-3" />
+                      Hide
+                    </Button>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}

@@ -42,7 +42,9 @@ export function AirportSearch({ compact = false }: { compact?: boolean }) {
   };
 
   return (
-    <div className={`relative ${compact ? "w-72" : "w-[560px]"}`}>
+    <div
+      className={`relative ${compact ? "w-72" : "w-[560px]"} max-w-[80vw] mx-auto`}
+    >
       <Command className="w-full" shouldFilter={false} loop>
         <div
           className={`flex items-center gap-3 px-4 bg-[#1a1a1c] border border-white/[0.08] transition-colors focus-within:border-yellow-400/40 ${compact ? "h-9" : "h-14"}`}
@@ -87,7 +89,9 @@ export function AirportSearch({ compact = false }: { compact?: boolean }) {
                 <Command.Item
                   key={airport.iataCode}
                   value={airport.iataCode ?? ""}
-                  onSelect={() => airport.iataCode && handleSelect(airport.iataCode)}
+                  onSelect={() =>
+                    airport.iataCode && handleSelect(airport.iataCode)
+                  }
                   className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-white/[0.04] data-[selected=true]:bg-white/[0.04]"
                 >
                   <span className="font-grotesk text-[13px] font-bold text-[#f5f5f0] tracking-wider w-10 shrink-0">

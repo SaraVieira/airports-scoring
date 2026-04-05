@@ -40,6 +40,9 @@ function AdminAirports() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [fetchingIata, setFetchingIata] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
+  const [countryFilter, setCountryFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("name");
   const [batchOpen, setBatchOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -72,17 +75,39 @@ function AdminAirports() {
     }
   };
 
-  const filtered = useMemo(
-    () =>
-      airports.filter(
-        (a) =>
-          !filter ||
-          a.iataCode.toLowerCase().includes(filter.toLowerCase()) ||
-          a.name.toLowerCase().includes(filter.toLowerCase()) ||
-          a.countryCode.toLowerCase().includes(filter.toLowerCase()),
-      ),
-    [airports, filter],
-  );
+  const countries = useMemo(() => {
+    const codes = [...new Set(airports.map((a) => a.countryCode))].sort();
+    return codes;
+  }, [airports]);
+
+  const filtered = useMemo(() => {
+    const lf = filter.toLowerCase();
+    return airports
+      .filter((a) => {
+        if (
+          lf &&
+          !a.iataCode.toLowerCase().includes(lf) &&
+          !a.name.toLowerCase().includes(lf) &&
+          !a.countryCode.toLowerCase().includes(lf)
+        )
+          return false;
+        if (countryFilter !== "all" && a.countryCode !== countryFilter) return false;
+        if (statusFilter === "enabled" && !a.enabled) return false;
+        if (statusFilter === "disabled" && a.enabled) return false;
+        if (statusFilter === "scored" && !a.hasScore) return false;
+        if (statusFilter === "unscored" && a.hasScore) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case "iata": return a.iataCode.localeCompare(b.iataCode);
+          case "country": return a.countryCode.localeCompare(b.countryCode) || a.name.localeCompare(b.name);
+          case "newest": return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          case "updated": return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          default: return a.name.localeCompare(b.name);
+        }
+      });
+  }, [airports, filter, countryFilter, statusFilter, sortBy]);
 
   if (authenticated === false) {
     return (
@@ -141,19 +166,55 @@ function AdminAirports() {
         onComplete={fetchAirports}
       />
 
-      {/* Filter */}
-      <div className="flex items-center gap-3 mb-4">
+      {/* Filters */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
           <Input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            placeholder="Filter by IATA, name, or country..."
-            className="pl-8 w-64"
+            placeholder="Filter by IATA, name..."
+            className="pl-8 w-56"
           />
         </div>
+
+        <select
+          value={countryFilter}
+          onChange={(e) => setCountryFilter(e.target.value)}
+          className="h-9 rounded-md border border-border bg-muted px-3 text-xs text-foreground"
+        >
+          <option value="all">All countries</option>
+          {countries.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="h-9 rounded-md border border-border bg-muted px-3 text-xs text-foreground"
+        >
+          <option value="all">All statuses</option>
+          <option value="enabled">Enabled</option>
+          <option value="disabled">Disabled</option>
+          <option value="scored">Scored</option>
+          <option value="unscored">Unscored</option>
+        </select>
+
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="h-9 rounded-md border border-border bg-muted px-3 text-xs text-foreground"
+        >
+          <option value="name">Sort: Name</option>
+          <option value="iata">Sort: IATA</option>
+          <option value="country">Sort: Country</option>
+          <option value="newest">Sort: Newest first</option>
+          <option value="updated">Sort: Recently updated</option>
+        </select>
+
         <span className="text-xs text-muted-foreground">
-          {filtered.length} airports
+          {filtered.length} of {airports.length} airports
         </span>
       </div>
 

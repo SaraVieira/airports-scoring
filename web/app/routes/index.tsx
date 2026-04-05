@@ -31,8 +31,14 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { rankings: ranked, delays, busiest, bestReviewed, connected, mapData } =
-    Route.useLoaderData();
+  const {
+    rankings: ranked,
+    delays,
+    busiest,
+    bestReviewed,
+    connected,
+    mapData,
+  } = Route.useLoaderData();
 
   const { mostImproved, wallOfShame } = useMemo(() => {
     const filtered = ranked.filter((a) => a.scoreSentimentVelocity != null);
@@ -71,7 +77,7 @@ function Home() {
         {mostImproved.length > 0 && (
           <>
             <div className="w-full h-px bg-zinc-800" />
-            <section className="flex gap-16 py-16">
+            <section className="flex-col flex sm:flex-row gap-16 py-16">
               <WallColumn
                 title="MOST IMPROVED"
                 subtitle="Sentiment velocity — who's actually getting better"
@@ -94,7 +100,7 @@ function Home() {
         {mostDelayed.length > 0 && (
           <>
             <div className="w-full h-px bg-zinc-800" />
-            <section className="flex gap-16 py-16">
+            <section className="flex-col flex sm:flex-row gap-16 py-16">
               <DelayColumn
                 title="TARDIEST AIRPORTS"
                 subtitle="Highest average flight delay percentage (last 12 months)"
@@ -115,7 +121,7 @@ function Home() {
         {(busiest.length > 0 || bestReviewed.length > 0) && (
           <>
             <div className="w-full h-px bg-zinc-800" />
-            <section className="flex gap-16 py-16">
+            <section className="flex-col flex sm:flex-row gap-16 py-16">
               {busiest.length > 0 && <BusiestColumn airports={busiest} />}
               {bestReviewed.length > 0 && (
                 <BestReviewedColumn airports={bestReviewed} />
@@ -128,7 +134,7 @@ function Home() {
         {connected.length > 0 && (
           <>
             <div className="w-full h-px bg-zinc-800" />
-            <section className="flex gap-16 py-16">
+            <section className="flex-col flex sm:flex-row gap-16 py-16">
               <ConnectivityColumns airports={connected} />
             </section>
           </>

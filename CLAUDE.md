@@ -26,8 +26,12 @@ airports-scoring/
 ├── migrations/             # SQL migrations (run automatically on server start)
 ├── scripts/
 │   ├── airport_schema.sql  # Full DB schema (run once for fresh DB)
-│   └── seed-all-airports.sh # Seeds 29K global airports into all_airports table
+│   ├── seed-all-airports.sh # Seeds 29K global airports into all_airports table
+│   └── seed-operators.sh   # Seeds organisations + airport→operator mappings (truncate+reseed)
+├── data/
+│   └── european_airport_operators.json  # Source of truth for operators (154 entries, 400 airports, 35 countries)
 ├── web/                    # TanStack Start frontend
+│   ├── .interface-design/system.md  # Design system documentation
 │   └── app/
 │       ├── routes/         # File-based routing (includes admin/)
 │       ├── components/     # UI components (single/, home/, admin/, ui/)
@@ -56,6 +60,7 @@ DB=postgres://airports:airports@localhost:5433/airports
 psql "$DB" -q < scripts/airport_schema.sql
 DATABASE_URL="$DB" bash scripts/seed-all-airports.sh
 DATABASE_URL="$DB" bash scripts/seed-reference-data.sh
+DATABASE_URL="$DB" bash scripts/seed-operators.sh    # 154 operators, safe to re-run (truncates first)
 ```
 
 ## Commands
@@ -113,6 +118,17 @@ All API client methods in `web/app/api/client.ts` use `import("./types").compone
 
 ## Conventions
 
+### Design System
+
+- Design system documented in `web/.interface-design/system.md`
+- Dark mode is the primary mode — design dark-first
+- Depth strategy: borders-only, no box-shadows on cards
+- Typography: Geist (body), Space Grotesk (headings), IBM Plex Mono (data/IATA codes)
+- IATA codes always `font-mono font-bold` — they're typographic heroes, not metadata
+- Score colors via `scoreColor()` / `scoreBg()` in `utils/scoring.ts` — green (>=70), yellow (40-69), red (<40)
+- Status colors: green (success/recent), yellow (stale), red (failed), zinc (never), blue (scored)
+- Operator data lives in `data/european_airport_operators.json` — seed with `scripts/seed-operators.sh`
+
 ### Frontend
 
 - Types centralized in `web/app/utils/types.ts` — import from there, don't inline
@@ -142,6 +158,7 @@ All API client methods in `web/app/api/client.ts` use `import("./types").compone
 - `all_airports` table seeded by `scripts/seed-all-airports.sh` (29K global airports for batch import)
 - PostGIS `location` column managed by Rust CLI, not in any ORM
 - `.env` must be in repo root (Vite config uses `envDir: '..'`)
+- Stale data threshold is 30 days (Rust API data-gaps query + frontend source indicators)
 
 ### Sentiment Pipeline
 
