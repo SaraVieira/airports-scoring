@@ -16,6 +16,7 @@ import { getAirport } from "~/server/get-airport";
 import { CarbonBadge } from "~/components/single/carbon-badge";
 import { GroundTransport } from "~/components/single/ground-transport";
 import { Amenities } from "~/components/single/amenities";
+import { LivePulse } from "~/components/single/live-pulse";
 import type { Airport } from "~/utils/types";
 
 export const Route = createFileRoute("/airport/$iata")({
@@ -56,6 +57,8 @@ function AirportDetail() {
       <div className="max-w-5xl mx-auto px-16 pt-20 pb-12 flex flex-col gap-9">
         <Divider />
         <Header airport={airport} />
+
+        {airport.iataCode && <LivePulse iata={airport.iataCode} />}
 
         <Verdict airport={airport} />
 

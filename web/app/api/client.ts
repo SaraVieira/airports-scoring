@@ -3,6 +3,36 @@ import type { components } from "./types";
 
 export type CountrySummary = components["schemas"]["CountrySummary"];
 
+export interface LivePulseAircraft {
+  icao24: string;
+  callsign: string | null;
+  lat: number;
+  lon: number;
+  altitude: number | null;
+  velocity: number | null;
+  heading: number | null;
+  verticalRate: number | null;
+  onGround: boolean;
+  status: "arriving" | "departing" | "cruising" | "ground";
+}
+
+export interface LivePulseResponse {
+  iata: string;
+  airportLat: number;
+  airportLon: number;
+  timestamp: number;
+  aircraft: LivePulseAircraft[];
+  counts: {
+    total: number;
+    inAir: number;
+    onGround: number;
+    arriving: number;
+    departing: number;
+    cruising: number;
+  };
+  cached: boolean;
+}
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 
@@ -90,6 +120,8 @@ export const api = {
     apiFetch<import("./types").components["schemas"]["CountrySummary"][]>(
       `/api/countries`,
     ),
+  getLivePulse: (iata: string) =>
+    apiFetch<LivePulseResponse>(`/api/airports/${iata}/live`),
   admin: {
     listSupportedAirports: () =>
       adminFetch<

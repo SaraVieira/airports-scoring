@@ -51,7 +51,7 @@ struct CachedToken {
 static TOKEN_CACHE: Mutex<Option<CachedToken>> = Mutex::const_new(None);
 
 /// Get a valid OAuth2 access token, refreshing if needed.
-async fn get_access_token(client: &reqwest::Client) -> Result<String> {
+pub(crate) async fn get_access_token(client: &reqwest::Client) -> Result<String> {
     // Check cache first.
     {
         let cache = TOKEN_CACHE.lock().await;

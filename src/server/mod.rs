@@ -73,6 +73,7 @@ async fn health() -> Json<serde_json::Value> {
         routes::cron::cron_full_refresh,
         routes::cron::cron_sentiment,
         routes::cron::cron_reviews,
+        routes::live::get_live_pulse,
     ),
 )]
 struct ApiDoc;
@@ -157,6 +158,7 @@ pub async fn run(port: u16, log_sender: broadcast::Sender<LogEntry>) -> Result<(
         .route("/airports/best-reviewed", get(routes::airports::get_best_reviewed))
         .route("/airports/most-connected", get(routes::airports::get_most_connected))
         .route("/airports/map", get(routes::airports::get_map_airports))
+        .route("/airports/{iata}/live", get(routes::live::get_live_pulse))
         .route("/airports/{iata}", get(routes::airports::get_airport))
         .route("/countries", get(routes::airports::list_countries))
         .route(

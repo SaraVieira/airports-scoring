@@ -703,6 +703,16 @@
     "airports": ["AJA", "BIA", "CLY", "FSC"]
   },
   {
+    "name": "Aéroport Marseille Provence SA",
+    "short_name": "Marseille Airport",
+    "country_code": "FR",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 40.00,
+    "notes": "CCI Aix-Marseille-Provence ~25%; Région Sud-PACA ~6.5%; Département des Bouches-du-Rhône ~4.5%; other local public entities ~4%. Private shareholders: Schiphol Group and SAS Aéro (consortium) hold ~60%. France's 3rd-busiest airport after CDG and ORY. ~10M pax.",
+    "airports": ["MRS"]
+  },
+  {
     "name": "SAGEB (Société Aéroportuaire de Gestion et d'Exploitation de Beauvais)",
     "short_name": "SAGEB",
     "country_code": "FR",

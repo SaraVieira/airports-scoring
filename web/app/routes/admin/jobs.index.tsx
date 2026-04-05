@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAdminAuth } from "~/hooks/use-admin-auth";
 import { AdminLayout } from "~/components/admin-layout";
 import { Button } from "~/components/ui/button";
@@ -20,7 +20,7 @@ import { Plus, X, Eye, EyeOff } from "lucide-react";
 
 type JobInfo = components["schemas"]["JobInfo"];
 
-export const Route = createFileRoute("/admin/jobs")({
+export const Route = createFileRoute("/admin/jobs/")({
   component: AdminJobs,
 });
 
@@ -206,7 +206,13 @@ function AdminJobs() {
           {visibleJobs.map((job) => (
             <TableRow key={job.id}>
               <TableCell className="font-mono text-xs">
-                {job.id.slice(0, 8)}
+                <Link
+                  to="/admin/jobs/$id"
+                  params={{ id: job.id }}
+                  className="hover:text-foreground underline underline-offset-2"
+                >
+                  {job.id.slice(0, 8)}
+                </Link>
               </TableCell>
               <TableCell>
                 <JobStatusBadge status={job.status} />
