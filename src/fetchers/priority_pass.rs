@@ -54,7 +54,10 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         // These are not errors — the airport/country just has no Priority Pass lounges.
-        if stderr.contains("No lounge links found") || stderr.contains("is not mapped to a Priority Pass slug") {
+        if stderr.contains("No lounge links found")
+            || stderr.contains("is not mapped to a Priority Pass slug")
+            || stderr.contains("Failed to fetch country page")
+        {
             info!(airport = iata, "No Priority Pass coverage for this airport (not an error)");
             return Ok(FetchResult {
                 records_processed: 0,

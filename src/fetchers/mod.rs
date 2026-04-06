@@ -1,8 +1,10 @@
 pub mod aena;
 pub mod caa;
 pub mod carbon_accreditation;
+pub mod dst_denmark;
 pub mod eurocontrol;
 pub mod eurostat;
+pub mod finavia;
 pub mod google_reviews;
 pub mod metar;
 pub mod openflights;
@@ -14,4 +16,5 @@ pub mod reviews;
 pub mod routes;
 pub mod sentiment;
 pub mod skytrax;
+pub mod ssb_norway;
 pub mod wikipedia;

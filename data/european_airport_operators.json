@@ -18,8 +18,21 @@
     "public_share_pct": 0.0,
     "notes": "100% subsidiary of VINCI SA (private). Operates 10 airports in Portugal via ANA Aeroportos de Portugal (acquired 2013); 10 airports in France; BEG (Serbia, 25-year concession); BUD (Hungary, 20% stake as platform operator since Jun 2024, Hungarian state Corvinus 80%); BFS (Northern Ireland); LGW (UK, majority stake); NYO (Sweden, Skavsta). ~154 million pax across European network.",
     "airports": [
-      "LYS", "NTE", "GNB", "CMF", "NCY", "TLN", "RNS", "DNR", "CFE", "BZR", "BES", "PIS",
-      "BFS", "LGW", "NYO"
+      "LYS",
+      "NTE",
+      "GNB",
+      "CMF",
+      "NCY",
+      "TLN",
+      "RNS",
+      "DNR",
+      "CFE",
+      "BZR",
+      "BES",
+      "PIS",
+      "BFS",
+      "LGW",
+      "NYO"
     ]
   },
   {
@@ -150,17 +163,7 @@
     "ownership_model": "mixed",
     "public_share_pct": 46.1,
     "notes": "Groupe ADP 46.1%; free float ~47.6% on Borsa Istanbul; other ~6.3%. Listed on Istanbul exchange. Operates in Turkey, Georgia, North Macedonia and Croatia. Antalya (AYT) via 50/50 JV with Fraport. 107 million pax in 2024.",
-    "airports": [
-      "ESB",
-      "ADB",
-      "GZP",
-      "BJV",
-      "AYT",
-      "TBS",
-      "BUS",
-      "SKP",
-      "OHD"
-    ]
+    "airports": ["ESB", "ADB", "GZP", "BJV", "AYT", "TBS", "BUS", "SKP", "OHD"]
   },
   {
     "name": "iGA Havalimanı İşletmesi AŞ (Istanbul Grand Airport)",
@@ -644,8 +647,8 @@
     "org_type": "both",
     "ownership_model": "public",
     "public_share_pct": 100.0,
-    "notes": "100% Estonian state (via state-owned Tallinna Lennujaam AS). Estonia's sole international airport of significance.",
-    "airports": ["TLL"]
+    "notes": "100% Estonian state (via state-owned Tallinna Lennujaam AS). Operates all Estonian airports including Tallinn, Tartu, and Kuressaare.",
+    "airports": ["TLL", "TAY", "URE"]
   },
   {
     "name": "UAB Oro Uostai (Lithuanian Airports)",
@@ -708,7 +711,7 @@
     "country_code": "FR",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 40.00,
+    "public_share_pct": 40.0,
     "notes": "CCI Aix-Marseille-Provence ~25%; Région Sud-PACA ~6.5%; Département des Bouches-du-Rhône ~4.5%; other local public entities ~4%. Private shareholders: Schiphol Group and SAS Aéro (consortium) hold ~60%. France's 3rd-busiest airport after CDG and ORY. ~10M pax.",
     "airports": ["MRS"]
   },
@@ -898,7 +901,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 51.00,
+    "public_share_pct": 51.0,
     "notes": "Seven West Midlands metropolitan borough councils jointly hold 51% (Birmingham City Council is the largest single shareholder); Ontario Teachers' Pension Plan holds 49%. UK's seventh-busiest airport.",
     "airports": ["BHX"]
   },
@@ -908,7 +911,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "Ontario Teachers' Pension Plan Board 100% (acquired from Macquarie in 2014). Southwest England's largest airport. Serves Bristol, Bath, and South Wales.",
     "airports": ["BRS"]
   },
@@ -918,7 +921,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "100% subsidiary of Peel Group (Peel Holdings). Operates Liverpool John Lennon Airport and Robin Hood Doncaster Sheffield (currently closed for redevelopment). Peel Group is a private UK infrastructure and real estate conglomerate.",
     "airports": ["LPL"]
   },
@@ -928,7 +931,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "100% owned by Rigby Group (private UK family-owned conglomerate). Operates Exeter, Coventry, and Norwich airports. Also operates Bournemouth and City of Derry airports under management contracts.",
     "airports": ["EXT", "NWI", "CVT"]
   },
@@ -938,7 +941,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "3i Infrastructure plc acquired the airport in 2024. George Best Belfast City Airport, a city centre airport with a short runway. Competes with Belfast International (BFS, operated by VINCI).",
     "airports": ["BHD"]
   },
@@ -948,7 +951,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Welsh Government 100%. Nationalised in 2013 (purchased from TBI/Abertis for £52m). Wales' only international airport. Operated through holding company Cardiff International Airport Ltd.",
     "airports": ["CWL"]
   },
@@ -958,9 +961,20 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "100% Scottish Government (via Transport Scotland). Operates 11 airports across the Scottish Highlands and Islands. Most are lifeline services for remote communities. Dundee Airport is the group's largest mainland airport.",
-    "airports": ["INV", "DND", "WIC", "KOI", "LSI", "SYY", "BEB", "TRE", "ILY", "CAL"]
+    "airports": [
+      "INV",
+      "DND",
+      "WIC",
+      "KOI",
+      "LSI",
+      "SYY",
+      "BEB",
+      "TRE",
+      "ILY",
+      "CAL"
+    ]
   },
   {
     "name": "Glasgow Prestwick Airport Limited",
@@ -968,7 +982,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Scottish Government 100%. Nationalised in 2013 to prevent closure. Formerly a major transatlantic hub and Ryanair base. Now primarily cargo (Amazon Air hub) with limited scheduled passenger service.",
     "airports": ["PIK"]
   },
@@ -978,7 +992,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "GIP (Global Infrastructure Partners, now BlackRock) and consortium including ADIA (Abu Dhabi), AIMCo (Alberta), and Wren House (Kuwait). Acquired from Albert Balasingam for £2bn in 2016. STOL operations on a short runway in London Docklands. Primarily business travel focused.",
     "airports": ["LCY"]
   },
@@ -988,7 +1002,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "Esken Limited (formerly Stobart Group) owns the airport. Currently has very limited scheduled service following easyJet's withdrawal. Undergoing strategic review.",
     "airports": ["SEN"]
   },
@@ -998,7 +1012,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "Regional & City Airports (Rigby Group) operates under management contract. Manchester Airports Group sold the airport to Rigby Group in 2017. Seasonal leisure focus, primarily TUI and Ryanair.",
     "airports": ["BOH"]
   },
@@ -1008,7 +1022,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "100% States of Jersey (Jersey Government). Ports of Jersey is a wholly government-owned entity operating both the airport and harbour. Jersey is a Crown Dependency, not part of the UK.",
     "airports": ["JER"]
   },
@@ -1018,7 +1032,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "100% States of Guernsey. Government-operated airport. Guernsey is a Crown Dependency, not part of the UK.",
     "airports": ["GCI"]
   },
@@ -1028,7 +1042,7 @@
     "country_code": "GB",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "100% Isle of Man Government (Department of Infrastructure). Crown Dependency. Ronaldsway Airport is the island's sole commercial airport.",
     "airports": ["IOM"]
   },
@@ -1038,7 +1052,7 @@
     "country_code": "IE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "100% Irish state. Separated from daa (Dublin Airport Authority) in 2014 to operate independently. Operates Shannon Airport and Shannon Free Zone (the world's first free trade zone, established 1959). Ireland's third-busiest airport.",
     "airports": ["SNN"]
   },
@@ -1048,7 +1062,7 @@
     "country_code": "IE",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 60.00,
+    "public_share_pct": 60.0,
     "notes": "Community-owned not-for-profit company with public funding from Irish government, local authorities, and EU. Founded in 1985 by Monsignor James Horan. Serves the West of Ireland (Mayo, Sligo, Galway, Roscommon).",
     "airports": ["NOC"]
   },
@@ -1058,7 +1072,7 @@
     "country_code": "IE",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 34.00,
+    "public_share_pct": 34.0,
     "notes": "Kerry County Council ~34%; private shareholders ~66%. Publicly traded on the Irish Stock Exchange (Enterprise Securities Market). Small regional airport serving County Kerry and the southwest.",
     "airports": ["KIR"]
   },
@@ -1068,7 +1082,7 @@
     "country_code": "IE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Donegal County Council. Small regional airport serving the northwest, with PSO (Public Service Obligation) route to Dublin operated by Emerald Airlines.",
     "airports": ["CFN"]
   },
@@ -1078,7 +1092,7 @@
     "country_code": "IE",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 51.00,
+    "public_share_pct": 51.0,
     "notes": "Waterford City and County Council ~51%; local private investors ~49%. Currently has very limited scheduled service. Primarily GA and flight training.",
     "airports": ["WAT"]
   },
@@ -1088,7 +1102,7 @@
     "country_code": "DK",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Aalborg Municipality 100%. Denmark's third-busiest airport. Serves North Jutland. Significant military co-use (Aalborg Air Base, Royal Danish Air Force).",
     "airports": ["AAL"]
   },
@@ -1098,7 +1112,7 @@
     "country_code": "DK",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Owned by consortium of local municipalities (Syddjurs Municipality majority). Located at Tirstrup, ~40km from Aarhus city centre. Limited scheduled service to Copenhagen and a few European destinations.",
     "airports": ["AAR"]
   },
@@ -1108,7 +1122,7 @@
     "country_code": "DK",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Bornholm Regional Municipality 100%. Lifeline airport for the island of Bornholm in the Baltic Sea. PSO route to Copenhagen operated by DAT (Danish Air Transport).",
     "airports": ["RNN"]
   },
@@ -1118,7 +1132,7 @@
     "country_code": "DK",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Esbjerg Municipality 100%. Primarily serves North Sea oil and gas helicopter traffic. Limited scheduled passenger service. Gateway to Fanø island.",
     "airports": ["EBJ"]
   },
@@ -1128,7 +1142,7 @@
     "country_code": "DK",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Sønderborg Municipality 100%. Small regional airport serving southern Jutland. PSO route to Copenhagen. Near the German border.",
     "airports": ["SGD"]
   },
@@ -1138,7 +1152,7 @@
     "country_code": "DK",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Danish Defence (Forsvarsministeriet) owns the base; civilian terminal operated by a municipal consortium (Viborg, Herning, Silkeborg, Skive municipalities). Military airbase with co-located civilian operations.",
     "airports": ["KRP"]
   },
@@ -1148,7 +1162,7 @@
     "country_code": "DK",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Faroese Government (Landsverk) 100%. Sole airport in the Faroe Islands (autonomous territory of Denmark). Operated by Vága Floghavn. Atlantic Airways is the primary carrier. Spectacular approach through mountain terrain.",
     "airports": ["FAE"]
   },
@@ -1158,7 +1172,7 @@
     "country_code": "SE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "City of Västerås 100%. Alternative Stockholm airport ~100km west of the capital. Limited scheduled service. Primarily GA and flight training.",
     "airports": ["VST"]
   },
@@ -1168,7 +1182,7 @@
     "country_code": "SE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Örebro Municipality 100%. Primarily charter and cargo. Limited scheduled service. Also used for military exercises.",
     "airports": ["ORB"]
   },
@@ -1178,7 +1192,7 @@
     "country_code": "SE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Norrköping Municipality 100%. Kungsängen Airport. Small regional airport with limited scheduled service.",
     "airports": ["NRK"]
   },
@@ -1188,7 +1202,7 @@
     "country_code": "SE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Ängelholm Municipality ~majority; Region Skåne minority. Former military airbase (F10 wing). Serves northwest Skåne. SAS operates scheduled service to Stockholm.",
     "airports": ["AGH"]
   },
@@ -1198,7 +1212,7 @@
     "country_code": "SE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Kalmar Municipality majority; Region Kalmar minority. Serves Kalmar and the island of Öland. Scheduled service to Stockholm Arlanda.",
     "airports": ["KLR"]
   },
@@ -1208,7 +1222,7 @@
     "country_code": "SE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Växjö Municipality majority. Small regional airport serving Småland. Limited scheduled service.",
     "airports": ["VXO"]
   },
@@ -1218,7 +1232,7 @@
     "country_code": "SE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Halmstad Municipality 100%. Former military airbase. Limited civilian scheduled service.",
     "airports": ["HAD"]
   },
@@ -1228,7 +1242,7 @@
     "country_code": "SE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Sundsvall and Timrå municipalities jointly owned. Midnorrland Airport. Serves the Sundsvall/Härnösand region of central Sweden.",
     "airports": ["SDL"]
   },
@@ -1238,7 +1252,7 @@
     "country_code": "CY",
     "org_type": "operator",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "Consortium: Bouygues Bâtiment International, VINCI Airports, Cyprus Trading Corporation, Iacovou Brothers, Hellenic Mining. 25-year BOT concession (2006–2031) from the Republic of Cyprus. Operates both Cypriot airports. Combined ~11M pax annually. VINCI Airports holds the largest stake.",
     "airports": ["LCA", "PFO"]
   },
@@ -1248,7 +1262,7 @@
     "country_code": "SK",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Slovak Republic (Ministry of Transport) 100%. State enterprise (štátny podnik). Slovakia's largest airport. Competes with nearby Vienna (VIE) for Bratislava passenger catchment. ~2.5M pax.",
     "airports": ["BTS"]
   },
@@ -1258,7 +1272,7 @@
     "country_code": "SK",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Slovak Republic (Ministry of Transport) ~66%; Košice Self-Governing Region ~34%. Slovakia's second-largest airport, serving eastern Slovakia. ~600K pax.",
     "airports": ["KSC"]
   },
@@ -1268,9 +1282,20 @@
     "country_code": "PT",
     "org_type": "both",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "100% VINCI Airports (acquired from the Portuguese state in 2013 for €3.08bn). Operates all 10 commercial airports in mainland Portugal, Azores, and Madeira under a 50-year concession (2013–2063). Lisbon (LIS) handles ~32M pax annually, making it the busiest airport on the Iberian Atlantic coast.",
-    "airports": ["LIS", "OPO", "FAO", "PDL", "HOR", "SMA", "FLW", "FNC", "PXO", "TER"]
+    "airports": [
+      "LIS",
+      "OPO",
+      "FAO",
+      "PDL",
+      "HOR",
+      "SMA",
+      "FLW",
+      "FNC",
+      "PXO",
+      "TER"
+    ]
   },
   {
     "name": "Budapest Airport Zrt",
@@ -1278,7 +1303,7 @@
     "country_code": "HU",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 80.00,
+    "public_share_pct": 80.0,
     "notes": "Hungarian state (via Corvinus Nemzetközi Befektetési Zrt) 80%; VINCI Airports 20% (platform operator since Jun 2024). Renationalised in 2023 for €3.1bn after years of private ownership under AviAlliance. Hungary's sole major international airport. ~16M pax.",
     "airports": ["BUD"]
   },
@@ -1288,7 +1313,7 @@
     "country_code": "HR",
     "org_type": "operator",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "ZAIC consortium (Groupe ADP 21%, TAV Airports 7.5%, local partners 71.5%) operates under a 30-year concession (2013–2043) from the Croatian state. New terminal opened 2017. Croatia's busiest airport, ~3.5M pax.",
     "airports": ["ZAG"]
   },
@@ -1298,7 +1323,7 @@
     "country_code": "HR",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Republic of Croatia 55%; Split-Dalmatia County 45%. Croatia's second-busiest airport and busiest on the Adriatic coast. Major seasonal tourist gateway. ~3.5M pax, heavily summer-weighted.",
     "airports": ["SPU"]
   },
@@ -1308,7 +1333,7 @@
     "country_code": "HR",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Republic of Croatia 55%; Dubrovnik-Neretva County 45%. Gateway to Dubrovnik and the southern Dalmatian coast. Heavily seasonal, ~2.5M pax. Expanded terminal 2017.",
     "airports": ["DBV"]
   },
@@ -1318,7 +1343,7 @@
     "country_code": "HR",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Republic of Croatia 55%; Zadar County 45%. Major Ryanair base on the Adriatic. New terminal opened 2018. ~900K pax, growing rapidly.",
     "airports": ["ZAD"]
   },
@@ -1328,7 +1353,7 @@
     "country_code": "HR",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Republic of Croatia 55%; Primorje-Gorski Kotar County 45%. Located on the island of Krk. Serves the Kvarner Gulf tourist region. ~200K pax, seasonal.",
     "airports": ["RJK"]
   },
@@ -1338,7 +1363,7 @@
     "country_code": "HR",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Republic of Croatia 55%; Istria County 45%. Gateway to the Istrian peninsula. Heavily seasonal charter traffic. ~700K pax.",
     "airports": ["PUY"]
   },
@@ -1348,7 +1373,7 @@
     "country_code": "HR",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Republic of Croatia 55%; Osijek-Baranja County 45%. Small regional airport serving Slavonia (eastern Croatia). Very limited scheduled service.",
     "airports": ["OSI"]
   },
@@ -1358,7 +1383,7 @@
     "country_code": "AL",
     "org_type": "operator",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "Kastrati Group (Albania) acquired concession in 2024, taking over from China Everbright. 20-year BOT concession from the Albanian government. Albania's sole international airport. Rapid growth: ~4M pax, up from 2.5M pre-pandemic. New terminal under construction.",
     "airports": ["TIA"]
   },
@@ -1368,7 +1393,7 @@
     "country_code": "ME",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Government of Montenegro 100%. Operates both Montenegrin airports. TGD (Podgorica) is the capital city airport; TIV (Tivat) serves the Bay of Kotor tourist region. Combined ~2.5M pax, heavily seasonal at TIV.",
     "airports": ["TGD", "TIV"]
   },
@@ -1378,7 +1403,7 @@
     "country_code": "RS",
     "org_type": "operator",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "VINCI Airports holds 100% operating concession (25-year concession from 2018). Serbian state retains ownership of the infrastructure. Serbia's main international gateway and Air Serbia hub. ~7M pax. Major expansion underway.",
     "airports": ["BEG"]
   },
@@ -1388,7 +1413,7 @@
     "country_code": "RS",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Republic of Serbia 100%. Serbia's second-largest airport. Low-cost carrier focus (Wizz Air base). Serves southern Serbia. ~500K pax.",
     "airports": ["INI"]
   },
@@ -1399,7 +1424,7 @@
     "country_code": "AT",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Province of Styria 87%; City of Graz 13%. Fully publicly owned. Austria's second-busiest airport. Serves Styria and southern Austria. ~1M pax.",
     "airports": ["GRZ"]
   },
@@ -1409,7 +1434,7 @@
     "country_code": "AT",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Province of Tyrol ~50%; City of Innsbruck ~50%. Fully publicly owned. Challenging mountain approach. Strong seasonal charter traffic for skiing. ~1M pax.",
     "airports": ["INN"]
   },
@@ -1419,7 +1444,7 @@
     "country_code": "AT",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 75.00,
+    "public_share_pct": 75.0,
     "notes": "Province of Salzburg 50%; City of Salzburg 25%; private minority shareholders 25%. Austria's third-busiest airport. Gateway to the Austrian and Bavarian Alps. ~1.8M pax.",
     "airports": ["SZG"]
   },
@@ -1429,7 +1454,7 @@
     "country_code": "AT",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Province of Upper Austria ~64%; City of Linz ~27%; others ~9%. Fully publicly owned. Serves Upper Austria. Limited scheduled service. ~300K pax.",
     "airports": ["LNZ"]
   },
@@ -1439,7 +1464,7 @@
     "country_code": "AT",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 55.00,
+    "public_share_pct": 55.0,
     "notes": "Province of Carinthia ~35%; City of Klagenfurt ~20%; Flughafen Wien AG holds minority stake via Lilihill. Small regional airport serving Carinthia. Limited scheduled service.",
     "airports": ["KLU"]
   },
@@ -1450,7 +1475,7 @@
     "country_code": "CZ",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "South Moravian Region (Jihomoravský kraj) 100%. Czech Republic's second-largest airport. Serves Moravia. Low-cost and charter focus. ~500K pax.",
     "airports": ["BRQ"]
   },
@@ -1460,7 +1485,7 @@
     "country_code": "CZ",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Moravian-Silesian Region 100%. Czech Republic's third-largest airport. Serves the industrial region of Silesia and northern Moravia. ~300K pax.",
     "airports": ["OSR"]
   },
@@ -1471,7 +1496,7 @@
     "country_code": "BE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Flemish Region (via PMV/Vlaamse Overheid). City airport with short runway. Primarily business aviation and TUI fly Belgium. ~300K pax.",
     "airports": ["ANR"]
   },
@@ -1481,7 +1506,7 @@
     "country_code": "BE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Flemish Region (via PMV). Primarily charter and cargo. TUI fly Belgium seasonal base. Serves West Flanders. ~400K pax.",
     "airports": ["OST"]
   },
@@ -1491,7 +1516,7 @@
     "country_code": "BE",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Walloon Region (via SOWAER/SAB) 100%. Europe's 7th-largest cargo airport. Major e-commerce hub (Alibaba/Cainiao European hub). Limited passenger service. ~300K pax but massive cargo volumes.",
     "airports": ["LGG"]
   },
@@ -1502,7 +1527,7 @@
     "country_code": "CH",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Unique binational airport on French soil, governed by a Franco-Swiss international treaty (1949). Joint Franco-Swiss public entity. Swiss and French customs sectors. Switzerland's third-largest airport. ~9M pax. IATA codes: BSL (Swiss side), MLH (French side), EAP (combined).",
     "airports": ["BSL", "MLH"]
   },
@@ -1512,7 +1537,7 @@
     "country_code": "CH",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 50.00,
+    "public_share_pct": 50.0,
     "notes": "Canton of Bern and local municipalities ~50%; private shareholders ~50%. Small airport near the Swiss capital. Very limited scheduled service. Primarily GA and charter.",
     "airports": ["BRN"]
   },
@@ -1523,7 +1548,7 @@
     "country_code": "RO",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Timiș County Council 80%; Romanian Ministry of Transport 20%. Romania's third-busiest airport. Serves the Banat region and western Romania. Wizz Air base. ~1.5M pax.",
     "airports": ["TSR"]
   },
@@ -1533,7 +1558,7 @@
     "country_code": "RO",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Iași County Council ~80%; Romanian Ministry of Transport ~20%. Serves Moldova region (eastern Romania). Rapid growth driven by diaspora traffic. ~2M pax.",
     "airports": ["IAS"]
   },
@@ -1543,7 +1568,7 @@
     "country_code": "RO",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Sibiu County Council majority; Romanian state minority. Serves central Transylvania. Growing low-cost carrier traffic. ~500K pax.",
     "airports": ["SBZ"]
   },
@@ -1553,7 +1578,7 @@
     "country_code": "RO",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Suceava County Council majority. Serves Bukovina and northeast Romania. Growing Wizz Air service. ~500K pax.",
     "airports": ["SCV"]
   },
@@ -1563,7 +1588,7 @@
     "country_code": "RO",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Mureș County Council majority. Serves central Transylvania. Wizz Air base. ~400K pax.",
     "airports": ["TGM"]
   },
@@ -1573,7 +1598,7 @@
     "country_code": "RO",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Bacău County Council majority. Serves western Moldova region. Strong diaspora traffic to Italy and UK. ~700K pax.",
     "airports": ["BCM"]
   },
@@ -1583,7 +1608,7 @@
     "country_code": "RO",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Dolj County Council majority; Romanian state minority. Serves Oltenia (southwest Romania). Growing Wizz Air traffic. ~400K pax.",
     "airports": ["CRA"]
   },
@@ -1594,7 +1619,7 @@
     "country_code": "HU",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "City of Debrecen and Hajdú-Bihar County. Hungary's second airport with scheduled service. Wizz Air base. Serves eastern Hungary. ~600K pax.",
     "airports": ["DEB"]
   },
@@ -1605,7 +1630,7 @@
     "country_code": "IT",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 44.00,
+    "public_share_pct": 44.0,
     "notes": "Bologna Municipality ~3.8%; Emilia-Romagna Region ~3.3%; Province of Bologna ~2.3%; Camera di Commercio Bologna ~11.5%; other public ~23.1%; free float ~56% on Borsa Italiana (ticker: ADB.MI). Italy's 7th-busiest airport. Ryanair's largest Italian base.",
     "airports": ["BLQ"]
   },
@@ -1615,7 +1640,7 @@
     "country_code": "IT",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 61.00,
+    "public_share_pct": 61.0,
     "notes": "Camera di Commercio di Catania ~61%; City of Catania ~12%; F2i SGR and 2i Aeroporti ~27%. Sicily's busiest airport and Italy's 6th-busiest. Gateway to Mount Etna and eastern Sicily. ~12M pax.",
     "airports": ["CTA"]
   },
@@ -1625,7 +1650,7 @@
     "country_code": "IT",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 68.00,
+    "public_share_pct": 68.0,
     "notes": "Provincia Regionale di Palermo ~39.1%; Camera di Commercio Palermo ~29.0%; other public entities ~6.5%; Airgest (Trapani) ~3.2%. Western Sicily's main airport. ~8M pax.",
     "airports": ["PMO"]
   },
@@ -1635,7 +1660,7 @@
     "country_code": "IT",
     "org_type": "both",
     "ownership_model": "private",
-    "public_share_pct": 0.00,
+    "public_share_pct": 0.0,
     "notes": "Alisarda/Meridiana founder's family (Aga Khan's interests) historically controlled; now F2i SGR holds majority via Costasmeralda SpA. Gateway to Costa Smeralda and northeast Sardinia. ~3M pax, heavily seasonal.",
     "airports": ["OLB"]
   },
@@ -1645,7 +1670,7 @@
     "country_code": "IT",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 66.00,
+    "public_share_pct": 66.0,
     "notes": "Camera di Commercio di Cagliari ~94.35% (quasi-public); F2i SGR ~5.65%. Sardinia's busiest airport. Gateway to southern Sardinia. ~5M pax.",
     "airports": ["CAG"]
   },
@@ -1655,7 +1680,7 @@
     "country_code": "IT",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 38.00,
+    "public_share_pct": 38.0,
     "notes": "2i Aeroporti SpA (F2i/Asterion) 55.87%; Città Metropolitana di Torino (ex-Provincia) 5%; Region of Piedmont 8%; Camera di Commercio di Torino ~5%; other public ~20%; private minority. Major Ryanair base. ~4.5M pax.",
     "airports": ["TRN"]
   },
@@ -1665,7 +1690,7 @@
     "country_code": "IT",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 82.00,
+    "public_share_pct": 82.0,
     "notes": "Autonomous Region Friuli Venezia Giulia ~82%; local public entities ~18%. Serves Trieste and northeast Italy/Slovenia border region. ~900K pax.",
     "airports": ["TRS"]
   },
@@ -1675,7 +1700,7 @@
     "country_code": "IT",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 60.00,
+    "public_share_pct": 60.0,
     "notes": "Autorità di Sistema Portuale del Mar Ligure Occidentale (port authority) 60%; Camera di Commercio di Genova 25%; City of Genoa 15%. Italy's main Ligurian coast airport. ~1.5M pax.",
     "airports": ["GOA"]
   },
@@ -1685,7 +1710,7 @@
     "country_code": "IT",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 90.00,
+    "public_share_pct": 90.0,
     "notes": "Calabria Region ~26%; Province of Catanzaro ~19%; local municipalities and public entities ~45%. Calabria's main airport. Also manages Reggio Calabria (REG) and Crotone (CRV). ~3M pax.",
     "airports": ["SUF", "REG", "CRV"]
   },
@@ -1695,7 +1720,7 @@
     "country_code": "IT",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 80.00,
+    "public_share_pct": 80.0,
     "notes": "F2i SGR ~79.8%; Camera di Commercio di Sassari and local public entities ~20.2%. Northwest Sardinia's airport. Ryanair base. ~1.5M pax.",
     "airports": ["AHO"]
   },
@@ -1705,7 +1730,7 @@
     "country_code": "IT",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 51.00,
+    "public_share_pct": 51.0,
     "notes": "Save SpA (Venice) 70.98%; local public entities (Province of Verona, Camera di Commercio, Aerogest) ~29%. Managed by Save group. Serves Lake Garda and Verona. Also operates Brescia (VBS). ~4M pax.",
     "airports": ["VRN"]
   },
@@ -1715,7 +1740,7 @@
     "country_code": "PL",
     "org_type": "both",
     "ownership_model": "mixed",
-    "public_share_pct": 72.00,
+    "public_share_pct": 72.0,
     "notes": "Silesian Voivodeship (Sejmik Śląski) ~72%; PPL (Polish state airports) ~28%. Poland's third-busiest airport. Wizz Air's largest Polish base. Serves the Upper Silesian industrial region. ~6M pax.",
     "airports": ["KTW"]
   },
@@ -1725,7 +1750,7 @@
     "country_code": "PL",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "City of Łódź ~72%; Łódź Voivodeship ~28%. Poland's central airport. Limited scheduled service. ~300K pax.",
     "airports": ["LCJ"]
   },
@@ -1735,8 +1760,88 @@
     "country_code": "PL",
     "org_type": "both",
     "ownership_model": "public",
-    "public_share_pct": 100.00,
+    "public_share_pct": 100.0,
     "notes": "Lublin Voivodeship ~64%; City of Lublin ~16%; surrounding municipalities ~20%. Eastern Poland's newest airport (opened 2012). Wizz Air and Ryanair service. ~600K pax.",
     "airports": ["LUZ"]
+  },
+  {
+    "name": "Međunarodni Aerodrom Sarajevo d.o.o.",
+    "short_name": "Sarajevo Airport",
+    "country_code": "BA",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.0,
+    "notes": "State-owned enterprise under the Federation of Bosnia and Herzegovina. Bosnia's main international gateway. ~1.2M pax. EBRD and EU-funded modernization projects.",
+    "airports": ["SJJ"]
+  },
+  {
+    "name": "Aerodrom Tuzla d.o.o.",
+    "short_name": "Tuzla Airport",
+    "country_code": "BA",
+    "org_type": "operator",
+    "ownership_model": "public",
+    "public_share_pct": 100.0,
+    "notes": "Owned by Tuzla Canton. Bosnia's second busiest airport. Ryanair hub. ~800K pax.",
+    "airports": ["TZL"]
+  },
+  {
+    "name": "Aerodrom Mostar d.o.o.",
+    "short_name": "Mostar Airport",
+    "country_code": "BA",
+    "org_type": "operator",
+    "ownership_model": "public",
+    "public_share_pct": 100.0,
+    "notes": "State-owned, mainly seasonal charter flights. Serves Herzegovina tourism region. Small operations ~30K pax.",
+    "airports": ["OMO"]
+  },
+  {
+    "name": "Aerodrom Banja Luka d.o.o.",
+    "short_name": "Banja Luka Airport",
+    "country_code": "BA",
+    "org_type": "operator",
+    "ownership_model": "public",
+    "public_share_pct": 100.0,
+    "notes": "Owned by Republika Srpska. Ryanair and Air Serbia service. ~300K pax. Rapid growth since 2022.",
+    "airports": ["BNX"]
+  },
+  {
+    "name": "United Airports of Georgia LLC",
+    "short_name": "UAG",
+    "country_code": "GE",
+    "org_type": "operator",
+    "ownership_model": "public",
+    "public_share_pct": 100.0,
+    "notes": "State-owned company operating Kutaisi airport. Georgia's second airport, major Wizz Air base. ~1M pax. Separate from TAV-operated Tbilisi and Batumi.",
+    "airports": ["KUT"]
+  },
+  {
+    "name": "Plovdiv Airport EAD",
+    "short_name": "Plovdiv Airport",
+    "country_code": "BG",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.0,
+    "notes": "State-owned via Bulgarian Ministry of Transport. Small operations, mainly seasonal charters. New terminal opened. Seeking private concession operator.",
+    "airports": ["PDV"]
+  },
+  {
+    "name": "Kalaallit Airports A/S",
+    "short_name": "Kalaallit Airports",
+    "country_code": "GL",
+    "org_type": "both",
+    "ownership_model": "mixed",
+    "public_share_pct": 67.0,
+    "notes": "Greenland government 67%; Danish state investment fund 33%. Building new international airports at Nuuk and Ilulissat. Also operates Kangerlussuaq (former US air base).",
+    "airports": ["GOH", "SFJ"]
+  },
+  {
+    "name": "Limak Kosovo International Airport J.S.C.",
+    "short_name": "Limak Kosovo",
+    "country_code": "XK",
+    "org_type": "operator",
+    "ownership_model": "private",
+    "public_share_pct": 0.0,
+    "notes": "Turkish-French consortium (Limak Holding + Aéroports de Lyon). 20-year DBFOT concession since 2011. Kosovo's only international airport. ~2.3M pax.",
+    "airports": ["PRN"]
   }
 ]

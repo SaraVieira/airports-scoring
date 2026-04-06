@@ -12,11 +12,15 @@ use crate::scoring;
 /// If an airport's country is NOT in this list, we emit a warning
 /// because we're relying solely on Wikipedia/Eurostat for pax data.
 const COUNTRIES_WITH_PAX_FETCHER: &[&str] = &[
+    "DK", // Statistics Denmark
     "ES", // AENA
+    "FI", // Finavia
+    "GB", // UK CAA
+    "NO", // Statistics Norway (SSB)
 ];
 
 /// Sources that produce passenger data (write to pax_yearly).
-const PAX_SOURCES: &[&str] = &["aena", "eurostat", "wikipedia"];
+const PAX_SOURCES: &[&str] = &["aena", "caa", "ssb_norway", "dst_denmark", "finavia", "eurostat", "wikipedia"];
 
 /// Data sources run by the Rust CLI per-airport.
 /// ourairports is run once at the start of every job (bulk bootstrap).
@@ -30,6 +34,9 @@ pub const ALL_SOURCES: &[&str] = &[
     "eurostat",
     "caa",
     "aena",
+    "ssb_norway",
+    "dst_denmark",
+    "finavia",
     "wikipedia",
     "reviews",
     "sentiment",
@@ -59,6 +66,9 @@ pub(crate) async fn dispatch_fetcher(
         "eurostat" => fetchers::eurostat::fetch(pool, airport, full_refresh).await,
         "caa" => fetchers::caa::fetch(pool, airport, full_refresh).await,
         "aena" => fetchers::aena::fetch(pool, airport, full_refresh).await,
+        "ssb_norway" => fetchers::ssb_norway::fetch(pool, airport, full_refresh).await,
+        "dst_denmark" => fetchers::dst_denmark::fetch(pool, airport, full_refresh).await,
+        "finavia" => fetchers::finavia::fetch(pool, airport, full_refresh).await,
         "openflights" => fetchers::openflights::fetch(pool, airport, full_refresh).await,
         "wikipedia" => fetchers::wikipedia::fetch(pool, airport, full_refresh).await,
         // Unified reviews: runs Skytrax + Google in sequence

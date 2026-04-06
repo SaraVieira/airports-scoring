@@ -331,7 +331,8 @@ pub async fn data_gaps(
         FROM supported_airports sa
         CROSS JOIN (
             VALUES ('eurocontrol'), ('metar'), ('opensky'), ('routes'),
-                   ('eurostat'), ('caa'), ('aena'), ('wikipedia'),
+                   ('eurostat'), ('caa'), ('aena'), ('ssb_norway'),
+                   ('dst_denmark'), ('finavia'), ('wikipedia'),
                    ('reviews'), ('sentiment'), ('carbon_accreditation'), ('priority_pass')
         ) AS expected(source)
         LEFT JOIN source_status ss
