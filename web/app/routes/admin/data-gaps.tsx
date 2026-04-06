@@ -95,12 +95,13 @@ function AdminDataGaps() {
     setFixingAll(true);
     try {
       const password = useAuthStore.getState().password || "";
-      // Collect unique airports from the current filtered view
-      const airports = [...new Set(filtered.map((g) => g.iataCode))];
+      // Collect unique airports from the current filtered view (exclude operator gaps)
+      const fetchable = filtered.filter((g) => g.source !== "operator");
+      const airports = [...new Set(fetchable.map((g) => g.iataCode))];
       // Collect unique sources (excluding "none" which means no sources at all)
       const sources = [
         ...new Set(
-          filtered.map((g) => g.source).filter((s) => s !== "none"),
+          fetchable.map((g) => g.source).filter((s) => s !== "none"),
         ),
       ];
       await adminStartJob({
@@ -273,19 +274,23 @@ function AdminDataGaps() {
                     {timeAgo(gap.lastFetchedAt)}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="xs"
-                      onClick={() => handleFetch(gap.iataCode, gap.source)}
-                      disabled={fetchingKey === key}
-                    >
-                      {fetchingKey === key ? (
-                        <Loader2 className="size-3 animate-spin" />
-                      ) : (
-                        <Play className="size-3" />
-                      )}
-                      {gap.source === "none" ? "Fetch all" : `Fetch ${gap.source}`}
-                    </Button>
+                    {gap.source === "operator" ? (
+                      <span className="text-xs text-muted-foreground italic">manual</span>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => handleFetch(gap.iataCode, gap.source)}
+                        disabled={fetchingKey === key}
+                      >
+                        {fetchingKey === key ? (
+                          <Loader2 className="size-3 animate-spin" />
+                        ) : (
+                          <Play className="size-3" />
+                        )}
+                        {gap.source === "none" ? "Fetch all" : `Fetch ${gap.source}`}
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               );

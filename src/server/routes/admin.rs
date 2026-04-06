@@ -312,6 +312,7 @@ pub async fn data_gaps(
         FROM source_status ss
         JOIN supported_airports sa ON sa.iata_code = ss.iata_code
         WHERE sa.enabled = true
+          AND ss.source != 'operator'
           AND (ss.last_fetched_at IS NULL
                OR ss.last_status = 'failed'
                OR ss.last_fetched_at < now() - interval '30 days')
