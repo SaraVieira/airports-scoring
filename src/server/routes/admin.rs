@@ -322,16 +322,23 @@ pub async fn data_gaps(
     .await
     .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
-    // Enabled airports with NO source_status rows at all (never had a job run)
-    let missing = sqlx::query_as::<sqlx::Postgres, (String, String)>(
+    // Find airports missing expected sources entirely (no source_status row for that source).
+    // Cross-join enabled airports with the expected pipeline sources, then LEFT JOIN
+    // to find combinations that have never been run.
+    let never_fetched = sqlx::query_as::<sqlx::Postgres, (String, String, String)>(
         r#"
-        SELECT sa.iata_code, sa.name
+        SELECT sa.iata_code, sa.name, expected.source
         FROM supported_airports sa
+        CROSS JOIN (
+            VALUES ('eurocontrol'), ('metar'), ('opensky'), ('routes'),
+                   ('eurostat'), ('caa'), ('aena'), ('wikipedia'),
+                   ('reviews'), ('sentiment'), ('carbon_accreditation'), ('priority_pass')
+        ) AS expected(source)
+        LEFT JOIN source_status ss
+            ON ss.iata_code = sa.iata_code AND ss.source = expected.source
         WHERE sa.enabled = true
-          AND NOT EXISTS (
-              SELECT 1 FROM source_status ss WHERE ss.iata_code = sa.iata_code
-          )
-        ORDER BY sa.iata_code
+          AND ss.iata_code IS NULL
+        ORDER BY sa.iata_code, expected.source
         "#,
     )
     .fetch_all(&state.pool)
@@ -349,11 +356,11 @@ pub async fn data_gaps(
         })
         .collect();
 
-    for (iata_code, name) in missing {
+    for (iata_code, name, source) in never_fetched {
         results.push(DataGapResponse {
             iata_code,
             name,
-            source: "none".to_string(),
+            source,
             last_fetched_at: None,
             last_status: "never_fetched".to_string(),
         });
