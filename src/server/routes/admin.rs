@@ -366,6 +366,31 @@ pub async fn data_gaps(
         });
     }
 
+    // Airports with no operator assigned
+    let no_operator = sqlx::query_as::<sqlx::Postgres, (String, String)>(
+        r#"
+        SELECT sa.iata_code, sa.name
+        FROM supported_airports sa
+        JOIN airports a ON a.iata_code = sa.iata_code
+        WHERE sa.enabled = true
+          AND a.operator_id IS NULL
+        ORDER BY sa.iata_code
+        "#,
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+
+    for (iata_code, name) in no_operator {
+        results.push(DataGapResponse {
+            iata_code,
+            name,
+            source: "operator".to_string(),
+            last_fetched_at: None,
+            last_status: "missing".to_string(),
+        });
+    }
+
     Ok(Json(results))
 }
 

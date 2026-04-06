@@ -34,6 +34,15 @@ function statusBadge(status: string) {
   if (status === "never_fetched")
     return <Badge variant="secondary">never fetched</Badge>;
   if (status === "failed") return <Badge variant="destructive">failed</Badge>;
+  if (status === "missing")
+    return (
+      <Badge
+        variant="outline"
+        className="border-orange-500/30 text-orange-500 bg-orange-500/10"
+      >
+        missing
+      </Badge>
+    );
   if (status === "success")
     return (
       <Badge
