@@ -28,7 +28,7 @@ const REVIEWS_PAGE_SIZE: u32 = 200;
 /// 4. Upsert into reviews_raw
 ///
 /// Gracefully skips if:
-/// - Airport has no `google_maps_url` configured in airports.json
+/// - Airport has no `google_maps_url` configured in supported_airports
 /// - Scraper service is not running
 pub async fn fetch(
     pool: &PgPool,

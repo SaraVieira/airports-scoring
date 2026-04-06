@@ -227,6 +227,16 @@ pub async fn update_supported_airport(
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
     .ok_or(StatusCode::NOT_FOUND)?;
 
+    // Sync in_seed_set with enabled status
+    if let Some(enabled) = body.enabled {
+        sqlx::query("UPDATE airports SET in_seed_set = $1 WHERE iata_code = $2")
+            .bind(enabled)
+            .bind(&iata)
+            .execute(&state.pool)
+            .await
+            .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+    }
+
     let statuses = sqlx::query_as::<sqlx::Postgres, SourceStatus>(
         "SELECT * FROM source_status WHERE iata_code = $1 ORDER BY source",
     )
@@ -272,6 +282,13 @@ pub async fn delete_supported_airport(
     if result.rows_affected() == 0 {
         return Err(StatusCode::NOT_FOUND);
     }
+
+    // Remove from public lists and operator aggregations
+    sqlx::query("UPDATE airports SET in_seed_set = false WHERE iata_code = $1")
+        .bind(&iata)
+        .execute(&state.pool)
+        .await
+        .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     Ok(StatusCode::NO_CONTENT)
 }

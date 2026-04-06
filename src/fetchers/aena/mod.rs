@@ -52,7 +52,7 @@ fn year_from_filename(filename: &str) -> Option<i16> {
 /// AENA names vary across years (e.g. "MADRID-BARAJAS" vs
 /// "ADOLFO SUÁREZ MADRID-BARAJAS", "BARCELONA" vs "BARCELONA-EL PRAT J.T.").
 /// We derive search terms from the airport's city and name so that any
-/// Spanish airport added to airports.json is automatically matched.
+/// Spanish airport added to supported_airports is automatically matched.
 fn build_search_terms(airport: &Airport) -> Vec<String> {
     let mut terms = Vec::new();
 

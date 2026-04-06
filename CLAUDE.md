@@ -13,7 +13,7 @@
 ```
 airports-scoring/
 ├── .env                    # DATABASE_URL + API tokens (repo root, NOT web/)
-├── airports.json           # Source of truth for airport config
+├──                         # Airport config lives in supported_airports DB table (admin UI)
 ├── start.sh                # Start all dev services (Docker + Rust + Frontend)
 ├── docker-compose.dev.yml  # Postgres + Google scraper for local dev
 ├── src/                    # Rust data pipeline + API server

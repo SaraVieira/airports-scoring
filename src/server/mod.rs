@@ -73,6 +73,7 @@ async fn health() -> Json<serde_json::Value> {
         routes::cron::cron_full_refresh,
         routes::cron::cron_sentiment,
         routes::cron::cron_reviews,
+        routes::cron::cron_sync_eurocontrol,
         routes::live::get_live_pulse,
     ),
 )]
@@ -146,7 +147,8 @@ pub async fn run(port: u16, log_sender: broadcast::Sender<LogEntry>) -> Result<(
     let cron_routes = Router::new()
         .route("/full-refresh", post(routes::cron::cron_full_refresh))
         .route("/sentiment", post(routes::cron::cron_sentiment))
-        .route("/reviews", post(routes::cron::cron_reviews));
+        .route("/reviews", post(routes::cron::cron_reviews))
+        .route("/sync-eurocontrol", post(routes::cron::cron_sync_eurocontrol));
 
     // Public API routes: require API key only.
     let api_routes = Router::new()

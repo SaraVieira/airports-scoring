@@ -56,6 +56,17 @@ enum Command {
         score: bool,
     },
 
+    /// Sync Eurocontrol datasets into local database cache.
+    ///
+    /// Downloads all Eurocontrol CSV datasets (airport_traffic, ASMA,
+    /// taxi-out, taxi-in, vertical flight efficiency, slot adherence)
+    /// and ingests them into the eurocontrol_raw table.
+    SyncEurocontrol {
+        /// Re-download all data including historical apt_dly files back to 2014.
+        #[arg(long)]
+        full_refresh: bool,
+    },
+
     /// Start the HTTP API server.
     Serve {
         /// Port to listen on.
@@ -96,6 +107,17 @@ async fn main() -> Result<()> {
         } => {
             run_fetch(airports, all, source, full_refresh, score).await?;
         }
+        Command::SyncEurocontrol { full_refresh } => {
+            let pool = db::get_pool().await?;
+            info!("Connected to database");
+            let result = fetchers::eurocontrol::sync::run_sync(&pool, full_refresh).await?;
+            info!(
+                datasets = result.datasets_synced,
+                rows = result.total_rows,
+                errors = result.errors.len(),
+                "Eurocontrol sync complete"
+            );
+        }
         Command::Serve { port } => {
             server::run(port, log_sender).await?;
         }
@@ -111,11 +133,6 @@ async fn run_fetch(
     full_refresh: bool,
     score: bool,
 ) -> Result<()> {
-    // Load airport config from airports.json.
-    let seed_config = config::load_seed_airports(None)?;
-    let seed_iata_codes = config::seed_iata_codes(&seed_config);
-    info!(count = seed_iata_codes.len(), "Loaded seed airports from airports.json");
-
     // Validate: need either airport codes or --all.
     if airports.is_empty() && !all {
         bail!("Provide at least one IATA code, or use --all for all seed airports.");
@@ -124,6 +141,11 @@ async fn run_fetch(
     // Connect to Postgres.
     let pool = db::get_pool().await?;
     info!("Connected to database");
+
+    // Load seed config from database.
+    let seed_config = config::load_seed_airports_from_db(&pool).await?;
+    let seed_iata_codes = config::seed_iata_codes(&seed_config);
+    info!(count = seed_iata_codes.len(), "Loaded seed airports from database");
 
     // Bootstrap: OurAirports populates the airports table.
     // Only run if explicitly requested or if the DB is empty.

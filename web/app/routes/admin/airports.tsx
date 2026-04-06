@@ -14,11 +14,9 @@ import {
 import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
 import { BatchImportModal } from "~/components/admin/batch-import-modal";
-import { AddAirportDialog } from "~/components/admin/add-airport-dialog";
 import { EditRow } from "~/components/admin/edit-airport-row";
 import { SourceIndicators } from "~/components/admin/source-indicators";
 import {
-  Plus,
   FileText,
   Pencil,
   Trash2,
@@ -44,7 +42,6 @@ function AdminAirports() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [batchOpen, setBatchOpen] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
 
   useEffect(() => {
     if (authenticated) fetchAirports();
@@ -139,27 +136,16 @@ function AdminAirports() {
     <AdminLayout
       title="Airports"
       actions={
-        <>
-          <Button size="sm" onClick={() => setAddOpen(true)}>
-            <Plus className="size-3.5" />
-            Add Airport
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => setBatchOpen(true)}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            <FileText className="size-3.5" />
-            Batch Import
-          </Button>
-        </>
+        <Button
+          size="sm"
+          onClick={() => setBatchOpen(true)}
+          className="bg-green-600 hover:bg-green-700 text-white"
+        >
+          <FileText className="size-3.5" />
+          Batch Import
+        </Button>
       }
     >
-      <AddAirportDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        onCreated={fetchAirports}
-      />
       <BatchImportModal
         open={batchOpen}
         onOpenChange={setBatchOpen}

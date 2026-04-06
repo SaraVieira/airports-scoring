@@ -33,28 +33,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# IATA -> Skytrax slug mapping loaded from airports.json
+# IATA -> Skytrax slug mapping (populated from --review-slug/--rating-slug CLI args,
+# which the Rust pipeline passes from the supported_airports DB table).
 # ---------------------------------------------------------------------------
-
-def _load_slugs() -> tuple[dict[str, str], dict[str, str]]:
-    """Load Skytrax slugs from airports.json (fallback if --review-slug/--rating-slug not provided)."""
-    airports_path = Path(__file__).parent.parent / "airports.json"
-    try:
-        with open(airports_path) as f:
-            airports = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}, {}
-    review_slugs = {}
-    rating_slugs = {}
-    for a in airports:
-        iata = a["iata"]
-        if a.get("skytrax_review_slug"):
-            review_slugs[iata] = a["skytrax_review_slug"]
-        if a.get("skytrax_rating_slug"):
-            rating_slugs[iata] = a["skytrax_rating_slug"]
-    return review_slugs, rating_slugs
-
-AIRPORT_SLUGS, RATING_SLUGS = _load_slugs()
+AIRPORT_SLUGS: dict[str, str] = {}
+RATING_SLUGS: dict[str, str] = {}
 
 # Sub-rating labels as they appear on the page -> output field names.
 # Skytrax uses slightly different labels across versions of their site.
@@ -377,11 +360,11 @@ def main():
     )
     parser.add_argument(
         "--review-slug", required=False,
-        help="Skytrax review slug (e.g. london-heathrow-airport). Overrides airports.json lookup."
+        help="Skytrax review slug (e.g. london-heathrow-airport)"
     )
     parser.add_argument(
         "--rating-slug", required=False,
-        help="Skytrax rating slug (e.g. london-heathrow-airport). Overrides airports.json lookup."
+        help="Skytrax rating slug (e.g. london-heathrow-airport)"
     )
     args = parser.parse_args()
 

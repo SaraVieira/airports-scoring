@@ -106,6 +106,24 @@ pub async fn run_pipeline(
         None => ALL_SOURCES.to_vec(),
     };
 
+    // Auto-sync Eurocontrol raw data if eurocontrol source is included.
+    // This downloads CSVs once for all airports instead of per-airport.
+    if sources.contains(&"eurocontrol") {
+        info!("Auto-syncing Eurocontrol raw data before per-airport fetch");
+        match fetchers::eurocontrol::sync::run_sync(pool, full_refresh).await {
+            Ok(result) => {
+                info!(
+                    datasets = result.datasets_synced,
+                    rows = result.total_rows,
+                    "Eurocontrol sync complete"
+                );
+            }
+            Err(e) => {
+                warn!(error = %e, "Eurocontrol sync failed — per-airport fetch will use existing raw data");
+            }
+        }
+    }
+
     // Run sources per airport.
     for airport in airports {
         let iata = airport

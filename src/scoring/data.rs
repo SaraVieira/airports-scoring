@@ -20,7 +20,12 @@ pub(crate) struct ScoringData {
     pub avg_cancellation_pct: Option<f64>,
     pub avg_delay_minutes: Option<f64>,
     pub delay_airport_pct: Option<f64>,
+    pub asma_additional_min: Option<f64>,
     pub taxi_out_additional_min: Option<f64>,
+    pub taxi_in_additional_min: Option<f64>,
+    pub slot_adherence_pct: Option<f64>,
+    pub cdo_pct: Option<f64>,
+    pub cco_pct: Option<f64>,
     // Sentiment (weighted average across all snapshots)
     pub weighted_avg_rating: Option<f64>,
     pub total_review_count: Option<i32>,
@@ -62,6 +67,12 @@ pub(crate) struct YearlyOps {
     pub avg_cancellation_pct: Option<Decimal>,
     pub avg_delay_minutes: Option<Decimal>,
     pub avg_delay_airport_pct: Option<Decimal>,
+    pub avg_asma_additional_min: Option<Decimal>,
+    pub avg_taxi_out_additional_min: Option<Decimal>,
+    pub avg_taxi_in_additional_min: Option<Decimal>,
+    pub avg_slot_adherence_pct: Option<Decimal>,
+    pub avg_cdo_pct: Option<Decimal>,
+    pub avg_cco_pct: Option<Decimal>,
 }
 
 /// Sentiment snapshot for weighted averaging across all time.
@@ -100,7 +111,13 @@ pub(crate) async fn gather_scoring_data(
                 AVG(delay_pct) as avg_delay_pct, \
                 AVG(cancellation_pct) as avg_cancellation_pct, \
                 AVG(avg_delay_minutes) as avg_delay_minutes, \
-                AVG(delay_airport_pct) as avg_delay_airport_pct \
+                AVG(delay_airport_pct) as avg_delay_airport_pct, \
+                AVG(asma_additional_min) as avg_asma_additional_min, \
+                AVG(taxi_out_additional_min) as avg_taxi_out_additional_min, \
+                AVG(taxi_in_additional_min) as avg_taxi_in_additional_min, \
+                AVG(slot_adherence_pct) as avg_slot_adherence_pct, \
+                AVG(cdo_pct) as avg_cdo_pct, \
+                AVG(cco_pct) as avg_cco_pct \
          FROM operational_stats WHERE airport_id = $1 \
          GROUP BY period_year ORDER BY period_year",
     )
@@ -109,8 +126,7 @@ pub(crate) async fn gather_scoring_data(
     .await?;
 
     // Compute weighted averages for operational data
-    let (avg_delay_pct, avg_cancellation_pct, avg_delay_minutes, delay_airport_pct) =
-        weighted_avg_ops(&yearly_ops);
+    let ops = weighted_avg_ops(&yearly_ops);
 
     // Sentiment — ALL snapshots for weighted averaging
     let all_sentiment: Vec<SentimentRow> = sqlx::query_as(
@@ -220,11 +236,16 @@ pub(crate) async fn gather_scoring_data(
         annual_pax_latest_m: airport.annual_pax_latest_m.as_ref().and_then(|d| d.to_f64()),
         opened_year: airport.opened_year,
         last_major_reno: airport.last_major_reno,
-        avg_delay_pct,
-        avg_cancellation_pct,
-        avg_delay_minutes,
-        delay_airport_pct,
-        taxi_out_additional_min: None, // TODO: Eurocontrol PRU ASMA/taxi-out
+        avg_delay_pct: ops.delay_pct,
+        avg_cancellation_pct: ops.cancellation_pct,
+        avg_delay_minutes: ops.delay_minutes,
+        delay_airport_pct: ops.airport_delay_pct,
+        asma_additional_min: ops.asma_additional_min,
+        taxi_out_additional_min: ops.taxi_out_additional_min,
+        taxi_in_additional_min: ops.taxi_in_additional_min,
+        slot_adherence_pct: ops.slot_adherence_pct,
+        cdo_pct: ops.cdo_pct,
+        cco_pct: ops.cco_pct,
         weighted_avg_rating,
         total_review_count,
         sub_score_count,
@@ -251,55 +272,77 @@ pub(crate) async fn gather_scoring_data(
     })
 }
 
+/// Weighted averages for all operational metrics across all years.
+#[derive(Debug, Default)]
+pub(crate) struct WeightedOps {
+    pub delay_pct: Option<f64>,
+    pub cancellation_pct: Option<f64>,
+    pub delay_minutes: Option<f64>,
+    pub airport_delay_pct: Option<f64>,
+    pub asma_additional_min: Option<f64>,
+    pub taxi_out_additional_min: Option<f64>,
+    pub taxi_in_additional_min: Option<f64>,
+    pub slot_adherence_pct: Option<f64>,
+    pub cdo_pct: Option<f64>,
+    pub cco_pct: Option<f64>,
+}
+
 /// Compute weighted averages for operational data across all years.
 /// weight(year) = 1 + max(0, (year - 2015) * 0.3)
-pub(crate) fn weighted_avg_ops(
-    yearly: &[YearlyOps],
-) -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
+pub(crate) fn weighted_avg_ops(yearly: &[YearlyOps]) -> WeightedOps {
     if yearly.is_empty() {
-        return (None, None, None, None);
+        return WeightedOps::default();
     }
 
-    let mut delay_sum = 0.0_f64;
-    let mut delay_weight = 0.0_f64;
-    let mut cancel_sum = 0.0_f64;
-    let mut cancel_weight = 0.0_f64;
-    let mut avg_delay_sum = 0.0_f64;
-    let mut avg_delay_weight = 0.0_f64;
-    let mut airport_pct_sum = 0.0_f64;
-    let mut airport_pct_weight = 0.0_f64;
+    // Accumulator: (sum, weight) for each metric
+    struct Acc {
+        sum: f64,
+        weight: f64,
+    }
+    impl Acc {
+        fn new() -> Self { Self { sum: 0.0, weight: 0.0 } }
+        fn add(&mut self, val: f64, w: f64) { self.sum += val * w; self.weight += w; }
+        fn avg(&self) -> Option<f64> { if self.weight > 0.0 { Some(self.sum / self.weight) } else { None } }
+    }
+
+    let mut delay = Acc::new();
+    let mut cancel = Acc::new();
+    let mut avg_dly = Acc::new();
+    let mut airport = Acc::new();
+    let mut asma = Acc::new();
+    let mut taxi_out = Acc::new();
+    let mut taxi_in = Acc::new();
+    let mut slot = Acc::new();
+    let mut cdo = Acc::new();
+    let mut cco = Acc::new();
 
     for row in yearly {
         let w = year_weight(row.period_year);
 
-        if let Some(v) = row.avg_delay_pct.and_then(|d| d.to_f64()) {
-            delay_sum += v * w;
-            delay_weight += w;
-        }
-        if let Some(v) = row.avg_cancellation_pct.and_then(|d| d.to_f64()) {
-            cancel_sum += v * w;
-            cancel_weight += w;
-        }
-        if let Some(v) = row.avg_delay_minutes.and_then(|d| d.to_f64()) {
-            avg_delay_sum += v * w;
-            avg_delay_weight += w;
-        }
-        if let Some(v) = row.avg_delay_airport_pct.and_then(|d| d.to_f64()) {
-            airport_pct_sum += v * w;
-            airport_pct_weight += w;
-        }
+        if let Some(v) = row.avg_delay_pct.and_then(|d| d.to_f64()) { delay.add(v, w); }
+        if let Some(v) = row.avg_cancellation_pct.and_then(|d| d.to_f64()) { cancel.add(v, w); }
+        if let Some(v) = row.avg_delay_minutes.and_then(|d| d.to_f64()) { avg_dly.add(v, w); }
+        if let Some(v) = row.avg_delay_airport_pct.and_then(|d| d.to_f64()) { airport.add(v, w); }
+        if let Some(v) = row.avg_asma_additional_min.and_then(|d| d.to_f64()) { asma.add(v, w); }
+        if let Some(v) = row.avg_taxi_out_additional_min.and_then(|d| d.to_f64()) { taxi_out.add(v, w); }
+        if let Some(v) = row.avg_taxi_in_additional_min.and_then(|d| d.to_f64()) { taxi_in.add(v, w); }
+        if let Some(v) = row.avg_slot_adherence_pct.and_then(|d| d.to_f64()) { slot.add(v, w); }
+        if let Some(v) = row.avg_cdo_pct.and_then(|d| d.to_f64()) { cdo.add(v, w); }
+        if let Some(v) = row.avg_cco_pct.and_then(|d| d.to_f64()) { cco.add(v, w); }
     }
 
-    let avg = |sum: f64, weight: f64| -> Option<f64> {
-        if weight > 0.0 { Some(sum / weight) } else { None }
-    };
-
-    (
-        avg(delay_sum, delay_weight),
-        avg(cancel_sum, cancel_weight),
-        avg(avg_delay_sum, avg_delay_weight),
-        avg(airport_pct_sum, airport_pct_weight),
-    )
+    WeightedOps {
+        delay_pct: delay.avg(),
+        cancellation_pct: cancel.avg(),
+        delay_minutes: avg_dly.avg(),
+        airport_delay_pct: airport.avg(),
+        asma_additional_min: asma.avg(),
+        taxi_out_additional_min: taxi_out.avg(),
+        taxi_in_additional_min: taxi_in.avg(),
+        slot_adherence_pct: slot.avg(),
+        cdo_pct: cdo.avg(),
+        cco_pct: cco.avg(),
+    }
 }
 
 /// Compute weighted sentiment averages across all snapshots.

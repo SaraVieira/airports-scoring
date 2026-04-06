@@ -798,15 +798,18 @@ async fn fetch_recent_reviews(pool: &PgPool, airport_id: i32) -> Vec<RecentRevie
 async fn fetch_ranking(pool: &PgPool, airport_id: i32) -> RankingResponse {
     let row = sqlx::query_as::<_, RankingRow>(
         "WITH ranked AS (
-            SELECT airport_id,
-                   RANK() OVER (ORDER BY score_total DESC) AS position,
+            SELECT s.airport_id,
+                   RANK() OVER (ORDER BY s.score_total DESC) AS position,
                    COUNT(*) OVER () AS total
-            FROM airport_scores
-            WHERE is_latest = TRUE
+            FROM airport_scores s
+            INNER JOIN airports a ON a.id = s.airport_id
+            WHERE s.is_latest = TRUE AND a.in_seed_set = TRUE
+              AND (SELECT COUNT(*) FROM routes r WHERE r.origin_id = a.id) >= $2
          )
          SELECT position, total FROM ranked WHERE airport_id = $1",
     )
     .bind(airport_id)
+    .bind(crate::scoring::MIN_ROUTES_FOR_SCORING)
     .fetch_optional(pool)
     .await
     .ok()
@@ -1037,9 +1040,11 @@ pub async fn list_airports(
                 s.score_sentiment_velocity::float8 as score_sentiment_velocity
          FROM airport_scores s
          INNER JOIN airports a ON a.id = s.airport_id
-         WHERE s.is_latest = TRUE
+         WHERE s.is_latest = TRUE AND a.in_seed_set = TRUE
+           AND (SELECT COUNT(*) FROM routes r WHERE r.origin_id = a.id) >= $1
          ORDER BY s.score_total DESC",
     )
+    .bind(crate::scoring::MIN_ROUTES_FOR_SCORING)
     .fetch_all(&state.pool)
     .await
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;

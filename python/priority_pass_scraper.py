@@ -59,21 +59,25 @@ HEADERS = {
 # ---------------------------------------------------------------------------
 
 def load_country_code(iata: str) -> str | None:
-    """Load the country code for an airport from airports.json."""
-    airports_path = Path(__file__).parent.parent / "airports.json"
+    """Load the country code for an airport from the database."""
+    db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        logger.error("DATABASE_URL not set, cannot look up country code")
+        return None
     try:
-        with open(airports_path) as f:
-            airports = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError) as exc:
-        logger.error("Failed to load airports.json: %s", exc)
+        import psycopg2
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
+        cur.execute("SELECT country_code FROM airports WHERE iata_code = %s", (iata.upper(),))
+        row = cur.fetchone()
+        conn.close()
+        if row:
+            return row[0]
+    except Exception as exc:
+        logger.error("Failed to load country code from DB: %s", exc)
         return None
 
-    iata_upper = iata.upper()
-    for airport in airports:
-        if airport.get("iata", "").upper() == iata_upper:
-            return airport.get("country")
-
-    logger.error("IATA code %s not found in airports.json", iata)
+    logger.error("IATA code %s not found in database", iata)
     return None
 
 
@@ -215,7 +219,7 @@ def main() -> None:
 
     iata = args.airport.upper()
 
-    # Use --country arg if provided, otherwise fall back to airports.json
+    # Use --country arg if provided, otherwise look up from database
     country_code = args.country.upper() if args.country else load_country_code(iata)
     if not country_code:
         print(f"ERROR: Could not determine country code for {iata}", file=sys.stderr)

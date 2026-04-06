@@ -227,6 +227,15 @@ CREATE TABLE operational_stats (
     -- Baggage
     mishandled_bags_per_1k  NUMERIC(6,3),
 
+    -- Eurocontrol PRU metrics
+    asma_additional_min     NUMERIC(10,2),   -- ASMA approach congestion (min/flight)
+    taxi_out_additional_min NUMERIC(10,2),   -- Taxi-out additional time (min/flight)
+    taxi_in_additional_min  NUMERIC(10,2),   -- Taxi-in additional time (min/flight)
+    slot_adherence_pct      NUMERIC(5,2),    -- ATFM slot adherence %
+    cdo_pct                 NUMERIC(5,2),    -- Continuous Descent Operations %
+    cco_pct                 NUMERIC(5,2),    -- Continuous Climb Operations %
+    co2_waste_kg_per_flight NUMERIC(10,2),   -- CO2 waste from non-optimal flight paths
+
     source                  TEXT,
     created_at              TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE (airport_id, period_year, period_month, source)
@@ -234,6 +243,50 @@ CREATE TABLE operational_stats (
 
 CREATE INDEX ops_stats_airport_idx ON operational_stats (airport_id);
 CREATE INDEX ops_stats_period_idx ON operational_stats (period_year, period_month);
+
+-- Eurocontrol raw data cache (populated by sync-eurocontrol command)
+CREATE TABLE eurocontrol_raw (
+    id                   BIGSERIAL PRIMARY KEY,
+    dataset              TEXT NOT NULL,
+    apt_icao             TEXT NOT NULL,
+    flight_date          DATE,
+    year                 SMALLINT NOT NULL,
+    month                SMALLINT NOT NULL,
+    total_flights        INTEGER,
+    ifr_flights          INTEGER,
+    additional_time_min  NUMERIC(10,2),
+    reference_time_min   NUMERIC(10,2),
+    reference_flights    INTEGER,
+    arr_flights          INTEGER,
+    delayed_flights      INTEGER,
+    total_atfm_delay_min NUMERIC(10,2),
+    dly_weather_min      NUMERIC(10,2),
+    dly_atc_min          NUMERIC(10,2),
+    dly_carrier_min      NUMERIC(10,2),
+    dly_airport_min      NUMERIC(10,2),
+    cdo_flights          INTEGER,
+    cco_flights          INTEGER,
+    total_flights_vfe    INTEGER,
+    delta_co2_kg_descent NUMERIC(12,2),
+    delta_co2_kg_climb   NUMERIC(12,2),
+    slot_departures      INTEGER,
+    slot_early           INTEGER,
+    slot_on_time         INTEGER,
+    slot_late            INTEGER,
+    ingested_at          TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE NULLS NOT DISTINCT (dataset, apt_icao, year, month, flight_date)
+);
+
+CREATE INDEX eurocontrol_raw_icao_idx ON eurocontrol_raw (apt_icao);
+CREATE INDEX eurocontrol_raw_dataset_year_idx ON eurocontrol_raw (dataset, year);
+
+CREATE TABLE eurocontrol_sync_log (
+    id        SERIAL PRIMARY KEY,
+    dataset   TEXT NOT NULL,
+    year      SMALLINT NOT NULL,
+    row_count INTEGER NOT NULL,
+    synced_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- ============================================================
 -- SENTIMENT (time series, multi-source)

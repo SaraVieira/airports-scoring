@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 use anyhow::{Context, Result};
 use serde::Deserialize;
-
-const DEFAULT_CONFIG_PATH: &str = "airports.json";
+use sqlx::PgPool;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SeedAirport {
@@ -14,42 +13,32 @@ pub struct SeedAirport {
     pub google_maps_url: Option<String>,
 }
 
-/// Load the seed airport list from `airports.json` (or a custom path).
-pub fn load_seed_airports(path: Option<&str>) -> Result<Vec<SeedAirport>> {
-    let p = path.unwrap_or(DEFAULT_CONFIG_PATH);
-    let content = std::fs::read_to_string(p)
-        .with_context(|| format!("Failed to read airport config from '{}'", p))?;
-    let airports: Vec<SeedAirport> =
-        serde_json::from_str(&content).context("Failed to parse airports.json")?;
-    Ok(airports)
+/// Load the seed airport list from the database (supported_airports table).
+pub async fn load_seed_airports_from_db(pool: &PgPool) -> Result<Vec<SeedAirport>> {
+    let rows: Vec<(String, String, String, Option<String>, Option<String>, Option<String>)> =
+        sqlx::query_as(
+            "SELECT iata_code, country_code, name, \
+                    skytrax_review_slug, skytrax_rating_slug, google_maps_url \
+             FROM supported_airports WHERE enabled = true ORDER BY iata_code",
+        )
+        .fetch_all(pool)
+        .await
+        .context("Failed to load seed airports from database")?;
+
+    Ok(rows
+        .into_iter()
+        .map(|(iata, country, name, review_slug, rating_slug, google_url)| SeedAirport {
+            iata,
+            country,
+            name,
+            skytrax_review_slug: review_slug,
+            skytrax_rating_slug: rating_slug,
+            google_maps_url: google_url,
+        })
+        .collect())
 }
 
 /// Extract just the IATA codes from the seed config.
 pub fn seed_iata_codes(airports: &[SeedAirport]) -> Vec<&str> {
     airports.iter().map(|a| a.iata.as_str()).collect()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn load_airports_json() {
-        let airports = load_seed_airports(None).expect("airports.json should exist at repo root");
-        assert!(!airports.is_empty(), "airports.json should not be empty");
-
-        // Verify all entries have required fields.
-        for a in &airports {
-            assert!(!a.iata.is_empty(), "IATA code must not be empty");
-            assert_eq!(a.iata.len(), 3, "IATA code must be 3 chars: {}", a.iata);
-            assert!(!a.country.is_empty(), "Country code must not be empty");
-            assert!(!a.name.is_empty(), "Name must not be empty");
-        }
-
-        // Check a known airport exists.
-        assert!(
-            airports.iter().any(|a| a.iata == "LHR"),
-            "LHR should be in airports.json"
-        );
-    }
 }

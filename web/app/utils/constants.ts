@@ -1,3 +1,6 @@
+/** Minimum number of routes for an airport to be scored and ranked. */
+export const MIN_ROUTES_FOR_SCORING = 5;
+
 /** All data sources that run per-airport in the pipeline. */
 export const PIPELINE_SOURCES = [
   "eurocontrol",

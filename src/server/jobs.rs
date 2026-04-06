@@ -9,7 +9,6 @@ use tracing::{error, info, warn};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::config::SeedAirport;
 use crate::db;
 use crate::models::{Airport, SupportedAirport};
 use crate::pipeline;
@@ -234,7 +233,7 @@ async fn run_job(
     update_job_status(&jobs_map, &job_id, "running", None).await;
 
     // Load seed data from DB.
-    let seed_airports = match load_seed_from_db(&pool).await {
+    let seed_airports = match crate::config::load_seed_airports_from_db(&pool).await {
         Ok(s) => s,
         Err(e) => {
             let msg = format!("Failed to load seed airports: {e}");
@@ -619,20 +618,6 @@ async fn load_supported_from_db(pool: &PgPool) -> Result<Vec<SupportedAirport>, 
     .await
 }
 
-async fn load_seed_from_db(pool: &PgPool) -> Result<Vec<SeedAirport>, sqlx::Error> {
-    let rows = load_supported_from_db(pool).await?;
-    Ok(rows
-        .into_iter()
-        .map(|r| SeedAirport {
-            iata: r.iata_code,
-            country: r.country_code,
-            name: r.name,
-            skytrax_review_slug: r.skytrax_review_slug,
-            skytrax_rating_slug: r.skytrax_rating_slug,
-            google_maps_url: r.google_maps_url,
-        })
-        .collect())
-}
 
 /// Cancel all running jobs on the Google Reviews scraper service.
 #[allow(dead_code)]

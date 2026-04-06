@@ -70,6 +70,9 @@ pub async fn compute_score(
     })
 }
 
+/// Minimum number of routes required to score an airport.
+pub const MIN_ROUTES_FOR_SCORING: i64 = 5;
+
 /// Compute and persist all-time scores for all airports in the list.
 pub async fn score_airports(
     pool: &PgPool,
@@ -77,6 +80,25 @@ pub async fn score_airports(
 ) -> Result<()> {
     for airport in airports {
         let iata = airport.iata_code.as_deref().unwrap_or("???");
+
+        // Skip airports with fewer than 5 routes
+        let route_count: (i64,) = sqlx::query_as(
+            "SELECT COUNT(*) FROM routes WHERE origin_id = $1",
+        )
+        .bind(airport.id)
+        .fetch_one(pool)
+        .await?;
+
+        if route_count.0 < MIN_ROUTES_FOR_SCORING {
+            info!(airport = iata, routes = route_count.0, "Skipping score — fewer than {MIN_ROUTES_FOR_SCORING} routes");
+            // Remove any stale score from a previous run
+            sqlx::query("DELETE FROM airport_scores WHERE airport_id = $1")
+                .bind(airport.id)
+                .execute(pool)
+                .await?;
+            continue;
+        }
+
         info!(airport = iata, "Computing all-time score");
 
         let score = compute_score(pool, airport).await?;

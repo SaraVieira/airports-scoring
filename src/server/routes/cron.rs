@@ -1,5 +1,6 @@
 use axum::{extract::State, http::StatusCode, Json};
 
+use crate::fetchers::eurocontrol::sync::run_sync;
 use crate::server::jobs::{JobInfo, JobProgress, StartJobRequest};
 use crate::server::AppState;
 
@@ -86,5 +87,35 @@ pub async fn cron_reviews(State(state): State<AppState>) -> (StatusCode, Json<Jo
     match state.jobs.start_job(req).await {
         Ok(job) => (StatusCode::CREATED, Json(job)),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(error_job(e))),
+    }
+}
+
+/// Cron: sync Eurocontrol datasets into local database cache.
+/// Downloads all remote CSVs and ingests local apt_dly files.
+#[utoipa::path(
+    post,
+    path = "/api/cron/sync-eurocontrol",
+    responses(
+        (status = 200, description = "Sync completed"),
+        (status = 500, description = "Sync failed"),
+    ),
+    tag = "cron"
+)]
+pub async fn cron_sync_eurocontrol(
+    State(state): State<AppState>,
+) -> (StatusCode, Json<serde_json::Value>) {
+    match run_sync(&state.pool, false).await {
+        Ok(result) => (
+            StatusCode::OK,
+            Json(serde_json::json!({
+                "datasets_synced": result.datasets_synced,
+                "total_rows": result.total_rows,
+                "errors": result.errors,
+            })),
+        ),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({ "error": e.to_string() })),
+        ),
     }
 }

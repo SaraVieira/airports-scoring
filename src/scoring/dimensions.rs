@@ -48,25 +48,48 @@ pub(crate) fn score_infrastructure(data: &ScoringData, reference_year: i16) -> f
     score.clamp(0.0, 100.0)
 }
 
-/// Operational score (weight: 25%)
+/// Operational score (weight: 30%)
 ///
 /// delay_score        = GREATEST(0, 100 - (delay_pct * 2.5))
 /// avg_delay_score    = GREATEST(0, 100 - (avg_delay_minutes * 3))
+/// taxi_score         = GREATEST(0, 100 - avg(taxi_out, taxi_in) * 10)
+/// asma_score         = GREATEST(0, 100 - asma_additional_min * 15)
+/// slot_score         = slot_adherence_pct (already 0-100)
 /// cancellation_score = GREATEST(0, 100 - (cancellation_pct * 10))
-/// taxi_score         = GREATEST(0, 100 - (taxi_out_additional_min * 10))
 ///
 /// attribution_modifier = 1.0 - (airport_delay_pct * 0.003)
+/// cdo_bonus = if cdo_pct > 50%, up to +3 points
 ///
-/// score = (delay * 0.35 + avg_delay * 0.25 + cancel * 0.20 + taxi * 0.20) * modifier
+/// score = (delay * 0.25 + avg_delay * 0.20 + taxi * 0.15
+///        + asma * 0.15 + slot * 0.15 + cancel * 0.10) * modifier + cdo_bonus
 pub(crate) fn score_operational(data: &ScoringData) -> f64 {
     let delay_score = data
         .avg_delay_pct
         .map(|d| (100.0 - d * 2.5).max(0.0))
-        .unwrap_or(70.0); // no data = slightly below neutral
+        .unwrap_or(70.0);
 
     let avg_delay_score = data
         .avg_delay_minutes
         .map(|d| (100.0 - d * 3.0).max(0.0))
+        .unwrap_or(70.0);
+
+    // Combined taxi: average of taxi-out and taxi-in additional time
+    let taxi_score = match (data.taxi_out_additional_min, data.taxi_in_additional_min) {
+        (Some(out), Some(inn)) => (100.0 - ((out + inn) / 2.0) * 10.0).max(0.0),
+        (Some(out), None) => (100.0 - out * 10.0).max(0.0),
+        (None, Some(inn)) => (100.0 - inn * 10.0).max(0.0),
+        (None, None) => 70.0,
+    };
+
+    // ASMA approach congestion: additional minutes per flight
+    let asma_score = data
+        .asma_additional_min
+        .map(|d| (100.0 - d * 15.0).max(0.0))
+        .unwrap_or(70.0);
+
+    // Slot adherence: already a percentage (0-100)
+    let slot_score = data
+        .slot_adherence_pct
         .unwrap_or(70.0);
 
     let cancellation_score = data
@@ -74,22 +97,25 @@ pub(crate) fn score_operational(data: &ScoringData) -> f64 {
         .map(|d| (100.0 - d * 10.0).max(0.0))
         .unwrap_or(80.0);
 
-    let taxi_score = data
-        .taxi_out_additional_min
-        .map(|d| (100.0 - d * 10.0).max(0.0))
-        .unwrap_or(70.0);
-
     let attribution_modifier = data
         .delay_airport_pct
         .map(|d| 1.0 - d * 0.003)
         .unwrap_or(1.0);
 
-    let raw = delay_score * 0.35
-        + avg_delay_score * 0.25
-        + cancellation_score * 0.20
-        + taxi_score * 0.20;
+    let raw = delay_score * 0.25
+        + avg_delay_score * 0.20
+        + taxi_score * 0.15
+        + asma_score * 0.15
+        + slot_score * 0.15
+        + cancellation_score * 0.10;
 
-    (raw * attribution_modifier).clamp(0.0, 100.0)
+    // CDO environmental bonus: up to +3 points if >50% of flights are CDO
+    let cdo_bonus = data
+        .cdo_pct
+        .map(|pct| if pct > 50.0 { ((pct - 50.0) / 50.0) * 3.0 } else { 0.0 })
+        .unwrap_or(0.0);
+
+    (raw * attribution_modifier + cdo_bonus).clamp(0.0, 100.0)
 }
 
 /// Sentiment score (weight: 25%)

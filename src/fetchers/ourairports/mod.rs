@@ -10,9 +10,8 @@ use tracing::info;
 use crate::models::{Airport, FetchResult};
 use types::CsvAirport;
 
-// Seed IATA codes are loaded from airports.json at startup —
-// see config::load_seed_airports(). The fetch_all() function
-// receives them as a parameter.
+// Seed IATA codes are loaded from the supported_airports table at startup.
+// The fetch_all() function receives them as a parameter.
 
 const AIRPORTS_CSV_URL: &str =
     "https://davidmegginson.github.io/ourairports-data/airports.csv";

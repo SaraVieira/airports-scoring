@@ -42,12 +42,22 @@ logger = logging.getLogger(__name__)
 # Config
 # ---------------------------------------------------------------------------
 
-def load_airports_json() -> dict[str, dict]:
-    """Load airports.json and return a dict keyed by IATA code."""
-    path = os.path.join(os.path.dirname(__file__), "..", "airports.json")
-    with open(path) as f:
-        airports = json.load(f)
-    return {a["iata"]: a for a in airports}
+def load_google_maps_url_from_db(iata: str, db_url: str) -> str | None:
+    """Load google_maps_url from supported_airports table."""
+    try:
+        import psycopg2
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT google_maps_url FROM supported_airports WHERE iata_code = %s AND enabled = true",
+            (iata,),
+        )
+        row = cur.fetchone()
+        conn.close()
+        return row[0] if row else None
+    except Exception as exc:
+        logger.warning("Could not load google_maps_url from DB: %s", exc)
+        return None
 
 
 def synthetic_source_url(iata: str, reviewer_name: str, date_iso: str, text: str) -> str:
@@ -233,20 +243,13 @@ def main():
         "--timeout", type=int, default=600,
         help="Max seconds to wait for scrape job (default: 600)"
     )
+    parser.add_argument(
+        "--google-maps-url", required=False,
+        help="Google Maps URL for the airport. If not provided, loaded from DB."
+    )
     args = parser.parse_args()
 
     iata = args.airport.upper()
-
-    # Load config
-    airports = load_airports_json()
-    if iata not in airports:
-        logger.error("Airport %s not found in airports.json", iata)
-        sys.exit(1)
-
-    google_maps_url = airports[iata].get("google_maps_url")
-    if not google_maps_url:
-        logger.error("No google_maps_url configured for %s in airports.json", iata)
-        sys.exit(1)
 
     # Env vars
     base_url = os.environ.get("GOOGLE_SCRAPER_URL", "http://localhost:8000")
@@ -254,6 +257,14 @@ def main():
     db_url = os.environ.get("DATABASE_URL")
     if not db_url:
         logger.error("DATABASE_URL env var not set")
+        sys.exit(1)
+
+    # Load google_maps_url from CLI arg or DB
+    google_maps_url = args.google_maps_url
+    if not google_maps_url:
+        google_maps_url = load_google_maps_url_from_db(iata, db_url)
+    if not google_maps_url:
+        logger.error("No google_maps_url for %s. Pass --google-maps-url or configure in admin.", iata)
         sys.exit(1)
 
     # Health check

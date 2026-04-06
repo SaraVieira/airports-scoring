@@ -18,7 +18,12 @@ fn empty_data() -> ScoringData {
         avg_cancellation_pct: None,
         avg_delay_minutes: None,
         delay_airport_pct: None,
+        asma_additional_min: None,
         taxi_out_additional_min: None,
+        taxi_in_additional_min: None,
+        slot_adherence_pct: None,
+        cdo_pct: None,
+        cco_pct: None,
         weighted_avg_rating: None,
         total_review_count: None,
         sub_score_count: 0,
@@ -103,35 +108,46 @@ fn operational_perfect() {
         avg_cancellation_pct: Some(0.0),
         avg_delay_minutes: Some(0.0),
         delay_airport_pct: Some(0.0),
+        asma_additional_min: Some(0.0),
         taxi_out_additional_min: Some(0.0),
+        taxi_in_additional_min: Some(0.0),
+        slot_adherence_pct: Some(100.0),
+        cdo_pct: Some(0.0),
         ..empty_data()
     };
     let score = score_operational(&data);
+    // delay=100*0.25 + avg_delay=100*0.20 + taxi=100*0.15
+    // + asma=100*0.15 + slot=100*0.15 + cancel=100*0.10 = 100
     assert!((score - 100.0).abs() < 0.01, "got {}", score);
 }
 
 #[test]
 fn operational_high_delays() {
     let data = ScoringData {
-        avg_delay_pct: Some(40.0),          // 100 - 100 = 0
-        avg_cancellation_pct: Some(5.0),    // 100 - 50 = 50
-        avg_delay_minutes: Some(30.0),      // 100 - 90 = 10
-        delay_airport_pct: Some(50.0),      // modifier: 1 - 0.15 = 0.85
-        taxi_out_additional_min: Some(5.0), // 100 - 50 = 50
+        avg_delay_pct: Some(40.0),          // 100-100=0
+        avg_cancellation_pct: Some(5.0),    // 100-50=50
+        avg_delay_minutes: Some(30.0),      // 100-90=10
+        delay_airport_pct: Some(50.0),      // modifier: 1-0.15=0.85
+        asma_additional_min: Some(4.0),     // 100-60=40
+        taxi_out_additional_min: Some(5.0), // avg(5,3)/2=4 -> 100-40=60
+        taxi_in_additional_min: Some(3.0),
+        slot_adherence_pct: Some(60.0),     // 60
+        cdo_pct: Some(30.0),               // no bonus (<50%)
         ..empty_data()
     };
     let score = score_operational(&data);
-    // raw = 0*0.35 + 10*0.25 + 50*0.20 + 50*0.20 = 22.5
-    // * 0.85 = 19.125
-    assert!((score - 19.125).abs() < 0.01, "got {}", score);
+    // raw = 0*0.25 + 10*0.20 + 60*0.15 + 40*0.15 + 60*0.15 + 50*0.10
+    //     = 0 + 2 + 9 + 6 + 9 + 5 = 31
+    // * 0.85 = 26.35
+    assert!((score - 26.35).abs() < 0.01, "got {}", score);
 }
 
 #[test]
 fn operational_no_data_defaults() {
     let data = empty_data();
     let score = score_operational(&data);
-    // 70*0.35 + 70*0.25 + 80*0.20 + 70*0.20 = 72
-    assert!((score - 72.0).abs() < 0.01, "got {}", score);
+    // 70*0.25 + 70*0.20 + 70*0.15 + 70*0.15 + 70*0.15 + 80*0.10 = 71
+    assert!((score - 71.0).abs() < 0.01, "got {}", score);
 }
 
 #[test]
@@ -246,7 +262,12 @@ fn all_scores_clamped_0_to_100() {
         avg_cancellation_pct: Some(100.0),
         avg_delay_minutes: Some(999.0),
         delay_airport_pct: Some(100.0),
+        asma_additional_min: Some(999.0),
         taxi_out_additional_min: Some(999.0),
+        taxi_in_additional_min: Some(999.0),
+        slot_adherence_pct: Some(0.0),
+        cdo_pct: Some(0.0),
+        cco_pct: Some(0.0),
         weighted_avg_rating: Some(5.0),
         total_review_count: Some(99999),
         sub_score_count: 8,
@@ -295,6 +316,12 @@ fn weighted_ops_recency_bias() {
             avg_cancellation_pct: None,
             avg_delay_minutes: None,
             avg_delay_airport_pct: None,
+            avg_asma_additional_min: None,
+            avg_taxi_out_additional_min: None,
+            avg_taxi_in_additional_min: None,
+            avg_slot_adherence_pct: None,
+            avg_cdo_pct: None,
+            avg_cco_pct: None,
         },
         YearlyOps {
             period_year: 2025,
@@ -302,10 +329,16 @@ fn weighted_ops_recency_bias() {
             avg_cancellation_pct: None,
             avg_delay_minutes: None,
             avg_delay_airport_pct: None,
+            avg_asma_additional_min: None,
+            avg_taxi_out_additional_min: None,
+            avg_taxi_in_additional_min: None,
+            avg_slot_adherence_pct: None,
+            avg_cdo_pct: None,
+            avg_cco_pct: None,
         },
     ];
-    let (delay, _, _, _) = weighted_avg_ops(&ops);
-    let d = delay.unwrap();
+    let result = weighted_avg_ops(&ops);
+    let d = result.delay_pct.unwrap();
     // 2015 weight=1.0, 2025 weight=4.0
     // (50*1 + 10*4) / (1+4) = 90/5 = 18.0
     assert!((d - 18.0).abs() < 0.01, "expected ~18.0, got {}", d);
