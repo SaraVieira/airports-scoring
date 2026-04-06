@@ -25,6 +25,7 @@ pub(crate) struct ScoringData {
     pub taxi_in_additional_min: Option<f64>,
     pub slot_adherence_pct: Option<f64>,
     pub cdo_pct: Option<f64>,
+    #[allow(dead_code)] // Reserved for future environmental scoring dimension
     pub cco_pct: Option<f64>,
     // Sentiment (weighted average across all snapshots)
     pub weighted_avg_rating: Option<f64>,

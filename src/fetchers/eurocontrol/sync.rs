@@ -238,7 +238,6 @@ fn parse_csv(csv_data: &str, dataset: &str, is_apt_dly: bool) -> Vec<RawRecord> 
     // Columns vary by dataset type
     let flight_col = find_col(&headers, &["flt_tot_1", "flt_tot_ifr_2", "tf"]);
     let ifr_flight_col = find_col_exact(&headers, "FLT_TOT_IFR_2");
-    let _delay_col = find_col(&headers, &["total_add_time_min", "flt_dly_1"]);
 
     // ASMA / taxi specific
     let add_time_col = find_col_exact(&headers, "TOTAL_ADD_TIME_MIN");

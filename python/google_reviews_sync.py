@@ -46,15 +46,14 @@ def load_google_maps_url_from_db(iata: str, db_url: str) -> str | None:
     """Load google_maps_url from supported_airports table."""
     try:
         import psycopg2
-        conn = psycopg2.connect(db_url)
-        cur = conn.cursor()
-        cur.execute(
-            "SELECT google_maps_url FROM supported_airports WHERE iata_code = %s AND enabled = true",
-            (iata,),
-        )
-        row = cur.fetchone()
-        conn.close()
-        return row[0] if row else None
+        with psycopg2.connect(db_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT google_maps_url FROM supported_airports WHERE iata_code = %s AND enabled = true",
+                    (iata,),
+                )
+                row = cur.fetchone()
+                return row[0] if row else None
     except Exception as exc:
         logger.warning("Could not load google_maps_url from DB: %s", exc)
         return None

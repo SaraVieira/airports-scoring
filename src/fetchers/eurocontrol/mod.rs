@@ -17,7 +17,6 @@ use csv_parser::compute_cause_pct;
 struct MonthBucket {
     total_flights: i64,
     delayed_flights: i64,
-    total_delay_minutes: f64,
     // ATFM delay cause breakdown (minutes)
     delay_weather_min: f64,
     delay_carrier_min: f64,
@@ -239,11 +238,9 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
     let mut records_processed: i32 = 0;
 
     for ((year, month), bucket) in &buckets {
-        let avg_delay = if bucket.total_flights > 0 {
-            let avg = bucket.total_delay_minutes / bucket.total_flights as f64;
-            let mut d = Decimal::from_f64_retain(avg).unwrap_or_default();
-            d.rescale(2);
-            Some(d)
+        let avg_delay = if bucket.atfm_flights > 0 && bucket.total_atfm_delay_min > 0.0 {
+            let avg = bucket.total_atfm_delay_min / bucket.atfm_flights as f64;
+            Some(dec2(avg))
         } else {
             None
         };

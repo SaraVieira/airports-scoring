@@ -66,13 +66,12 @@ def load_country_code(iata: str) -> str | None:
         return None
     try:
         import psycopg2
-        conn = psycopg2.connect(db_url)
-        cur = conn.cursor()
-        cur.execute("SELECT country_code FROM airports WHERE iata_code = %s", (iata.upper(),))
-        row = cur.fetchone()
-        conn.close()
-        if row:
-            return row[0]
+        with psycopg2.connect(db_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT country_code FROM airports WHERE iata_code = %s", (iata.upper(),))
+                row = cur.fetchone()
+                if row:
+                    return row[0]
     except Exception as exc:
         logger.error("Failed to load country code from DB: %s", exc)
         return None
