@@ -57,9 +57,10 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         }
     };
 
-    let current_year = Utc::now().year();
-    let start_year = current_year - 9;
-    let year_values: Vec<String> = (start_year..=current_year)
+    // DST publishes annual data — current year is usually not available yet
+    let last_year = Utc::now().year() - 1;
+    let start_year = last_year - 9;
+    let year_values: Vec<String> = (start_year..=last_year)
         .map(|y| y.to_string())
         .collect();
 
