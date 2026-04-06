@@ -19,6 +19,7 @@ fn error_job(e: String) -> JobInfo {
             airports_total: 0,
             current_airport: None,
             current_source: None,
+            phase: None,
         },
         error: Some(e),
     }

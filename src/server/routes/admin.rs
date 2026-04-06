@@ -305,14 +305,16 @@ pub async fn delete_supported_airport(
 pub async fn data_gaps(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<DataGapResponse>>, StatusCode> {
-    // Stale or never-fetched source_status rows
+    // Stale, failed, or never-fetched source_status rows
     let stale = sqlx::query_as::<sqlx::Postgres, (String, String, String, Option<DateTime<Utc>>, String)>(
         r#"
         SELECT sa.iata_code, sa.name, ss.source, ss.last_fetched_at, ss.last_status
         FROM source_status ss
         JOIN supported_airports sa ON sa.iata_code = ss.iata_code
-        WHERE ss.last_fetched_at IS NULL
-           OR ss.last_fetched_at < now() - interval '30 days'
+        WHERE sa.enabled = true
+          AND (ss.last_fetched_at IS NULL
+               OR ss.last_status = 'failed'
+               OR ss.last_fetched_at < now() - interval '30 days')
         ORDER BY sa.iata_code, ss.source
         "#,
     )
@@ -320,13 +322,15 @@ pub async fn data_gaps(
     .await
     .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
-    // Airports with NO source_status rows at all
+    // Enabled airports with NO source_status rows at all (never had a job run)
     let missing = sqlx::query_as::<sqlx::Postgres, (String, String)>(
         r#"
         SELECT sa.iata_code, sa.name
         FROM supported_airports sa
-        LEFT JOIN source_status ss ON ss.iata_code = sa.iata_code
-        WHERE ss.iata_code IS NULL
+        WHERE sa.enabled = true
+          AND NOT EXISTS (
+              SELECT 1 FROM source_status ss WHERE ss.iata_code = sa.iata_code
+          )
         ORDER BY sa.iata_code
         "#,
     )

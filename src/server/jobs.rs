@@ -38,6 +38,8 @@ pub struct JobProgress {
     pub airports_total: usize,
     pub current_airport: Option<String>,
     pub current_source: Option<String>,
+    /// Current phase: "fetching", "reviews", "sentiment", "scoring", or null
+    pub phase: Option<String>,
 }
 
 #[derive(Debug, Deserialize, ToSchema)]
@@ -109,6 +111,7 @@ impl JobManager {
                 airports_total: airport_iatas.len(),
                 current_airport: None,
                 current_source: None,
+                phase: None,
             },
             error: None,
         };
@@ -267,6 +270,7 @@ async fn run_job(
 
     let mut airports_completed = 0;
     let mut had_errors = false;
+    update_job_phase(&jobs_map, &job_id, "fetching", None, None).await;
     // Collect review work to run in parallel after non-review sources complete.
     let mut review_work: Vec<(String, crate::models::Airport, Vec<String>)> = Vec::new();
     let mut post_review_work: Vec<(String, crate::models::Airport, Vec<String>)> = Vec::new();
@@ -399,7 +403,7 @@ async fn run_job(
     // ── Phase 2: Run review sources in parallel across scraper pool ──
     if !review_work.is_empty() {
         info!(job_id = %job_id, airports = review_work.len(), "Starting parallel review phase");
-        update_job_progress(&jobs_map, &job_id, airports_completed, airport_iatas.len(), None, Some("reviews (parallel)".to_string())).await;
+        update_job_phase(&jobs_map, &job_id, "reviews", None, Some("reviews".to_string())).await;
 
         let mut join_set = tokio::task::JoinSet::new();
 
@@ -409,8 +413,10 @@ async fn run_job(
             let seed_airports = seed_airports.clone();
             let scraper_pool = scraper_pool.clone();
             let job_id = job_id.clone();
+            let jobs_map = jobs_map.clone();
 
             join_set.spawn(async move {
+                let mut review_had_errors = false;
                 // Acquire a scraper from the pool (blocks until one is free).
                 let scraper_guard = if let Some(ref sp) = scraper_pool {
                     Some(sp.acquire().await)
@@ -420,6 +426,7 @@ async fn run_job(
                 let scraper_url = scraper_guard.as_ref().map(|g| g.url.as_str());
 
                 for source in &review_srcs {
+                    update_job_phase(&jobs_map, &job_id, "reviews", Some(iata.clone()), Some(source.to_string())).await;
                     info!(job_id = %job_id, iata = %iata, source = %source, scraper = ?scraper_url, "Running review fetcher");
 
                     let result = if source == "google_reviews" || source == "reviews" {
@@ -456,21 +463,26 @@ async fn run_job(
                     };
                     let _ = update_source_status(&pool, &iata, source, status_str, record_count, error_msg.as_deref()).await;
 
+                    let failed = result.is_err();
                     match result {
                         Ok(r) => info!(job_id = %job_id, iata = %iata, source = %source, records = r.records_processed, "Review fetch completed"),
                         Err(e) => error!(job_id = %job_id, iata = %iata, source = %source, error = %e, "Review fetch failed"),
                     }
+                    if failed { review_had_errors = true; }
                 }
 
-                iata
+                (iata, review_had_errors)
             });
         }
 
         // Wait for all review tasks to complete.
         while let Some(result) = join_set.join_next().await {
             match result {
-                Ok(iata) => info!(job_id = %job_id, iata = %iata, "Review phase completed for airport"),
-                Err(e) => error!(job_id = %job_id, error = %e, "Review task panicked"),
+                Ok((iata, errors)) => {
+                    if errors { had_errors = true; }
+                    info!(job_id = %job_id, iata = %iata, errors, "Review phase completed for airport");
+                }
+                Err(e) => { had_errors = true; error!(job_id = %job_id, error = %e, "Review task panicked"); }
             }
         }
 
@@ -480,6 +492,7 @@ async fn run_job(
     // ── Phase 3: Run post-review sources (sentiment) sequentially ──
     if !post_review_work.is_empty() {
         info!(job_id = %job_id, airports = post_review_work.len(), "Running post-review sources (sentiment)");
+        update_job_phase(&jobs_map, &job_id, "sentiment", None, None).await;
         for (iata, airport, srcs) in &post_review_work {
             for source in srcs {
                 update_job_progress(&jobs_map, &job_id, airports_completed, airport_iatas.len(), Some(iata.clone()), Some(source.clone())).await;
@@ -504,6 +517,7 @@ async fn run_job(
     // Run scoring if requested.
     if score {
         info!(job_id = %job_id, "Running scoring");
+        update_job_phase(&jobs_map, &job_id, "scoring", None, None).await;
         update_job_progress(
             &jobs_map,
             &job_id,
@@ -528,8 +542,7 @@ async fn run_job(
         }
     }
 
-    let final_status = if had_errors { "completed" } else { "completed" };
-    // Even with partial errors we mark as completed — errors are logged per source.
+    let final_status = if had_errors { "completed_with_errors" } else { "completed" };
     update_job_status(&jobs_map, &job_id, final_status, None).await;
     cleanup_cancel_token(&cancel_tokens_map, &job_id).await;
 }
@@ -546,7 +559,7 @@ async fn update_job_status(
     if let Some(job) = jobs.get_mut(job_id) {
         job.status = status.to_string();
         job.error = error;
-        if status == "completed" || status == "failed" || status == "cancelled" {
+        if matches!(status, "completed" | "completed_with_errors" | "failed" | "cancelled") {
             job.completed_at = Some(Utc::now().to_rfc3339());
             job.progress.current_airport = None;
             job.progress.current_source = None;
@@ -566,6 +579,21 @@ async fn update_job_progress(
     if let Some(job) = jobs.get_mut(job_id) {
         job.progress.airports_completed = completed;
         job.progress.airports_total = total;
+        job.progress.current_airport = current_airport;
+        job.progress.current_source = current_source;
+    }
+}
+
+async fn update_job_phase(
+    jobs_map: &Arc<RwLock<HashMap<String, JobInfo>>>,
+    job_id: &str,
+    phase: &str,
+    current_airport: Option<String>,
+    current_source: Option<String>,
+) {
+    let mut jobs = jobs_map.write().await;
+    if let Some(job) = jobs.get_mut(job_id) {
+        job.progress.phase = Some(phase.to_string());
         job.progress.current_airport = current_airport;
         job.progress.current_source = current_source;
     }

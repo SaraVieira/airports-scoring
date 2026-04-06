@@ -54,6 +54,7 @@ function AdminDataGaps() {
     "all" | "failed" | "stale" | "never"
   >("all");
   const [fetchingKey, setFetchingKey] = useState<string | null>(null);
+  const [fixingAll, setFixingAll] = useState(false);
 
   useEffect(() => {
     if (authenticated) fetchDataGaps();
@@ -70,6 +71,7 @@ function AdminDataGaps() {
           body: {
             airports: [iata],
             sources: source === "none" ? null : [source],
+            score: true,
           },
         },
       });
@@ -77,6 +79,35 @@ function AdminDataGaps() {
       console.error("Failed to start job", err);
     } finally {
       setFetchingKey(null);
+    }
+  };
+
+  const handleFixAll = async () => {
+    setFixingAll(true);
+    try {
+      const password = useAuthStore.getState().password || "";
+      // Collect unique airports from the current filtered view
+      const airports = [...new Set(filtered.map((g) => g.iataCode))];
+      // Collect unique sources (excluding "none" which means no sources at all)
+      const sources = [
+        ...new Set(
+          filtered.map((g) => g.source).filter((s) => s !== "none"),
+        ),
+      ];
+      await adminStartJob({
+        data: {
+          password,
+          body: {
+            airports,
+            sources: sources.length > 0 ? sources : null,
+            score: true,
+          },
+        },
+      });
+    } catch (err) {
+      console.error("Failed to start fix-all job", err);
+    } finally {
+      setFixingAll(false);
     }
   };
 
@@ -179,6 +210,21 @@ function AdminDataGaps() {
           {filtered.length} gaps across{" "}
           {new Set(filtered.map((g) => g.iataCode)).size} airports
         </span>
+        {filtered.length > 0 && (
+          <Button
+            size="sm"
+            onClick={handleFixAll}
+            disabled={fixingAll}
+            className="ml-auto bg-green-600 hover:bg-green-700 text-white"
+          >
+            {fixingAll ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Play className="size-3.5" />
+            )}
+            Fix {new Set(filtered.map((g) => g.iataCode)).size} airports + score
+          </Button>
+        )}
       </div>
 
       {gaps.length === 0 ? (
@@ -229,7 +275,7 @@ function AdminDataGaps() {
                       ) : (
                         <Play className="size-3" />
                       )}
-                      Fetch
+                      {gap.source === "none" ? "Fetch all" : `Fetch ${gap.source}`}
                     </Button>
                   </TableCell>
                 </TableRow>

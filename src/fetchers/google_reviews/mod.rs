@@ -13,6 +13,9 @@ use types::*;
 const POLL_MIN_INTERVAL_SECS: u64 = 5;
 const POLL_MAX_INTERVAL_SECS: u64 = 30;
 
+/// Maximum time to wait for a scraper job before giving up (10 minutes).
+const MAX_POLL_DURATION_SECS: u64 = 600;
+
 /// Maximum reviews to fetch per airport from the scraper API.
 const MAX_REVIEWS_PER_AIRPORT: u32 = 1500;
 
@@ -153,15 +156,24 @@ pub async fn fetch_with_url(
 
     // We need the place_id to fetch reviews. Try to find it early.
     let mut place_id: Option<String> = None;
+    let mut timed_out = false;
 
     loop {
         tokio::time::sleep(poll_interval).await;
         poll_interval = (poll_interval * 2).min(max_interval);
 
         let elapsed = start.elapsed().as_secs();
-        if elapsed % 60 < POLL_MAX_INTERVAL_SECS {
-            info!(airport = iata, elapsed_secs = elapsed, ingested = ingested_offset, "Polling scraper...");
+
+        // Bail if we've been polling too long
+        if elapsed > MAX_POLL_DURATION_SECS {
+            warn!(airport = iata, elapsed_secs = elapsed, ingested = ingested_offset,
+                "Scraper polling timed out after {}s, ingesting what we have", MAX_POLL_DURATION_SECS);
+            timed_out = true;
+            break;
         }
+
+        info!(airport = iata, elapsed_secs = elapsed, ingested = ingested_offset,
+            "Polling scraper for {} reviews...", iata);
 
         // Check job status
         let status_resp = match client
@@ -404,7 +416,14 @@ pub async fn fetch_with_url(
         }
     }
 
-    info!(airport = iata, records = records, "Google Reviews upserted");
+    info!(airport = iata, records = records, timed_out, "Google Reviews upserted");
+
+    if timed_out {
+        anyhow::bail!(
+            "Scraper timed out after {}s for {} — ingested {} reviews but job did not complete",
+            MAX_POLL_DURATION_SECS, iata, records
+        );
+    }
 
     Ok(FetchResult {
         records_processed: records,
