@@ -69,7 +69,7 @@ function AdminDataGaps() {
   const { dataGaps: gaps, loading, fetchDataGaps } = useAdminStore();
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<
-    "all" | "failed" | "stale" | "never"
+    "all" | "failed" | "stale" | "never" | "unprocessed" | "operator"
   >("all");
   const [fetchingKey, setFetchingKey] = useState<string | null>(null);
   const [fixingAll, setFixingAll] = useState(false);
@@ -141,6 +141,10 @@ function AdminDataGaps() {
       result = result.filter((g) => g.lastStatus === "success");
     } else if (statusFilter === "never") {
       result = result.filter((g) => g.lastStatus === "never_fetched");
+    } else if (statusFilter === "unprocessed") {
+      result = result.filter((g) => g.lastStatus.includes("unprocessed"));
+    } else if (statusFilter === "operator") {
+      result = result.filter((g) => g.lastStatus === "missing");
     }
 
     if (filter) {
@@ -162,6 +166,8 @@ function AdminDataGaps() {
       failed: gaps.filter((g) => g.lastStatus === "failed").length,
       stale: gaps.filter((g) => g.lastStatus === "success").length,
       never: gaps.filter((g) => g.lastStatus === "never_fetched").length,
+      unprocessed: gaps.filter((g) => g.lastStatus.includes("unprocessed")).length,
+      operator: gaps.filter((g) => g.lastStatus === "missing").length,
       airports: new Set(gaps.map((g) => g.iataCode)).size,
     }),
     [gaps],
@@ -226,6 +232,26 @@ function AdminDataGaps() {
           >
             Never fetched ({counts.never})
           </Button>
+          {counts.unprocessed > 0 && (
+            <Button
+              variant={statusFilter === "unprocessed" ? "secondary" : "ghost"}
+              size="xs"
+              onClick={() => setStatusFilter("unprocessed")}
+              className={statusFilter === "unprocessed" ? "" : "text-purple-500"}
+            >
+              Unprocessed ({counts.unprocessed})
+            </Button>
+          )}
+          {counts.operator > 0 && (
+            <Button
+              variant={statusFilter === "operator" ? "secondary" : "ghost"}
+              size="xs"
+              onClick={() => setStatusFilter("operator")}
+              className={statusFilter === "operator" ? "" : "text-orange-500"}
+            >
+              Missing operator ({counts.operator})
+            </Button>
+          )}
         </div>
         <span className="text-xs text-muted-foreground">
           {filtered.length} gaps across{" "}
