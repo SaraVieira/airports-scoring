@@ -52,6 +52,15 @@ function statusBadge(status: string) {
         stale
       </Badge>
     );
+  if (status.includes("unprocessed"))
+    return (
+      <Badge
+        variant="outline"
+        className="border-purple-500/30 text-purple-500 bg-purple-500/10"
+      >
+        {status}
+      </Badge>
+    );
   return <Badge variant="secondary">{status}</Badge>;
 }
 
@@ -74,12 +83,14 @@ function AdminDataGaps() {
     setFetchingKey(key);
     try {
       const password = useAuthStore.getState().password || "";
+      // sentiment:google / sentiment:skytrax → run sentiment + score
+      const actualSource = source.startsWith("sentiment:") ? "sentiment" : source;
       await adminStartJob({
         data: {
           password,
           body: {
             airports: [iata],
-            sources: source === "none" ? null : [source],
+            sources: actualSource === "none" ? null : [actualSource],
             score: true,
           },
         },

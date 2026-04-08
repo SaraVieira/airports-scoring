@@ -2,9 +2,14 @@ use anyhow::{Context, Result};
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use sqlx::PgPool;
+use tokio::sync::Semaphore;
 use tracing::{info, warn};
 
 use crate::models::{Airport, FetchResult};
+
+/// Global semaphore: only one sentiment pipeline process at a time.
+/// The ML models use ~800MB RAM — two concurrent instances will OOM on 16GB servers.
+static SENTIMENT_SEMAPHORE: Semaphore = Semaphore::const_new(1);
 
 #[derive(Debug, Deserialize)]
 struct PipelineOutput {
@@ -52,6 +57,11 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, _full_refresh: bool) -> Res
         .iata_code
         .as_deref()
         .context("Airport has no IATA code")?;
+
+    // Acquire the global semaphore — blocks if another sentiment job is running.
+    let _permit = SENTIMENT_SEMAPHORE.acquire().await
+        .map_err(|_| anyhow::anyhow!("Sentiment semaphore closed"))?;
+    info!(airport = iata, "Acquired sentiment lock");
 
     let python = if std::path::Path::new(".venv/bin/python3").exists() {
         ".venv/bin/python3"

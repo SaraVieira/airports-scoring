@@ -13,11 +13,8 @@ use types::*;
 const POLL_MIN_INTERVAL_SECS: u64 = 5;
 const POLL_MAX_INTERVAL_SECS: u64 = 30;
 
-/// Maximum time to wait for a scraper job before giving up (10 minutes).
-const MAX_POLL_DURATION_SECS: u64 = 600;
-
-/// Maximum reviews to fetch per airport from the scraper API.
-const MAX_REVIEWS_PER_AIRPORT: u32 = 1500;
+/// Maximum time to wait for a scraper job before giving up (30 minutes).
+const MAX_POLL_DURATION_SECS: u64 = 1800;
 
 /// Page size when fetching reviews from the scraper API.
 const REVIEWS_PAGE_SIZE: u32 = 200;
@@ -269,14 +266,9 @@ pub async fn fetch_with_url(
                     info!(airport = iata, batch = batch_count, total = ingested_offset, "Ingested reviews batch");
                 }
 
-                if page_offset >= page.total || page_offset >= MAX_REVIEWS_PER_AIRPORT {
+                if page_offset >= page.total {
                     break;
                 }
-            }
-
-            if ingested_offset >= MAX_REVIEWS_PER_AIRPORT {
-                info!(airport = iata, max = MAX_REVIEWS_PER_AIRPORT, "Hit review cap, stopping");
-                break;
             }
         }
 
@@ -408,21 +400,15 @@ pub async fn fetch_with_url(
         }
 
         offset += page.reviews.len() as u32;
-        if offset >= page.total || offset >= MAX_REVIEWS_PER_AIRPORT {
-            if offset >= MAX_REVIEWS_PER_AIRPORT {
-                info!(airport = iata, max = MAX_REVIEWS_PER_AIRPORT, "Hit review cap, stopping pagination");
-            }
+        if offset >= page.total {
             break;
         }
     }
 
-    info!(airport = iata, records = records, timed_out, "Google Reviews upserted");
-
     if timed_out {
-        anyhow::bail!(
-            "Scraper timed out after {}s for {} — ingested {} reviews but job did not complete",
-            MAX_POLL_DURATION_SECS, iata, records
-        );
+        info!(airport = iata, records, "Scraper hit 30m limit — ingested {records} reviews, calling it done");
+    } else {
+        info!(airport = iata, records, "Google Reviews upserted");
     }
 
     Ok(FetchResult {
