@@ -30,6 +30,8 @@ pub struct SupportedAirportWithStatus {
     pub updated_at: String,
     pub sources: Vec<SourceStatusResponse>,
     pub has_score: bool,
+    /// "scored", "too_small", or "pending"
+    pub score_status: String,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -58,7 +60,16 @@ fn airport_to_response(
     airport: &SupportedAirport,
     statuses: Vec<SourceStatus>,
     has_score: bool,
+    route_count: i64,
 ) -> SupportedAirportWithStatus {
+    let score_status = if has_score {
+        "scored".to_string()
+    } else if route_count < crate::scoring::MIN_ROUTES_FOR_SCORING {
+        "too_small".to_string()
+    } else {
+        "pending".to_string()
+    };
+
     SupportedAirportWithStatus {
         iata_code: airport.iata_code.clone(),
         country_code: airport.country_code.clone(),
@@ -80,6 +91,7 @@ fn airport_to_response(
             })
             .collect(),
         has_score,
+        score_status,
     }
 }
 
@@ -133,12 +145,28 @@ pub async fn list_supported_airports(
     .into_iter()
     .collect();
 
+    // Route counts per airport (for score_status)
+    let route_counts: Vec<(String, i64)> = sqlx::query_as(
+        "SELECT a.iata_code, COUNT(r.id) \
+         FROM airports a \
+         LEFT JOIN routes r ON r.origin_id = a.id \
+         WHERE a.in_seed_set = TRUE \
+         GROUP BY a.iata_code",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let route_map: std::collections::HashMap<String, i64> =
+        route_counts.into_iter().collect();
+
     let result: Vec<SupportedAirportWithStatus> = airports
         .iter()
         .map(|a| {
             let statuses = status_map.remove(&a.iata_code).unwrap_or_default();
             let has_score = scored_iatas.contains(&a.iata_code);
-            airport_to_response(a, statuses, has_score)
+            let routes = route_map.get(&a.iata_code).copied().unwrap_or(0);
+            airport_to_response(a, statuses, has_score, routes)
         })
         .collect();
 
@@ -180,7 +208,7 @@ pub async fn create_supported_airport(
         _ => StatusCode::INTERNAL_SERVER_ERROR,
     })?;
 
-    let response = airport_to_response(&airport, vec![], false);
+    let response = airport_to_response(&airport, vec![], false, 0);
     Ok((StatusCode::CREATED, Json(response)))
 }
 
@@ -255,7 +283,17 @@ pub async fn update_supported_airport(
     .await
     .unwrap_or(false);
 
-    Ok(Json(airport_to_response(&airport, statuses, has_score)))
+    let route_count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM routes r \
+         INNER JOIN airports a ON a.id = r.origin_id \
+         WHERE a.iata_code = $1",
+    )
+    .bind(&iata)
+    .fetch_one(&state.pool)
+    .await
+    .unwrap_or((0,));
+
+    Ok(Json(airport_to_response(&airport, statuses, has_score, route_count.0)))
 }
 
 /// Delete a supported airport.

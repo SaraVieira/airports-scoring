@@ -1843,5 +1843,45 @@
     "public_share_pct": 0.0,
     "notes": "Turkish-French consortium (Limak Holding + Aéroports de Lyon). 20-year DBFOT concession since 2011. Kosovo's only international airport. ~2.3M pax.",
     "airports": ["PRN"]
+  },
+  {
+    "name": "Zračna Luka Brač d.o.o.",
+    "short_name": "Airport Brač",
+    "country_code": "HR",
+    "org_type": "operator",
+    "ownership_model": "public",
+    "public_share_pct": 100.0,
+    "notes": "State-owned, operates Croatia's youngest commercial airport on the island of Brač. Seasonal tourism traffic. Terminal opened 2007.",
+    "airports": ["BWK"]
+  },
+  {
+    "name": "Zračna Luka Mali Lošinj d.o.o.",
+    "short_name": "Airport Lošinj",
+    "country_code": "HR",
+    "org_type": "operator",
+    "ownership_model": "private",
+    "public_share_pct": 0.0,
+    "notes": "Privately owned public airport on Lošinj island. Small seasonal operations, domestic and international traffic.",
+    "airports": ["LSZ"]
+  },
+  {
+    "name": "Letiště Karlovy Vary s.r.o.",
+    "short_name": "Airport Karlovy Vary",
+    "country_code": "CZ",
+    "org_type": "operator",
+    "ownership_model": "public",
+    "public_share_pct": 100.0,
+    "notes": "100% owned by Karlovy Vary Region. Czech Republic's fourth-busiest airport. Spa tourism and charter traffic.",
+    "airports": ["KLV"]
+  },
+  {
+    "name": "East Bohemian Airport a.s.",
+    "short_name": "East Bohemian Airport",
+    "country_code": "CZ",
+    "org_type": "operator",
+    "ownership_model": "public",
+    "public_share_pct": 100.0,
+    "notes": "Jointly owned by City of Pardubice and Pardubice Region. Civil-military airport, seasonal charter flights. Modernized terminal.",
+    "airports": ["PED"]
   }
 ]

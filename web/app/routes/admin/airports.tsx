@@ -72,6 +72,24 @@ function AdminAirports() {
     }
   };
 
+  const [scoringIata, setScoringIata] = useState<string | null>(null);
+  const handleScore = async (iata: string) => {
+    setScoringIata(iata);
+    try {
+      const password = useAuthStore.getState().password || "";
+      await adminStartJob({
+        data: {
+          password,
+          body: { airports: [iata], sources: ["sentiment"], score: true },
+        },
+      });
+    } catch (err) {
+      console.error("Failed to start scoring", err);
+    } finally {
+      setScoringIata(null);
+    }
+  };
+
   const countries = useMemo(() => {
     const codes = [...new Set(airports.map((a) => a.countryCode))].sort();
     return codes;
@@ -294,6 +312,38 @@ function AdminAirports() {
                       )}
                       Fetch
                     </Button>
+                    {airport.scoreStatus !== "scored" && (
+                      <span
+                        className="relative group"
+                        title={
+                          airport.scoreStatus === "too_small"
+                            ? "Too few routes to score"
+                            : undefined
+                        }
+                      >
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => handleScore(airport.iataCode)}
+                          disabled={
+                            airport.scoreStatus === "too_small" ||
+                            scoringIata === airport.iataCode
+                          }
+                          className={
+                            airport.scoreStatus === "too_small"
+                              ? "opacity-40 cursor-not-allowed"
+                              : ""
+                          }
+                        >
+                          {scoringIata === airport.iataCode ? (
+                            <Loader2 className="size-3 animate-spin" />
+                          ) : (
+                            <Play className="size-3" />
+                          )}
+                          Score
+                        </Button>
+                      </span>
+                    )}
                     {deleteConfirm === airport.iataCode ? (
                       <>
                         <Button

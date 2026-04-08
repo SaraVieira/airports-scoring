@@ -59,6 +59,9 @@ pub struct AirportDetailResponse {
     pub ranking: RankingResponse,
     pub google_agg: Option<GoogleAggResponse>,
     pub source_breakdown: Vec<SourceBreakdownResponse>,
+
+    /// Why this airport is/isn't scored: "scored", "too_small", "pending"
+    pub score_status: String,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -916,6 +919,14 @@ pub async fn get_airport(
     let google_agg = fetch_google_agg(pool, aid).await;
     let source_breakdown = fetch_source_breakdown(pool, aid).await;
 
+    let score_status = if !scores.is_empty() {
+        "scored".to_string()
+    } else if (routes_out.len() as i64) < crate::scoring::MIN_ROUTES_FOR_SCORING {
+        "too_small".to_string()
+    } else {
+        "pending".to_string()
+    };
+
     let response = AirportDetailResponse {
         id: airport.id,
         iata_code: airport.iata_code,
@@ -955,6 +966,7 @@ pub async fn get_airport(
         ranking,
         google_agg,
         source_breakdown,
+        score_status,
     };
 
     Ok(Json(response))

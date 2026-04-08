@@ -1,15 +1,12 @@
 import { useSingleAirport } from "~/hooks/use-single-airport";
 import { scoreColor } from "~/utils/scoring";
 import { totalCommentary, totalVerdict } from "~/utils/snark";
-import { MIN_ROUTES_FOR_SCORING } from "~/utils/constants";
 import { Airport } from "~/utils/types";
 
 export const Verdict = ({ airport }: { airport: Airport }) => {
   const { totalNum, dataRange, score } = useSingleAirport({ airport });
 
-  const tooSmall = totalNum == null && airport.routesOut.length < MIN_ROUTES_FOR_SCORING;
-
-  if (tooSmall) {
+  if (airport.scoreStatus === "too_small") {
     return (
       <section className="flex flex-col gap-1 py-6">
         <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[2px] uppercase">
@@ -22,8 +19,17 @@ export const Verdict = ({ airport }: { airport: Airport }) => {
     );
   }
 
-  if (totalNum == null) {
-    return null;
+  if (airport.scoreStatus === "pending" || totalNum == null) {
+    return (
+      <section className="flex flex-col gap-1 py-6">
+        <span className="font-grotesk text-[10px] font-bold text-zinc-600 tracking-[2px] uppercase">
+          The Verdict
+        </span>
+        <p className="font-mono text-sm text-zinc-500 italic mt-2">
+          Score pending — data is still being collected for this airport.
+        </p>
+      </section>
+    );
   }
 
   return (

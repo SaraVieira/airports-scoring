@@ -90,6 +90,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/operators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all operators with their airport mappings. */
+        get: operations["list_admin_operators"];
+        put?: never;
+        /** Create a new operator. */
+        post: operations["create_operator"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/operators/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update an operator's details. */
+        put: operations["update_operator"];
+        post?: never;
+        /** Delete an operator. */
+        delete: operations["delete_operator"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/operators/{id}/airports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the list of IATA codes currently mapped to an operator. */
+        get: operations["get_operator_airports"];
+        put?: never;
+        /** Set the airport mappings for an operator. */
+        post: operations["set_operator_airports"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/refresh": {
         parameters: {
             query?: never;
@@ -313,6 +367,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/airports/{iata}/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get live flight activity around an airport. */
+        get: operations["get_live_pulse"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/countries": {
         parameters: {
             query?: never;
@@ -398,6 +469,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cron/sync-eurocontrol": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cron: sync Eurocontrol datasets into local database cache.
+         *     Downloads all remote CSVs and ingests local apt_dly files.
+         */
+        post: operations["cron_sync_eurocontrol"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/operators": {
         parameters: {
             query?: never;
@@ -436,6 +527,51 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AdminOperatorItem: {
+            /** Format: int64 */
+            airportCount: number;
+            countryCode?: string | null;
+            /** Format: int32 */
+            id: number;
+            name: string;
+            notes?: string | null;
+            orgType: string;
+            ownershipModel?: string | null;
+            /** Format: double */
+            publicSharePct?: number | null;
+            shortName?: string | null;
+        };
+        AircraftState: {
+            /**
+             * Format: double
+             * @description Barometric altitude in meters
+             */
+            altitude?: number | null;
+            callsign?: string | null;
+            /**
+             * Format: double
+             * @description Heading in degrees (0 = north, clockwise)
+             */
+            heading?: number | null;
+            icao24: string;
+            /** Format: double */
+            lat: number;
+            /** Format: double */
+            lon: number;
+            onGround: boolean;
+            /** @description "arriving", "departing", "cruising", or "ground" */
+            status: string;
+            /**
+             * Format: double
+             * @description Ground speed in m/s
+             */
+            velocity?: number | null;
+            /**
+             * Format: double
+             * @description Vertical rate in m/s (negative = descending)
+             */
+            verticalRate?: number | null;
+        };
         AirportDetailResponse: {
             airportType: string;
             /** Format: double */
@@ -471,6 +607,8 @@ export interface components {
             recentReviews: components["schemas"]["RecentReviewResponse"][];
             routesOut: components["schemas"]["RouteResponse"][];
             runways: components["schemas"]["RunwayResponse"][];
+            /** @description Why this airport is/isn't scored: "scored", "too_small", "pending" */
+            scoreStatus: string;
             scores: components["schemas"]["ScoreResponse"][];
             sentimentSnapshots: components["schemas"]["SentimentSnapshotResponse"][];
             shortName?: string | null;
@@ -578,6 +716,21 @@ export interface components {
             /** Format: double */
             worstScore?: number | null;
         };
+        CreateOperatorRequest: {
+            countryCode?: string | null;
+            iataCodes?: string[] | null;
+            name: string;
+            notes?: string | null;
+            orgType: string;
+            ownershipModel?: string | null;
+            /** Format: double */
+            publicSharePct?: number | null;
+            shortName?: string | null;
+        };
+        CreateOperatorResponse: {
+            /** Format: int32 */
+            id: number;
+        };
         /** @description For creating a supported airport via the admin API. */
         CreateSupportedAirport: {
             country_code: string;
@@ -639,6 +792,20 @@ export interface components {
             airportsTotal: number;
             currentAirport?: string | null;
             currentSource?: string | null;
+            /** @description Current phase: "fetching", "reviews", "sentiment", "scoring", or null */
+            phase?: string | null;
+        };
+        LivePulseResponse: {
+            aircraft: components["schemas"]["AircraftState"][];
+            /** Format: double */
+            airportLat: number;
+            /** Format: double */
+            airportLon: number;
+            cached: boolean;
+            counts: components["schemas"]["PulseCounts"];
+            iata: string;
+            /** Format: int64 */
+            timestamp: number;
         };
         LoungeResponse: {
             loungeName?: string | null;
@@ -753,6 +920,20 @@ export interface components {
             /** Format: int32 */
             year: number;
         };
+        PulseCounts: {
+            /** Format: int32 */
+            arriving: number;
+            /** Format: int32 */
+            cruising: number;
+            /** Format: int32 */
+            departing: number;
+            /** Format: int32 */
+            inAir: number;
+            /** Format: int32 */
+            onGround: number;
+            /** Format: int32 */
+            total: number;
+        };
         RankingResponse: {
             /** Format: int64 */
             position?: number | null;
@@ -857,6 +1038,13 @@ export interface components {
             snapshotYear?: number | null;
             source?: string | null;
         };
+        SetOperatorAirportsRequest: {
+            iataCodes: string[];
+        };
+        SetOperatorAirportsResponse: {
+            /** Format: int64 */
+            mappedCount: number;
+        };
         SourceBreakdownResponse: {
             /** Format: int64 */
             count: number;
@@ -884,10 +1072,22 @@ export interface components {
             hasScore: boolean;
             iataCode: string;
             name: string;
+            /** @description "scored", "too_small", or "pending" */
+            scoreStatus: string;
             skytraxRatingSlug?: string | null;
             skytraxReviewSlug?: string | null;
             sources: components["schemas"]["SourceStatusResponse"][];
             updatedAt: string;
+        };
+        UpdateOperatorRequest: {
+            countryCode?: string | null;
+            name?: string | null;
+            notes?: string | null;
+            orgType?: string | null;
+            ownershipModel?: string | null;
+            /** Format: double */
+            publicSharePct?: number | null;
+            shortName?: string | null;
         };
         /** @description For updating a supported airport via the admin API. */
         UpdateSupportedAirport: {
@@ -1079,6 +1279,167 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list_admin_operators: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All operators with airport counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOperatorItem"][];
+                };
+            };
+        };
+    };
+    create_operator: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOperatorRequest"];
+            };
+        };
+        responses: {
+            /** @description Operator created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateOperatorResponse"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_operator: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Operator ID */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOperatorRequest"];
+            };
+        };
+        responses: {
+            /** @description Operator updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operator not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_operator: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Operator ID */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operator deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operator not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_operator_airports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Operator ID */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of mapped IATA codes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
+    set_operator_airports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Operator ID */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetOperatorAirportsRequest"];
+            };
+        };
+        responses: {
+            /** @description Airports mapped */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetOperatorAirportsResponse"];
+                };
             };
         };
     };
@@ -1440,6 +1801,43 @@ export interface operations {
             };
         };
     };
+    get_live_pulse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description IATA airport code */
+                iata: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Live flight pulse */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LivePulseResponse"];
+                };
+            };
+            /** @description Airport not found or no location data */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description OpenSky unavailable or no credentials */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     list_countries: {
         parameters: {
             query?: never;
@@ -1540,6 +1938,31 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["JobInfo"];
                 };
+            };
+        };
+    };
+    cron_sync_eurocontrol: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sync completed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sync failed */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
