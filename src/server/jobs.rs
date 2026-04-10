@@ -389,6 +389,7 @@ async fn run_job(
         }
 
         // Collect review work for this airport (will be run in parallel after all airports' non-review sources).
+        let has_remaining_work = !review_sources.is_empty() || !post_review_sources.is_empty();
         if !review_sources.is_empty() {
             review_work.push((iata.clone(), airport.clone(), review_sources.iter().map(|s| s.to_string()).collect::<Vec<_>>()));
         }
@@ -396,7 +397,10 @@ async fn run_job(
             post_review_work.push((iata.clone(), airport.clone(), post_review_sources.iter().map(|s| s.to_string()).collect::<Vec<_>>()));
         }
 
-        airports_completed += 1;
+        // Only mark completed if no review/sentiment work remains for this airport
+        if !has_remaining_work {
+            airports_completed += 1;
+        }
         update_job_progress(&jobs_map, &job_id, airports_completed, airport_iatas.len(), None, None).await;
     }
 
@@ -476,10 +480,18 @@ async fn run_job(
         }
 
         // Wait for all review tasks to complete.
+        let post_review_iatas: std::collections::HashSet<String> =
+            post_review_work.iter().map(|(iata, _, _)| iata.clone()).collect();
+
         while let Some(result) = join_set.join_next().await {
             match result {
                 Ok((iata, errors)) => {
                     if errors { had_errors = true; }
+                    // Mark completed if no post-review (sentiment) work pending
+                    if !post_review_iatas.contains(&iata) {
+                        airports_completed += 1;
+                        update_job_progress(&jobs_map, &job_id, airports_completed, airport_iatas.len(), None, None).await;
+                    }
                     info!(job_id = %job_id, iata = %iata, errors, "Review phase completed for airport");
                 }
                 Err(e) => { had_errors = true; error!(job_id = %job_id, error = %e, "Review task panicked"); }
@@ -511,6 +523,8 @@ async fn run_job(
                     Err(e) => error!(job_id = %job_id, iata = %iata, source = %source, error = %e, "Post-review fetch failed"),
                 }
             }
+            airports_completed += 1;
+            update_job_progress(&jobs_map, &job_id, airports_completed, airport_iatas.len(), None, None).await;
         }
     }
 

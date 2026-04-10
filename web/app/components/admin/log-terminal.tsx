@@ -10,6 +10,7 @@ interface LogLine {
   level: string;
   message: string;
   target?: string;
+  fields?: Record<string, string | number | boolean>;
 }
 
 function levelColor(level: string): string {
@@ -138,7 +139,17 @@ export function LogTerminal() {
             <span className={`shrink-0 w-12 ${levelColor(line.level)}`}>
               {line.level.padEnd(5)}
             </span>
-            <span className={messageColor(line.level)}>{line.message}</span>
+            <span className={messageColor(line.level)}>
+              {line.message}
+              {line.fields && Object.keys(line.fields).length > 0 && (
+                <span className="text-muted-foreground/50">
+                  {" "}
+                  {Object.entries(line.fields)
+                    .map(([k, v]) => `${k}=${v}`)
+                    .join(" ")}
+                </span>
+              )}
+            </span>
           </div>
         ))}
       </div>

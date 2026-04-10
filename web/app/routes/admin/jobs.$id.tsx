@@ -135,10 +135,15 @@ function JobDetail() {
               {job.progress.airportsCompleted}/{job.progress.airportsTotal}
             </span>
           </div>
-          {isActive && job.progress.currentAirport && (
+          {isActive && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Loader2 className="size-3 animate-spin" />
-              <span className="font-mono font-bold">{job.progress.currentAirport}</span>
+              {job.progress.phase && (
+                <Badge variant="outline" className="text-[10px]">{job.progress.phase}</Badge>
+              )}
+              {job.progress.currentAirport && (
+                <span className="font-mono font-bold">{job.progress.currentAirport}</span>
+              )}
               {job.progress.currentSource && (
                 <span className="text-muted-foreground/60">/ {job.progress.currentSource}</span>
               )}
@@ -169,22 +174,28 @@ function JobDetail() {
             Airports ({job.airports.length})
           </span>
           <div className="flex flex-wrap gap-1.5">
-            {job.airports.map((iata) => (
-              <Badge
-                key={iata}
-                variant="secondary"
-                className={`font-mono text-xs ${
-                  job.progress.currentAirport === iata
-                    ? "border-yellow-500/30 text-yellow-400 bg-yellow-500/10"
-                    : ""
-                }`}
-              >
-                {iata}
-                {job.progress.currentAirport === iata && (
-                  <Loader2 className="size-2.5 animate-spin ml-1" />
-                )}
-              </Badge>
-            ))}
+            {job.airports.map((iata, idx) => {
+              const isCurrent = job.progress.currentAirport === iata;
+              const isDone = idx < job.progress.airportsCompleted;
+              return (
+                <Badge
+                  key={iata}
+                  variant="secondary"
+                  className={`font-mono text-xs ${
+                    isCurrent
+                      ? "border-yellow-500/30 text-yellow-400 bg-yellow-500/10"
+                      : isDone
+                        ? "border-green-500/30 text-green-400 bg-green-500/10"
+                        : ""
+                  }`}
+                >
+                  {iata}
+                  {isCurrent && (
+                    <Loader2 className="size-2.5 animate-spin ml-1" />
+                  )}
+                </Badge>
+              );
+            })}
           </div>
         </Card>
 
