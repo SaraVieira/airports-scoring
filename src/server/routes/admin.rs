@@ -432,9 +432,11 @@ pub async fn data_gaps(
     }
 
     // Airports with reviews but no sentiment snapshots for that source
-    let unprocessed_reviews = sqlx::query_as::<sqlx::Postgres, (String, String, String, i64)>(
+    // Airports with any reviews lacking sentiment snapshots — collapsed per airport
+    // regardless of source (google/skytrax), since the sentiment pipeline handles both.
+    let unprocessed_reviews = sqlx::query_as::<sqlx::Postgres, (String, String, i64)>(
         r#"
-        SELECT sa.iata_code, sa.name, r.source, COUNT(*) as review_count
+        SELECT sa.iata_code, sa.name, COUNT(*) as review_count
         FROM reviews_raw r
         JOIN airports a ON a.id = r.airport_id
         JOIN supported_airports sa ON sa.iata_code = a.iata_code
@@ -442,7 +444,7 @@ pub async fn data_gaps(
             ON ss.airport_id = a.id AND ss.source = r.source
         WHERE sa.enabled = true
           AND ss.id IS NULL
-        GROUP BY sa.iata_code, sa.name, r.source
+        GROUP BY sa.iata_code, sa.name
         HAVING COUNT(*) > 0
         ORDER BY COUNT(*) DESC
         "#,
@@ -451,11 +453,11 @@ pub async fn data_gaps(
     .await
     .map_err(|e| { tracing::error!("admin query error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
-    for (iata_code, name, source, count) in unprocessed_reviews {
+    for (iata_code, name, count) in unprocessed_reviews {
         results.push(DataGapResponse {
             iata_code,
             name,
-            source: format!("sentiment:{source}"),
+            source: "sentiment".to_string(),
             last_fetched_at: None,
             last_status: format!("{count} reviews unprocessed"),
         });
