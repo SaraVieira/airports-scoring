@@ -109,10 +109,13 @@ function AdminDataGaps() {
       // Collect unique airports from the current filtered view (exclude operator gaps)
       const fetchable = filtered.filter((g) => g.source !== "operator");
       const airports = [...new Set(fetchable.map((g) => g.iataCode))];
-      // Collect unique sources (excluding "none" which means no sources at all)
+      // Collect unique sources — strip "sentiment:google" / "sentiment:skytrax"
+      // prefix since they're display-only labels. Exclude "none".
       const sources = [
         ...new Set(
-          fetchable.map((g) => g.source).filter((s) => s !== "none"),
+          fetchable
+            .map((g) => (g.source.startsWith("sentiment:") ? "sentiment" : g.source))
+            .filter((s) => s !== "none"),
         ),
       ];
       await adminStartJob({

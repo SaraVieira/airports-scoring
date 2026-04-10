@@ -84,7 +84,7 @@ pub(crate) async fn dispatch_fetcher(
 }
 
 /// Check if a source name is valid (either in ALL_SOURCES or a known alias).
-fn is_valid_source(source: &str) -> bool {
+pub fn is_valid_source(source: &str) -> bool {
     ALL_SOURCES.contains(&source) || SOURCE_ALIASES.contains(&source)
 }
 

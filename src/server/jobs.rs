@@ -88,11 +88,21 @@ impl JobManager {
             None => supported.iter().map(|s| s.iata_code.clone()).collect(),
         };
 
-        // Resolve sources.
+        // Resolve and validate sources.
         let sources: Vec<String> = match request.sources {
             Some(ref s) => s.clone(),
             None => pipeline::ALL_SOURCES.iter().map(|s| s.to_string()).collect(),
         };
+        let invalid: Vec<&String> = sources.iter()
+            .filter(|s| !pipeline::is_valid_source(s))
+            .collect();
+        if !invalid.is_empty() {
+            return Err(format!(
+                "Invalid source(s): {}. Valid sources: {}",
+                invalid.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", "),
+                pipeline::ALL_SOURCES.join(", ")
+            ));
+        }
 
         let job_id = Uuid::new_v4().to_string();
         let now = Utc::now().to_rfc3339();

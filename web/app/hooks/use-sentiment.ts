@@ -55,7 +55,9 @@ const aggregateSnapshots = (snaps: Airport["sentimentSnapshots"]) => {
       shopSum: acc.shopSum + parseScore(scoreShopping),
       shopN: acc.shopN + (scoreShopping != null ? 1 : 0),
       latestSkytrax: skytraxStars ?? acc.latestSkytrax,
-      latestNotes: acc.latestNotes ?? notes ?? null,
+      // Notes come from the most recent snapshot with non-null notes.
+      // Snapshots arrive sorted ascending by year/quarter, so overwrite as we go.
+      latestNotes: notes ?? acc.latestNotes,
     }),
     {
       totalRating: 0,
