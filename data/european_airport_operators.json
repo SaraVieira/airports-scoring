@@ -1883,5 +1883,25 @@
     "public_share_pct": 100.0,
     "notes": "Jointly owned by City of Pardubice and Pardubice Region. Civil-military airport, seasonal charter flights. Modernized terminal.",
     "airports": ["PED"]
+  },
+  {
+    "name": "Întreprinderea de Stat Aeroportul Internațional Chișinău",
+    "short_name": "Chișinău Airport",
+    "country_code": "MD",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "State-owned enterprise under the Republic of Moldova. Renationalized at the end of 2023 after the Chișinău Court of Appeal annulled the 2013 Russian-held concession (Avia Invest). IATA code changed from KIV to RMO on 2024-01-18.",
+    "airports": ["RMO"]
+  },
+  {
+    "name": "Letisko Poprad-Tatry, a.s.",
+    "short_name": "Poprad-Tatry Airport",
+    "country_code": "SK",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "Slovak Republic (Ministry of Transport) 97.61%; City of Poprad 1.67%; Town of Vysoké Tatry 0.72%. Joint-stock company formed 2005-01-01. One of the highest-elevation commercial airports in Central Europe (718m). Serves the High Tatras ski region.",
+    "airports": ["TAT"]
   }
 ]

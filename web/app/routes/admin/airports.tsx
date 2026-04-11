@@ -14,7 +14,7 @@ import {
 import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
 import { BatchImportModal } from "~/components/admin/batch-import-modal";
-import { EditRow } from "~/components/admin/edit-airport-row";
+import { EditAirportDialog } from "~/components/admin/edit-airport-dialog";
 import { SourceIndicators } from "~/components/admin/source-indicators";
 import {
   FileText,
@@ -34,7 +34,9 @@ export const Route = createFileRoute("/admin/airports")({
 function AdminAirports() {
   const { authenticated } = useAdminAuth();
   const { airports, loading, fetchAirports } = useAdminStore();
-  const [editingIata, setEditingIata] = useState<string | null>(null);
+  const [editingAirport, setEditingAirport] = useState<
+    import("~/api/types").components["schemas"]["SupportedAirportWithStatus"] | null
+  >(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [fetchingIata, setFetchingIata] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
@@ -254,18 +256,7 @@ function AdminAirports() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filtered.map((airport) =>
-            editingIata === airport.iataCode ? (
-              <EditRow
-                key={airport.iataCode}
-                airport={airport}
-                onSaved={() => {
-                  setEditingIata(null);
-                  fetchAirports();
-                }}
-                onCancel={() => setEditingIata(null)}
-              />
-            ) : (
+          {filtered.map((airport) => (
               <TableRow key={airport.iataCode}>
                 <TableCell className="font-mono text-xs">
                   {airport.iataCode}
@@ -294,7 +285,7 @@ function AdminAirports() {
                     <Button
                       variant="ghost"
                       size="xs"
-                      onClick={() => setEditingIata(airport.iataCode)}
+                      onClick={() => setEditingAirport(airport)}
                     >
                       <Pencil className="size-3" />
                       Edit
@@ -375,10 +366,19 @@ function AdminAirports() {
                   </div>
                 </TableCell>
               </TableRow>
-            ),
-          )}
+          ))}
         </TableBody>
       </Table>
+
+      <EditAirportDialog
+        open={editingAirport !== null}
+        onOpenChange={(open) => !open && setEditingAirport(null)}
+        airport={editingAirport}
+        onSaved={() => {
+          setEditingAirport(null);
+          fetchAirports();
+        }}
+      />
     </AdminLayout>
   );
 }
