@@ -360,7 +360,7 @@ export function AirportMappingDialog({
               value={codes}
               onChange={(e) => setCodes(e.target.value)}
               rows={10}
-              className="font-mono text-sm"
+              className="font-mono text-sm max-h-72"
               placeholder={"MAD\nBCN\nAGP"}
             />
             <p className="text-xs text-muted-foreground">
