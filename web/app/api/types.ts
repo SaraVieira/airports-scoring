@@ -578,6 +578,7 @@ export interface components {
             annualCapacityM?: number | null;
             /** Format: double */
             annualPaxLatestM?: number | null;
+            awards: components["schemas"]["AwardResponse"][];
             carbonAccreditation: components["schemas"]["CarbonAccreditationResponse"][];
             city: string;
             country?: null | components["schemas"]["CountryResponse"];
@@ -624,6 +625,8 @@ export interface components {
             wikipediaUrl?: string | null;
         };
         AirportListItem: {
+            /** Format: int64 */
+            awardCount?: number | null;
             city: string;
             countryCode: string;
             iataCode: string;
@@ -632,6 +635,16 @@ export interface components {
             scoreSentimentVelocity?: number | null;
             /** Format: double */
             scoreTotal?: number | null;
+        };
+        AwardResponse: {
+            category: string;
+            /** Format: int32 */
+            rank?: number | null;
+            region?: string | null;
+            sizeBucket?: string | null;
+            source: string;
+            /** Format: int32 */
+            year: number;
         };
         BatchImportRequest: {
             iataCodes: string[];
@@ -1099,7 +1112,6 @@ export interface components {
             skytrax_review_slug?: string | null;
         };
         WikipediaSnapshotResponse: {
-            aciAwards?: unknown;
             fetchedAt?: string | null;
             milestoneNotes?: string | null;
             /** Format: int32 */

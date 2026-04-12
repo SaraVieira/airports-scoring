@@ -53,6 +53,7 @@ pub struct AirportDetailResponse {
     pub ground_transport: Vec<GroundTransportResponse>,
     pub lounges: Vec<LoungeResponse>,
     pub hub_status: Vec<HubStatusResponse>,
+    pub awards: Vec<AwardResponse>,
 
     // Derived
     pub recent_reviews: Vec<RecentReviewResponse>,
@@ -195,7 +196,17 @@ pub struct WikipediaSnapshotResponse {
     pub ownership_notes: Option<String>,
     pub milestone_notes: Option<String>,
     pub skytrax_history: Option<serde_json::Value>,
-    pub aci_awards: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Serialize, ToSchema, sqlx::FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct AwardResponse {
+    pub source: String,
+    pub year: i16,
+    pub category: String,
+    pub region: Option<String>,
+    pub size_bucket: Option<String>,
+    pub rank: Option<i16>,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -380,7 +391,6 @@ struct WikipediaSnapshotRow {
     ownership_notes: Option<String>,
     milestone_notes: Option<String>,
     skytrax_history: Option<serde_json::Value>,
-    aci_awards: Option<serde_json::Value>,
 }
 
 #[derive(FromRow)]
@@ -671,7 +681,7 @@ async fn fetch_wikipedia_snapshots(
     sqlx::query_as::<_, WikipediaSnapshotRow>(
         "SELECT fetched_at, opened_year, operator_raw, owner_raw, terminal_count,
                 terminal_names, renovation_notes, ownership_notes, milestone_notes,
-                skytrax_history, aci_awards
+                skytrax_history
          FROM wikipedia_snapshots WHERE airport_id = $1
          ORDER BY fetched_at DESC",
     )
@@ -691,9 +701,20 @@ async fn fetch_wikipedia_snapshots(
         ownership_notes: r.ownership_notes,
         milestone_notes: r.milestone_notes,
         skytrax_history: r.skytrax_history,
-        aci_awards: r.aci_awards,
     })
     .collect()
+}
+
+async fn fetch_awards(pool: &PgPool, iata_code: &str) -> Vec<AwardResponse> {
+    sqlx::query_as::<_, AwardResponse>(
+        "SELECT source, year, category, region, size_bucket, rank
+         FROM airport_awards WHERE iata_code = $1
+         ORDER BY year DESC, source",
+    )
+    .bind(iata_code)
+    .fetch_all(pool)
+    .await
+    .unwrap_or_default()
 }
 
 async fn fetch_carbon_accreditation(
@@ -914,6 +935,7 @@ pub async fn get_airport(
     let ground_transport = fetch_ground_transport(pool, aid).await;
     let lounges = fetch_lounges(pool, aid).await;
     let hub_status = fetch_hub_status(pool, aid).await;
+    let awards = fetch_awards(pool, airport.iata_code.as_deref().unwrap_or("")).await;
     let recent_reviews = fetch_recent_reviews(pool, aid).await;
     let ranking = fetch_ranking(pool, aid).await;
     let google_agg = fetch_google_agg(pool, aid).await;
@@ -962,6 +984,7 @@ pub async fn get_airport(
         ground_transport,
         lounges,
         hub_status,
+        awards,
         recent_reviews,
         ranking,
         google_agg,
@@ -998,6 +1021,7 @@ pub struct AirportListItem {
     pub country_code: String,
     pub score_total: Option<f64>,
     pub score_sentiment_velocity: Option<f64>,
+    pub award_count: Option<i64>,
 }
 
 /// Search airports by IATA code, name, or city.
@@ -1049,7 +1073,8 @@ pub async fn list_airports(
     let results = sqlx::query_as::<_, AirportListItem>(
         "SELECT a.iata_code, a.name, a.city, a.country_code,
                 s.score_total::float8 as score_total,
-                s.score_sentiment_velocity::float8 as score_sentiment_velocity
+                s.score_sentiment_velocity::float8 as score_sentiment_velocity,
+                (SELECT COUNT(*) FROM airport_awards aw WHERE aw.iata_code = a.iata_code) as award_count
          FROM airport_scores s
          INNER JOIN airports a ON a.id = s.airport_id
          WHERE s.is_latest = TRUE AND a.in_seed_set = TRUE

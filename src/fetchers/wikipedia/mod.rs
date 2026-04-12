@@ -1,16 +1,41 @@
-mod aci;
 mod parsers;
 
 #[cfg(test)]
 mod tests;
 
 use anyhow::{Context, Result};
+use serde::Deserialize;
+use serde_json::Value;
 use sqlx::PgPool;
 use tracing::info;
 
 use crate::models::{Airport, FetchResult};
 
-use aci::{fetch_aci_awards, WikiParseResponse, WikiQueryResponse};
+#[derive(Debug, Deserialize)]
+pub(super) struct WikiParseResponse {
+    pub(super) parse: Option<WikiParse>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(super) struct WikiParse {
+    pub(super) wikitext: Option<WikiText>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(super) struct WikiText {
+    #[serde(rename = "*")]
+    pub(super) content: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(super) struct WikiQueryResponse {
+    pub(super) query: Option<WikiQuery>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(super) struct WikiQuery {
+    pub(super) pages: Option<Value>,
+}
 use parsers::{
     article_title_from_url, extract_section_text, extract_skytrax_history, extract_year,
     parse_ground_transport, parse_hub_status, parse_infobox_field, parse_infobox_field_raw,
@@ -210,25 +235,12 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
         );
     }
 
-    // Fetch ACI ASQ awards from the dedicated Wikipedia article.
-    // Search by airport name, city, and short name for better matching.
-    let search_name = format!(
-        "{} {} {}",
-        airport.name,
-        airport.city,
-        airport.short_name.as_deref().unwrap_or("")
-    );
-    let aci_awards = fetch_aci_awards(&client, &search_name).await;
-    if aci_awards.is_some() {
-        info!(airport = iata, "Extracted ACI ASQ awards");
-    }
-
     sqlx::query(
         "INSERT INTO wikipedia_snapshots
          (airport_id, opened_year, operator_raw, owner_raw, terminal_count,
           renovation_notes, ownership_notes, milestone_notes,
-          skytrax_history, aci_awards, wikipedia_url, article_revision_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+          skytrax_history, wikipedia_url, article_revision_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
     )
     .bind(airport.id)
     .bind(opened_year)
@@ -239,7 +251,6 @@ pub async fn fetch(pool: &PgPool, airport: &Airport, full_refresh: bool) -> Resu
     .bind(ownership_notes.as_deref())
     .bind(milestone_notes.as_deref())
     .bind(skytrax_history.as_ref().and_then(|v| serde_json::to_value(v).ok()))
-    .bind(aci_awards.as_ref().and_then(|v| serde_json::to_value(v).ok()))
     .bind(wiki_url)
     .bind(revision_id)
     .execute(pool)

@@ -1,0 +1,2482 @@
+[
+  {
+    "year": 2006,
+    "region": null,
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "ICN",
+    "airport_name": "Incheon International Airport"
+  },
+  {
+    "year": 2006,
+    "region": null,
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "HKG",
+    "airport_name": "Hong Kong International Airport"
+  },
+  {
+    "year": 2006,
+    "region": null,
+    "size_bucket": null,
+    "rank": 3,
+    "iata_code": "KUL",
+    "airport_name": "Kuala Lumpur International Airport"
+  },
+  {
+    "year": 2007,
+    "region": null,
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "ICN",
+    "airport_name": "Incheon International Airport"
+  },
+  {
+    "year": 2007,
+    "region": null,
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "KUL",
+    "airport_name": "Kuala Lumpur International Airport"
+  },
+  {
+    "year": 2007,
+    "region": null,
+    "size_bucket": null,
+    "rank": 3,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2008,
+    "region": null,
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "ICN",
+    "airport_name": "Incheon International Airport"
+  },
+  {
+    "year": 2008,
+    "region": null,
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2008,
+    "region": null,
+    "size_bucket": null,
+    "rank": 3,
+    "iata_code": "HKG",
+    "airport_name": "Hong Kong International Airport"
+  },
+  {
+    "year": 2009,
+    "region": null,
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "ICN",
+    "airport_name": "Incheon International Airport"
+  },
+  {
+    "year": 2009,
+    "region": null,
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2009,
+    "region": null,
+    "size_bucket": null,
+    "rank": 3,
+    "iata_code": "HKG",
+    "airport_name": "Hong Kong International Airport"
+  },
+  {
+    "year": 2010,
+    "region": null,
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "ICN",
+    "airport_name": "Incheon International Airport"
+  },
+  {
+    "year": 2010,
+    "region": null,
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2010,
+    "region": null,
+    "size_bucket": null,
+    "rank": 3,
+    "iata_code": "HKG",
+    "airport_name": "Hong Kong International Airport"
+  },
+  {
+    "year": 2011,
+    "region": null,
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "ICN",
+    "airport_name": "Incheon International Airport"
+  },
+  {
+    "year": 2011,
+    "region": null,
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2011,
+    "region": null,
+    "size_bucket": null,
+    "rank": 3,
+    "iata_code": "PEK",
+    "airport_name": "Beijing Capital International Airport"
+  },
+  {
+    "year": 2007,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "JNB",
+    "airport_name": "O.R. Tambo International Airport"
+  },
+  {
+    "year": 2007,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2008,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "GRJ",
+    "airport_name": "George Airport"
+  },
+  {
+    "year": 2008,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "PLZ",
+    "airport_name": "Port Elizabeth Airport"
+  },
+  {
+    "year": 2009,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "GRJ",
+    "airport_name": "George Airport"
+  },
+  {
+    "year": 2009,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "JNB",
+    "airport_name": "O.R. Tambo International Airport"
+  },
+  {
+    "year": 2010,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2010,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "CAI",
+    "airport_name": "Cairo International Airport"
+  },
+  {
+    "year": 2012,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2012,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2013,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2013,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2014,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "MRU",
+    "airport_name": "Sir Seewoosagur Ramgoolam International Airport"
+  },
+  {
+    "year": 2014,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2015,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "MRU",
+    "airport_name": "Sir Seewoosagur Ramgoolam International Airport"
+  },
+  {
+    "year": 2015,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2016,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "MRU",
+    "airport_name": "Sir Seewoosagur Ramgoolam International Airport"
+  },
+  {
+    "year": 2016,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2017,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "CMN",
+    "airport_name": "Mohammed V International Airport"
+  },
+  {
+    "year": 2017,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "MRU",
+    "airport_name": "Sir Seewoosagur Ramgoolam International Airport"
+  },
+  {
+    "year": 2012,
+    "region": "asia",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "ICN",
+    "airport_name": "Incheon International Airport"
+  },
+  {
+    "year": 2012,
+    "region": "asia",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2012,
+    "region": "asia",
+    "size_bucket": null,
+    "rank": 3,
+    "iata_code": "PEK",
+    "airport_name": "Beijing Capital International Airport"
+  },
+  {
+    "year": 2013,
+    "region": "asia",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "ICN",
+    "airport_name": "Incheon International Airport"
+  },
+  {
+    "year": 2013,
+    "region": "asia",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2013,
+    "region": "asia",
+    "size_bucket": null,
+    "rank": 3,
+    "iata_code": "PEK",
+    "airport_name": "Beijing Capital International Airport"
+  },
+  {
+    "year": 2014,
+    "region": "asia",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "ICN",
+    "airport_name": "Incheon International Airport"
+  },
+  {
+    "year": 2014,
+    "region": "asia",
+    "size_bucket": null,
+    "rank": 2,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2018,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m_passengers",
+    "rank": 1,
+    "iata_code": "BOM",
+    "airport_name": "Chhatrapati Shivaji International Airport – Mumbai"
+  },
+  {
+    "year": 2018,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m_passengers",
+    "rank": 1,
+    "iata_code": "DEL",
+    "airport_name": "Indira Gandhi International Airport – Delhi"
+  },
+  {
+    "year": 2018,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m_passengers",
+    "rank": 1,
+    "iata_code": "PVG",
+    "airport_name": "Shanghai Pudong International Airport – Shanghai"
+  },
+  {
+    "year": 2018,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m_passengers",
+    "rank": 1,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport – Singapore"
+  },
+  {
+    "year": 2018,
+    "region": "europe",
+    "size_bucket": "over_40m_passengers",
+    "rank": 1,
+    "iata_code": "FCO",
+    "airport_name": "Aeroporto di Roma Fiumicino – Rome"
+  },
+  {
+    "year": 2018,
+    "region": "europe",
+    "size_bucket": "over_40m_passengers",
+    "rank": 1,
+    "iata_code": "SVO",
+    "airport_name": "Sheremetyevo International Airport – Moscow"
+  },
+  {
+    "year": 2018,
+    "region": "north_america",
+    "size_bucket": "over_40m_passengers",
+    "rank": 1,
+    "iata_code": "DFW",
+    "airport_name": "Dallas/Fort Worth International Airport – Dallas"
+  },
+  {
+    "year": 2018,
+    "region": "north_america",
+    "size_bucket": "over_40m_passengers",
+    "rank": 1,
+    "iata_code": "YTZ",
+    "airport_name": "Toronto Pearson International Airport – Toronto"
+  },
+  {
+    "year": 2019,
+    "region": "africa",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "GRJ",
+    "airport_name": "George Airport – George, South Africa"
+  },
+  {
+    "year": 2019,
+    "region": "africa",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "KIM",
+    "airport_name": "Kimberley Airport – Kimberley, South Africa"
+  },
+  {
+    "year": 2019,
+    "region": "africa",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "UTN",
+    "airport_name": "Upington International Airport – Upington, South Africa"
+  },
+  {
+    "year": 2019,
+    "region": "africa",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "ACC",
+    "airport_name": "Kotoka International Airport – Accra, Ghana"
+  },
+  {
+    "year": 2019,
+    "region": "africa",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "MRU",
+    "airport_name": "SSR International Airport – Port Louis, Mauritius"
+  },
+  {
+    "year": 2019,
+    "region": "africa",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "DUR",
+    "airport_name": "King Shaka International Airport – Durban, South Africa"
+  },
+  {
+    "year": 2019,
+    "region": "africa",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "CMN",
+    "airport_name": "Mohammed V International Airport – Casablanca, Morocco"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "KRC",
+    "airport_name": "Depati Amir Airport – Pangkal Pinang City, Indonesia"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "TNJ",
+    "airport_name": "RH Fisabilillah Airport – Bintan, Indonesia"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "DTB",
+    "airport_name": "Silangit Airport – Tapanuli, Indonesia"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "IXC",
+    "airport_name": "Chandigarh Airport – Chandigarh, India"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "BDO",
+    "airport_name": "Husein Sastranegara Airport – Bandung, Indonesia"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "IXE",
+    "airport_name": "Mangalore Airport – Mangalore, India"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "PLM",
+    "airport_name": "SM Badaruddin II Airport – Palembang, Indonesia"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "PKU",
+    "airport_name": "SS Kasim II Airport – Pekanbaru, Indonesia"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "PNK",
+    "airport_name": "Supadio Airport – Pontianak, Indonesia"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "TRV",
+    "airport_name": "Trivandrum International Airport – Thiruvananthapuram, India"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "LKO",
+    "airport_name": "Chaudhary Charan Singh Airport – Lucknow, India"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "COK",
+    "airport_name": "Cochin International Airport – Cochin, India"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "HLP",
+    "airport_name": "Halim Perdanakusuma Airport – Jakarta, Indonesia"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "HET",
+    "airport_name": "Hohhot Baita International Airport – Hohhot, China"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "UPG",
+    "airport_name": "Makassar International Airport Sultan Hasanuddin – Makassar, Indonesia"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "BPN",
+    "airport_name": "Sepinggan International Airport – Balikpapan, Indonesia"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "DPS",
+    "airport_name": "Bali International Airport I Gusti Ngurah Rai – Bali, Indonesia"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "HYD",
+    "airport_name": "Rajiv Gandhi International Airport – Hyderabad, India"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "SYX",
+    "airport_name": "Sanya Fenghua International Airport – Sanya, China"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "BLR",
+    "airport_name": "Kempegowda International Airport – Bangalore, India"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "NKG",
+    "airport_name": "Nanjing Lukou International Airport – Nanjing, China"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "BOM",
+    "airport_name": "Chhatrapati Shivaji International Airport – Mumbai, India"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "DEL",
+    "airport_name": "Indira Gandhi International Airport – Delhi, India"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "PVG",
+    "airport_name": "Shanghai Pudong International Airport – Shanghai, China"
+  },
+  {
+    "year": 2019,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport – Singapore"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "AES",
+    "airport_name": "Alesund Airport – Alesund, Norway"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto de El Hierro – Valverde, Spain"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto de Melilla – Melilla, Spain"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto de San Sebastián – San Sebastián, Spain"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "BOO",
+    "airport_name": "Bodo Airport – Bodo, Norway"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto de Menorca – Menorca, Spain"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "SKP",
+    "airport_name": "Skopje International Airport – Skopje, North Macedonia"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "TLL",
+    "airport_name": "Tallinn Airport – Tallinn, Estonia"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "ZAG",
+    "airport_name": "Zagreb Airport – Zagreb, Croatia"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto de Alicante-Elche – Alicante, Spain"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "BGO",
+    "airport_name": "Bergen Airport – Bergen, Norway"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "ADB",
+    "airport_name": "Izmir Adnan Menderes International Airport – İzmir, Turkey"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "AER",
+    "airport_name": "JSK International Airport Sochi – Sochi, Russia"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "KEF",
+    "airport_name": "Keflavik International Airport – Keflavik, Iceland"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "MLA",
+    "airport_name": "Malta International Airport – Luqa, Malta"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "NCL",
+    "airport_name": "Newcastle International Airport Ltd – Newcastle, United Kingdom"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "OPO",
+    "airport_name": "Porto Francisco Sá Carneiro Airport – Porto, Portugal"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "ESB",
+    "airport_name": "Esenboga Airport – Ankara, Turkey"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "PRG",
+    "airport_name": "Prague Airport – Prague, Czech Republic"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "LED",
+    "airport_name": "Pulkovo Airport – St. Petersburg, Russia"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "CPH",
+    "airport_name": "Copenhagen Airport – Copenhagen, Denmark"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "ZRH",
+    "airport_name": "Flughafen Zurich – Zurich, Switzerland"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "OSL",
+    "airport_name": "Oslo Gardermoen Airport – Oslo, Norway"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "FCO",
+    "airport_name": "Aeroporto di Roma Fiumicino – Rome, Italy"
+  },
+  {
+    "year": 2019,
+    "region": "europe",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "SVO",
+    "airport_name": "Sheremetyevo International Airport – Moscow, Russia"
+  },
+  {
+    "year": 2019,
+    "region": "latin_america_caribbean",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "GPS",
+    "airport_name": "Aeropuertos Ecologicos de Galapagos S.A. Ecogal – Galapagos, Ecuador"
+  },
+  {
+    "year": 2019,
+    "region": "latin_america_caribbean",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto Internacional Gregorio Luperón – Puerto Plata, Dominican Republic"
+  },
+  {
+    "year": 2019,
+    "region": "latin_america_caribbean",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "DNL",
+    "airport_name": "Airport International Daniel Oduber Quirós – Liberia, Costa Rica"
+  },
+  {
+    "year": 2019,
+    "region": "latin_america_caribbean",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto Internacional de Carrasco – Montevideo, Uruguay"
+  },
+  {
+    "year": 2019,
+    "region": "latin_america_caribbean",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto Internacional Jose Joaquín Olmedo – Guayaquil, Ecuador"
+  },
+  {
+    "year": 2019,
+    "region": "latin_america_caribbean",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto Internacional de los Cabos – Los Cabos, Mexico"
+  },
+  {
+    "year": 2019,
+    "region": "latin_america_caribbean",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto Internacional Punta Cana – Punta Cana, Dominican Republic"
+  },
+  {
+    "year": 2019,
+    "region": "north_america",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "LAN",
+    "airport_name": "Capital Region International Airport – Lansing, United States"
+  },
+  {
+    "year": 2019,
+    "region": "north_america",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "YQB",
+    "airport_name": "Jean-Lesage International Airport – Quebec, Canada"
+  },
+  {
+    "year": 2019,
+    "region": "north_america",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "ELP",
+    "airport_name": "El Paso International Airport – El Paso, United States"
+  },
+  {
+    "year": 2019,
+    "region": "north_america",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "PWM",
+    "airport_name": "Portland International Jetport – Portland, United States"
+  },
+  {
+    "year": 2019,
+    "region": "north_america",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "IND",
+    "airport_name": "Indianapolis International Airport – Indianapolis, United States"
+  },
+  {
+    "year": 2019,
+    "region": "north_america",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "CVG",
+    "airport_name": "Cincinnati/Northern Kentucky International Airport – Cincinnati, United States"
+  },
+  {
+    "year": 2019,
+    "region": "north_america",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "JAX",
+    "airport_name": "Jacksonville International Airport – Jacksonville, United States"
+  },
+  {
+    "year": 2019,
+    "region": "north_america",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "DAL",
+    "airport_name": "Dallas Love Field Airport – Dallas, United States"
+  },
+  {
+    "year": 2019,
+    "region": "north_america",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "TPA",
+    "airport_name": "Tampa International Airport – Tampa, United States"
+  },
+  {
+    "year": 2019,
+    "region": "north_america",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "MSP",
+    "airport_name": "Minneapolis/St Paul International Airport – Minneapolis, United States"
+  },
+  {
+    "year": 2019,
+    "region": "north_america",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "DFW",
+    "airport_name": "Dallas/Fort Worth International Airport – Dallas, United States"
+  },
+  {
+    "year": 2019,
+    "region": "north_america",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "YTZ",
+    "airport_name": "Toronto Pearson International Airport – Toronto, Canada"
+  },
+  {
+    "year": 2020,
+    "region": "africa",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "MBA",
+    "airport_name": "Moi International Airport – Mombasa, Kenya"
+  },
+  {
+    "year": 2020,
+    "region": "africa",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "ACC",
+    "airport_name": "Kotoka International Airport – Accra, Ghana"
+  },
+  {
+    "year": 2020,
+    "region": "africa",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "NBO",
+    "airport_name": "Jomo Kenyatta International Airport – Nairobi, Kenya"
+  },
+  {
+    "year": 2020,
+    "region": "africa",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "ABV",
+    "airport_name": "Nnamdi Azikiwe International Airport – Abuja, Nigeria"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "KRC",
+    "airport_name": "Depati Amir Airport – Pangkal Pinang City, Indonesia"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "DTB",
+    "airport_name": "Silangit Airport – Tapanuli, Indonesia"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "DJB",
+    "airport_name": "Sultan Thaha Airport – Kota Jambi, Indonesia"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "IXC",
+    "airport_name": "Chandigarh Airport – Chandigarh, India"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "BDO",
+    "airport_name": "Husein Sastranegara Airport – Bandung, Indonesia"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "SRG",
+    "airport_name": "Jenderal Ahmad Yani International Airport – Semerang, Indonesia"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "VNS",
+    "airport_name": "Lal Bahadur Shastri International Airport – Babatpur, India"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "GRP",
+    "airport_name": "Sri Guru Ram Das Jee International Airport – Amritsar, India"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "PLM",
+    "airport_name": "Sultan Mahmud Badaruddin II International Airport – Palembang, Indonesia"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "PNK",
+    "airport_name": "Supadio Airport – Pontianak, Indonesia"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "CGQ",
+    "airport_name": "Changchun Longjia International Airport – Changchun, China"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "COK",
+    "airport_name": "Cochin International Airport – Cochin, India"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "SJW",
+    "airport_name": "Shijiazhuang Zhengding International Airport – Shijiazhuang, China"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "AKH",
+    "airport_name": "Sultan Aji Muhammad Sulaiman Sepinggan International Airport – Kalimantan, Indonesia"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "AKH",
+    "airport_name": "Sultan Hasanuddin Makassar International Airport – Ujung, Indonesia"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "XNN",
+    "airport_name": "Xi'ning Caojiapu Airport – Qinghai, China"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport – Haikou, China"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "HYD",
+    "airport_name": "Rajiv Gandhi International Airport – Hyderabad, India"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "SHE",
+    "airport_name": "Shenyang Taoxian International Airport – Shenyang, China"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "PKX",
+    "airport_name": "Beijing Daxing International Airport – Beijing, China"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "BLR",
+    "airport_name": "Kempegowda International Airport – Bangalore, India"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "PEK",
+    "airport_name": "Beijing Capital International Airport – Beijing, China"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "BOM",
+    "airport_name": "Chhatrapati Shivaji Maharaj International Airport – Mumbai, India"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "CAN",
+    "airport_name": "Guangzhou Baiyun International Airport – Guangzhou, China"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "DEL",
+    "airport_name": "Indira Gandhi International Airport – Delhi, India"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "PVG",
+    "airport_name": "Shanghai Pudong International Airport – Shanghai, China"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "SZX",
+    "airport_name": "Shenzhen Bao'an International Airport – Shenzhen, China"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport – Singapore"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto de Federico García Lorca Granada-Jaén – Granada, Spain"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto de San Sebastián – San Sebastián, Spain"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "INV",
+    "airport_name": "Inverness Airport – Inverness, United Kingdom"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "PDL",
+    "airport_name": "João Paulo II Airport – Ponta Delgada, Portugal"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "KJA",
+    "airport_name": "Krasnoyarsk International Airport – Krasnoyarsk, Russian Federation"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "SKP",
+    "airport_name": "Skopje International Airport – Skopje, North Macedonia"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "TLL",
+    "airport_name": "Tallinn Airport – Tallinn, Estonia"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "ZAG",
+    "airport_name": "Zagreb Airport – Zagreb, Croatia"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "BEG",
+    "airport_name": "Belgrade Nikola Tesla Airport – Belgrade, Republic of Serbia"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "FAO",
+    "airport_name": "Faro Airport – Faro, Portugal"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "KRK",
+    "airport_name": "John Paul II International Airport Krakow-Balice – Kraków, Poland"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "KEF",
+    "airport_name": "Keflavik International Airport – Keflavik, Iceland"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "LCY",
+    "airport_name": "London City Airport – London, UK"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "MLA",
+    "airport_name": "Malta International Airport – Malta"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "OPO",
+    "airport_name": "Porto Francisco Sá Carneiro Airport – Porto, Portugal"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "AER",
+    "airport_name": "Sochi International Airport – Sochi, Russian Federation"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport – Helsinki, Finland"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "PRG",
+    "airport_name": "Prague Airport – Prague, Czech Republic"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "LED",
+    "airport_name": "Pulkovo Airport – St. Petersburg, Russian Federation"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "LIS",
+    "airport_name": "Lisbon Airport – Lisbon, Portugal"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "PUW",
+    "airport_name": "Moscow Domodedovo Airport – Moscow, Russian Federation"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "ZRH",
+    "airport_name": "Zurich Airport – Zurich, Switzerland"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "BJP",
+    "airport_name": "Aeroporto di Roma-Fiumicino – Rome, Italy"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "SVO",
+    "airport_name": "Sheremetyevo International Airport – Moscow, Russian Federation"
+  },
+  {
+    "year": 2020,
+    "region": "latin_america_caribbean",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "CUR",
+    "airport_name": "Curaçao International Airport – Curaçao, Netherlands Antilles"
+  },
+  {
+    "year": 2020,
+    "region": "latin_america_caribbean",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "DNL",
+    "airport_name": "Daniel Oduber Quirós International Airport – Liberia, Costa Rica"
+  },
+  {
+    "year": 2020,
+    "region": "latin_america_caribbean",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto Internacional Jose Joaquín Olmedo – Guayaquil, Ecuador"
+  },
+  {
+    "year": 2020,
+    "region": "latin_america_caribbean",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "PUJ",
+    "airport_name": "Punta Cana International Airport – Punta Cana, Dominican Republic"
+  },
+  {
+    "year": 2020,
+    "region": "latin_america_caribbean",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Quito International Airport – Quito, Ecuador"
+  },
+  {
+    "year": 2020,
+    "region": "middle_east",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "AMM",
+    "airport_name": "Queen Alia International Airport – Amman, Jordan"
+  },
+  {
+    "year": 2020,
+    "region": "middle_east",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "AUH",
+    "airport_name": "Abu Dhabi International Airport – Abu Dhabi, United Arab Emirates"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "YYJ",
+    "airport_name": "Victoria International Airport – Victoria, Canada"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "GSP",
+    "airport_name": "Greenville-Spartanburg International Airport – Greer, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "PWM",
+    "airport_name": "Portland International Jetport – Portland, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "IND",
+    "airport_name": "Indianapolis International Airport – Indianapolis, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "CMH",
+    "airport_name": "John Glenn Columbus International Airport – Columbus, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "SAT",
+    "airport_name": "San Antonio International Airport – San Antonio, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "ASQ",
+    "airport_name": "Austin-Bergstrom International Airport – Austin, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "DAL",
+    "airport_name": "Dallas Love Field Airport – Dallas, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "BWI",
+    "airport_name": "Baltimore/Washington International Thurgood Marshall Airport – Baltimore, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": "25_to_40m",
+    "rank": 1,
+    "iata_code": "DTW",
+    "airport_name": "Detroit Metropolitan Wayne County Airport – Detroit, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "PDK",
+    "airport_name": "Hartsfield-Jackson Atlanta International Airport – Atlanta, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": "over_40m",
+    "rank": 1,
+    "iata_code": "YTZ",
+    "airport_name": "Toronto Pearson International Airport – Toronto, Canada"
+  },
+  {
+    "year": 2020,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "MRU",
+    "airport_name": "Sir Seewoosagur Ramgoolam International Airport – Port Louis, Mauritius"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "PKX",
+    "airport_name": "Beijing Daxing International Airport – Beijing, China"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "IXC",
+    "airport_name": "Chandigarh Airport – Chandigarh, India"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "KRC",
+    "airport_name": "Depati Amir Airport – Pangkal Pinang, Indonesia"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "BDO",
+    "airport_name": "Husein Sastranegara Airport – Bandung, Indonesia"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "CCU",
+    "airport_name": "Netaji Subhash Chandra Bose International Airport – Kolkata, India"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "PNQ",
+    "airport_name": "Pune Airport – Pune, India"
+  },
+  {
+    "year": 2020,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "CGK",
+    "airport_name": "Soekarno-Hatta International Airport – Jakarta, Indonesia"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto de Alicante-Elche – Alicante, Spain"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto de Federico García Lorca Granada-Jaén – Granada, Spain"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto de Menorca – Menorca, Spain"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto de Pamplona – Pamplona, Spain"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto Internacional Región de Murcia – Murcia, Spain"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto Seve Ballesteros-Santander – Santander, Spain"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "BEG",
+    "airport_name": "Belgrade Nikola Tesla Airport – Belgrade, Serbia"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "FAO",
+    "airport_name": "Faro Airport – Faro, Portugal"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport – Helsinki, Finland"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "PDL",
+    "airport_name": "João Paulo II Airport – Ponta Delgada, Portugal"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "KEF",
+    "airport_name": "Keflavik International Airport – Keflavik, Iceland"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "FNC",
+    "airport_name": "Madeira Airport – Madeira, Portugal"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "OPO",
+    "airport_name": "Porto Airport – Porto, Portugal"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "SKP",
+    "airport_name": "Skopje International Airport – Skopje, North Macedonia"
+  },
+  {
+    "year": 2020,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "TLL",
+    "airport_name": "Tallinn Airport – Tallinn, Estonia"
+  },
+  {
+    "year": 2020,
+    "region": "latin_america_caribbean",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "DNL",
+    "airport_name": "Daniel Oduber Quirós International Airport – Liberia, Costa Rica"
+  },
+  {
+    "year": 2020,
+    "region": "latin_america_caribbean",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "PUJ",
+    "airport_name": "Punta Cana International Airport – Punta Cana, Dominican Republic"
+  },
+  {
+    "year": 2020,
+    "region": "middle_east",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "KIF",
+    "airport_name": "King Khalid International Airport – Riyadh, Saudi Arabia"
+  },
+  {
+    "year": 2020,
+    "region": "middle_east",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "SLL",
+    "airport_name": "Salalah Airport – Salalah, Oman"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "PDK",
+    "airport_name": "Hartsfield-Jackson Atlanta International Airport – Atlanta, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "MSY",
+    "airport_name": "Louis Armstrong New Orleans International Airport – New Orleans, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "SAT",
+    "airport_name": "San Antonio International Airport – San Antonio, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "TPA",
+    "airport_name": "Tampa International Airport – Tampa, USA"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "YTZ",
+    "airport_name": "Toronto Pearson International Airport – Toronto, Canada"
+  },
+  {
+    "year": 2020,
+    "region": "north_america",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "YYJ",
+    "airport_name": "Victoria International Airport – Victoria, Canada"
+  },
+  {
+    "year": 2021,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "RUN",
+    "airport_name": "Aéroport de la Réunion Roland Garros – Sainte-Marie, Réunion"
+  },
+  {
+    "year": 2021,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "MRU",
+    "airport_name": "Sir Seewoosagur Ramgoolam International Airport – Mauritius"
+  },
+  {
+    "year": 2021,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "PEK",
+    "airport_name": "Beijing Capital International Airport – Beijing, China"
+  },
+  {
+    "year": 2021,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "PKX",
+    "airport_name": "Beijing Daxing International Airport – Beijing, China"
+  },
+  {
+    "year": 2021,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "IXC",
+    "airport_name": "Chandigarh Airport – Chandigarh, India"
+  },
+  {
+    "year": 2021,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "KRC",
+    "airport_name": "Depati Amir Airport – Pangkal Pinang, Indonesia"
+  },
+  {
+    "year": 2021,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport – Haikou, China"
+  },
+  {
+    "year": 2021,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "MES",
+    "airport_name": "Kualanamu International Airport – Medan, Indonesia"
+  },
+  {
+    "year": 2021,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "CGK",
+    "airport_name": "Soekarno-Hatta International Airport – Jakarta, Indonesia"
+  },
+  {
+    "year": 2021,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "AKH",
+    "airport_name": "Sultan Syarif Kasim I Airport – Pekanbaru, Indonesia"
+  },
+  {
+    "year": 2021,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "DJB",
+    "airport_name": "Sultan Thaha Airport – Kota Jambi, Indonesia"
+  },
+  {
+    "year": 2021,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "PNK",
+    "airport_name": "Supadio Airport – Pontianak, Indonesia"
+  },
+  {
+    "year": 2021,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "ADB",
+    "airport_name": "Adnan Menderes Airport – Izmir, Turkey"
+  },
+  {
+    "year": 2021,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "PGF",
+    "airport_name": "Aéroport de Perpignan-Rivesaltes – Perpignan, France"
+  },
+  {
+    "year": 2022,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "CMN",
+    "airport_name": "Casablanca Mohammed V International Airport – Casablanca, Morocco"
+  },
+  {
+    "year": 2022,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "PKX",
+    "airport_name": "Beijing Daxing International Airport – Beijing, China"
+  },
+  {
+    "year": 2022,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "KUL",
+    "airport_name": "Kuala Lumpur International Airport – Kuala Lumpur, Malaysia"
+  },
+  {
+    "year": 2022,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "AMQ",
+    "airport_name": "Pattimura International Airport – Ambon, Indonesia"
+  },
+  {
+    "year": 2022,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport – Singapore"
+  },
+  {
+    "year": 2022,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "AKH",
+    "airport_name": "Sultan Hasanuddin International Airport – Ujung Pandang, Indonesia"
+  },
+  {
+    "year": 2023,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "RUN",
+    "airport_name": "Aéroport de la Réunion Roland Garros – Sainte-Marie, Réunion"
+  },
+  {
+    "year": 2023,
+    "region": "africa",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "CMN",
+    "airport_name": "Casablanca Mohammed V International Airport – Casablanca, Morocco"
+  },
+  {
+    "year": 2023,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "SOC",
+    "airport_name": "Adi Soemarmo International Airport – Surakarta, Indonesia"
+  },
+  {
+    "year": 2023,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport – Singapore"
+  },
+  {
+    "year": 2023,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "AKH",
+    "airport_name": "Sultan Aji Muhammad Sulaiman Sepinggan International Airport – Balikpapan, Indonesia"
+  },
+  {
+    "year": 2023,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "AKH",
+    "airport_name": "Sultan Hasanuddin International Airport – Ujung Pandang, Indonesia"
+  },
+  {
+    "year": 2023,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "PNK",
+    "airport_name": "Supadio Airport – Pontianak, Indonesia"
+  },
+  {
+    "year": 2023,
+    "region": "asia_pacific",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "YIA",
+    "airport_name": "Yogyakarta International Airport – Yogyakarta, Indonesia"
+  },
+  {
+    "year": 2023,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "BJP",
+    "airport_name": "Aeroporto di Roma-Fiumicino – Rome, Italy"
+  },
+  {
+    "year": 2023,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "UIO",
+    "airport_name": "Aeropuerto de El Hierro – Valverde, Spain"
+  },
+  {
+    "year": 2023,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "BEG",
+    "airport_name": "Belgrade Nikola Tesla Airport – Belgrade, Serbia"
+  },
+  {
+    "year": 2023,
+    "region": "europe",
+    "size_bucket": null,
+    "rank": 1,
+    "iata_code": "INV",
+    "airport_name": "Inverness Airport – Inverness, United Kingdom"
+  },
+  {
+    "year": 2024,
+    "region": "africa",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "BMP",
+    "airport_name": "Bram Fischer International Airport – Bloemfontein, South Africa"
+  },
+  {
+    "year": 2024,
+    "region": "africa",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "GRJ",
+    "airport_name": "George Airport – George, South Africa"
+  },
+  {
+    "year": 2024,
+    "region": "africa",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "TNR",
+    "airport_name": "Ivato International Airport – Antananarivo, Madagascar"
+  },
+  {
+    "year": 2024,
+    "region": "africa",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "DSS",
+    "airport_name": "Dakar Blaise Diagne International Airport – Diass, Senegal"
+  },
+  {
+    "year": 2024,
+    "region": "africa",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "MRU",
+    "airport_name": "Sir Seewoosagur Ramgoolam International Airport – Mauritius"
+  },
+  {
+    "year": 2024,
+    "region": "africa",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "CMN",
+    "airport_name": "Casablanca Mohammed V Airport – Casablanca, Morocco"
+  },
+  {
+    "year": 2024,
+    "region": "africa",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "RAK",
+    "airport_name": "Marrakech Menara Airport – Marrakech, Morocco"
+  },
+  {
+    "year": 2024,
+    "region": "asia_pacific",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "CNN",
+    "airport_name": "Kannur International Airport – Kannur, India"
+  },
+  {
+    "year": 2024,
+    "region": "asia_pacific",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "AMQ",
+    "airport_name": "Pattimura International Airport – Ambon, Indonesia"
+  },
+  {
+    "year": 2024,
+    "region": "asia_pacific",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "ZQZ",
+    "airport_name": "Zhangjiakou Ningyuan Airport – Zhangjiakou, China"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "GRO",
+    "airport_name": "Girona-Costa Brava Airport – Costa Brava, Spain"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "INV",
+    "airport_name": "Inverness Airport – Inverness, United Kingdom"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "PNA",
+    "airport_name": "Pamplona Airport – Pamplona, Spain"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "REU",
+    "airport_name": "Reus Airport – Reus, Spain"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "ZAZ",
+    "airport_name": "Zaragoza Airport – Zaragoza, Spain"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "BJV",
+    "airport_name": "Milas–Bodrum Airport – Milas, Turkey"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "NTL",
+    "airport_name": "Newcastle International Airport – Newcastle, United Kingdom"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "AFT",
+    "airport_name": "Rome Ciampino Airport – Rome, Italy"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "TLL",
+    "airport_name": "Tallinn Airport – Tallinn, Estonia"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "LLK",
+    "airport_name": "Ankara Esenboğa Airport – Ankara, Turkey"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "IGL",
+    "airport_name": "Izmir Adnan Menderes Airport – Izmir, Turkey"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "MLA",
+    "airport_name": "Malta International Airport – Luqa, Malta"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "GNT",
+    "airport_name": "Milan Linate Airport – Milan, Italy"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "PRG",
+    "airport_name": "Prague Airport – Prague, Czech Republic"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "SVQ",
+    "airport_name": "Sevilla Airport – Seville, Spain"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "SOF",
+    "airport_name": "Sofia Airport – Sofia, Bulgaria"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "SKG",
+    "airport_name": "Thessaloniki Airport Makedonia – Thessaloniki, Greece"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "ALC",
+    "airport_name": "Alicante-Elche Airport – Alicante, Spain"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "BUD",
+    "airport_name": "Budapest Ferenc Liszt International Airport – Budapest, Hungary"
+  },
+  {
+    "year": 2024,
+    "region": "europe",
+    "size_bucket": "15_to_25m",
+    "rank": 1,
+    "iata_code": "HEL",
+    "airport_name": "Helsinki Airport – Helsinki, Finland"
+  },
+  {
+    "year": 2024,
+    "region": "middle_east",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "EAM",
+    "airport_name": "Nejran Airport – Najran, Saudi Arabia"
+  },
+  {
+    "year": 2024,
+    "region": "middle_east",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "SLL",
+    "airport_name": "Salalah Airport – Salalah, Oman"
+  },
+  {
+    "year": 2024,
+    "region": "middle_east",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "MCT",
+    "airport_name": "Muscat International Airport – Muscat, Oman"
+  },
+  {
+    "year": 2024,
+    "region": "north_america",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "YYT",
+    "airport_name": "St John's International Airport – St John's, Canada"
+  },
+  {
+    "year": 2024,
+    "region": "north_america",
+    "size_bucket": "under_2m",
+    "rank": 1,
+    "iata_code": "YYJ",
+    "airport_name": "Victoria International Airport – Victoria, Canada"
+  },
+  {
+    "year": 2024,
+    "region": "north_america",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "GRR",
+    "airport_name": "Gerald R. Ford International Airport – Grand Rapids, United States"
+  },
+  {
+    "year": 2024,
+    "region": "north_america",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "GSP",
+    "airport_name": "Greenville-Spartanburg International Airport – Greer, United States"
+  },
+  {
+    "year": 2024,
+    "region": "north_america",
+    "size_bucket": "2_to_5m",
+    "rank": 1,
+    "iata_code": "PWM",
+    "airport_name": "Portland International Jetport – Portland, United States"
+  },
+  {
+    "year": 2024,
+    "region": "north_america",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "CVG",
+    "airport_name": "Cincinnati/Northern Kentucky International Airport – Cincinnati, United States"
+  },
+  {
+    "year": 2024,
+    "region": "north_america",
+    "size_bucket": "5_to_15m",
+    "rank": 1,
+    "iata_code": "IND",
+    "airport_name": "Indianapolis International Airport – Indianapolis, United States"
+  }
+]

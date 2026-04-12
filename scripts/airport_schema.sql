@@ -341,6 +341,26 @@ CREATE INDEX sentiment_source_idx ON sentiment_snapshots (source);
 CREATE INDEX sentiment_period_idx ON sentiment_snapshots (snapshot_year, snapshot_quarter);
 
 -- ============================================================
+-- AWARDS (Skytrax + ACI ASQ)
+-- ============================================================
+
+CREATE TABLE airport_awards (
+    id              SERIAL PRIMARY KEY,
+    iata_code       TEXT NOT NULL,
+    source          TEXT NOT NULL CHECK (source IN ('skytrax', 'aci_asq')),
+    year            SMALLINT NOT NULL,
+    category        TEXT NOT NULL,
+    region          TEXT,
+    size_bucket     TEXT,
+    rank            SMALLINT,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (iata_code, source, year, category)
+);
+
+CREATE INDEX airport_awards_iata_idx ON airport_awards (iata_code);
+CREATE INDEX airport_awards_source_year_idx ON airport_awards (source, year);
+
+-- ============================================================
 -- SCORES (composite, versioned)
 -- ============================================================
 

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { cleanCity } from "~/utils/format";
+import { Trophy } from "lucide-react";
 
 export function WallColumn({
   title,
@@ -50,6 +51,9 @@ export function WallColumn({
                 <span className="font-grotesk text-sm font-bold text-[#f5f5f0] tracking-wider">
                   {airport.iataCode}
                 </span>
+                {(airport.awardCount as number) > 0 && (
+                  <Trophy className="size-3 text-yellow-500/60" />
+                )}
                 <span className="font-mono text-xs text-zinc-600">
                   {cleanCity(airport.city)}
                 </span>

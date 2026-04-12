@@ -253,7 +253,6 @@ pub struct WikipediaSnapshot {
     pub ownership_notes: Option<String>,
     pub milestone_notes: Option<String>,
     pub skytrax_history: Option<serde_json::Value>,
-    pub aci_awards: Option<serde_json::Value>,
     pub wikipedia_url: Option<String>,
     pub article_revision_id: Option<i64>,
     pub created_at: Option<DateTime<Utc>>,

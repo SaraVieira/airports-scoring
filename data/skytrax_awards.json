@@ -1,0 +1,3677 @@
+[
+  {
+    "year": 2018,
+    "category": "worlds_best_airport",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_asia",
+    "region": "asia",
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "SYD",
+    "airport_name": "Sydney Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_central_asia_india",
+    "region": "asia",
+    "iata_code": "BOM",
+    "airport_name": "Mumbai Chhatrapati Shivaji International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_eastern_europe",
+    "region": "eastern_europe",
+    "iata_code": "BUD",
+    "airport_name": "Budapest Ferenc Liszt International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_northern_europe",
+    "region": "northern_europe",
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_southern_europe",
+    "region": "southern_europe",
+    "iata_code": "ATH",
+    "airport_name": "Athens International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_western_europe",
+    "region": "western_europe",
+    "iata_code": "LHR",
+    "airport_name": "London Heathrow Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_europe",
+    "region": "europe",
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_central_europe",
+    "region": "europe",
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "YVR",
+    "airport_name": "Vancouver International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "BOG",
+    "airport_name": "Bogotá El Dorado International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "PTY",
+    "airport_name": "Panama Tocumen International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_china",
+    "region": "china",
+    "iata_code": "SHA",
+    "airport_name": "Shanghai Hongqiao International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "BLR",
+    "airport_name": "Bangalore Kempegowda International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "worlds_best_airport_staff",
+    "region": null,
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_staff_in_asia",
+    "region": "asia",
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_staff_in_europe",
+    "region": "europe",
+    "iata_code": "AMS",
+    "airport_name": "Amsterdam Schiphol Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_staff_in_africa",
+    "region": "africa",
+    "iata_code": "MRU",
+    "airport_name": "Sir Seewoosagur Ramgoolam International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_staff_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "PER",
+    "airport_name": "Perth Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_staff_in_india_central_asia",
+    "region": "asia",
+    "iata_code": "DEL",
+    "airport_name": "Delhi Indira Gandhi International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_staff_in_north_america",
+    "region": "north_america",
+    "iata_code": "SFO",
+    "airport_name": "San Francisco International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_staff_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_staff_in_central_america",
+    "region": "central_america",
+    "iata_code": "PTY",
+    "airport_name": "Panama Tocumen International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_staff_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_staff_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_staff_in_china",
+    "region": "china",
+    "iata_code": "CTU",
+    "airport_name": "Chengdu Shuangliu International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "worlds_cleanest_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2018,
+    "category": "worlds_best_domestic_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2018,
+    "category": "worlds_best_airport_shopping",
+    "region": null,
+    "iata_code": "LHR",
+    "airport_name": "London Heathrow Airport"
+  },
+  {
+    "year": 2018,
+    "category": "worlds_best_airport_transit",
+    "region": null,
+    "iata_code": "HKG",
+    "airport_name": "Hong Kong International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "worlds_best_airport_dining",
+    "region": null,
+    "iata_code": "HKG",
+    "airport_name": "Hong Kong International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "worlds_best_airport_baggage_delivery",
+    "region": null,
+    "iata_code": "KIX",
+    "airport_name": "Kansai International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "worlds_best_airport_immigration",
+    "region": null,
+    "iata_code": "TPE",
+    "airport_name": "Taiwan Taoyuan International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "worlds_best_regional_airport",
+    "region": null,
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_regional_airport_in_asia",
+    "region": "asia",
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_regional_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "CHC",
+    "airport_name": "Christchurch International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_regional_airport_in_europe",
+    "region": "europe",
+    "iata_code": "HAM",
+    "airport_name": "Hamburg Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_regional_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "DEN",
+    "airport_name": "Denver International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_regional_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "BLR",
+    "airport_name": "Bangalore Kempegowda International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_regional_airport_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_regional_airport_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "KZN",
+    "airport_name": "Kazan International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_regional_airport_in_africa",
+    "region": "africa",
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_regional_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_under_5m_passengers",
+    "region": null,
+    "iata_code": "LCY",
+    "airport_name": "London City Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_5_10m_passengers",
+    "region": null,
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_10_20m_passengers",
+    "region": null,
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_20_30m_passengers",
+    "region": null,
+    "iata_code": "ZRH",
+    "airport_name": "Zurich Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_30_40m_passengers",
+    "region": null,
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_40_50m_passengers",
+    "region": null,
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2018,
+    "category": "best_airport_50_plus_passengers",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_best_airport",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_asia",
+    "region": "asia",
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "BNE",
+    "airport_name": "Brisbane Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_eastern_europe",
+    "region": "eastern_europe",
+    "iata_code": "BUD",
+    "airport_name": "Budapest Ferenc Liszt International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_northern_europe",
+    "region": "northern_europe",
+    "iata_code": "CPH",
+    "airport_name": "Copenhagen Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_southern_europe",
+    "region": "southern_europe",
+    "iata_code": "MAD",
+    "airport_name": "Madrid Barajas International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_western_europe",
+    "region": "western_europe",
+    "iata_code": "LHR",
+    "airport_name": "London Heathrow Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_europe",
+    "region": "europe",
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_central_europe",
+    "region": "europe",
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "YVR",
+    "airport_name": "Vancouver International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UEL",
+    "airport_name": "Lima Jorge Chávez International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_central_america",
+    "region": "central_america",
+    "iata_code": "PTY",
+    "airport_name": "Panama Tocumen International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_china",
+    "region": "china",
+    "iata_code": "SHA",
+    "airport_name": "Shanghai Hongqiao International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_in_india_central_asia",
+    "region": "asia",
+    "iata_code": "DEL",
+    "airport_name": "Delhi Indira Gandhi International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_best_airport_staff",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Narita International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_staff_in_asia",
+    "region": "asia",
+    "iata_code": "HND",
+    "airport_name": "Tokyo Narita International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_staff_in_europe",
+    "region": "europe",
+    "iata_code": "VIE",
+    "airport_name": "Vienna International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_staff_in_africa",
+    "region": "africa",
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_staff_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "OOL",
+    "airport_name": "Gold Coast Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_staff_in_india_central_asia",
+    "region": "asia",
+    "iata_code": "HDD",
+    "airport_name": "Hyderabad Rajiv Gandhi International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_staff_in_north_america",
+    "region": "north_america",
+    "iata_code": "SEA",
+    "airport_name": "Seattle-Tacoma International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_staff_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_staff_in_central_america",
+    "region": "central_america",
+    "iata_code": "PTY",
+    "airport_name": "Panama Tocumen International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_staff_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_staff_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "KZN",
+    "airport_name": "Kazan International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_staff_in_china",
+    "region": "china",
+    "iata_code": "CAN",
+    "airport_name": "Guangzhou Baiyun International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_cleanest_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_best_domestic_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_best_prm_accessible",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_best_transit_airport",
+    "region": null,
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_best_airport_shopping",
+    "region": null,
+    "iata_code": "LHR",
+    "airport_name": "London Heathrow Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_best_airport_dining",
+    "region": null,
+    "iata_code": "HKG",
+    "airport_name": "Hong Kong International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_best_airport_immigration",
+    "region": null,
+    "iata_code": "HKG",
+    "airport_name": "Hong Kong International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_best_airport_baggage_delivery",
+    "region": null,
+    "iata_code": "KIX",
+    "airport_name": "Kansai International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_best_regional_airport",
+    "region": null,
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_most_improved_airport",
+    "region": null,
+    "iata_code": "CAN",
+    "airport_name": "Guangzhou Baiyun International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_best_website_digital",
+    "region": null,
+    "iata_code": "CXO",
+    "airport_name": "Houston Airports System"
+  },
+  {
+    "year": 2019,
+    "category": "best_regional_airport_in_asia",
+    "region": "asia",
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_regional_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "OOL",
+    "airport_name": "Gold Coast Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_regional_airport_in_europe",
+    "region": "europe",
+    "iata_code": "CGN",
+    "airport_name": "Cologne/Bonn Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_regional_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "DEN",
+    "airport_name": "Denver International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_regional_airport_in_india_central_asia",
+    "region": "asia",
+    "iata_code": "HDD",
+    "airport_name": "Hyderabad Rajiv Gandhi International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_regional_airport_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_regional_airport_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "SVX",
+    "airport_name": "Yekaterinburg Koltsovo International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_regional_airport_in_africa",
+    "region": "africa",
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_regional_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_under_5m_passengers",
+    "region": null,
+    "iata_code": "LCY",
+    "airport_name": "London City Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_5_10m_passengers",
+    "region": null,
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_10_20m_passengers",
+    "region": null,
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_20_30m_passengers",
+    "region": null,
+    "iata_code": "KIX",
+    "airport_name": "Kansai International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_30_40m_passengers",
+    "region": null,
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_40_50m_passengers",
+    "region": null,
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_50_60m_passengers",
+    "region": null,
+    "iata_code": "MAD",
+    "airport_name": "Madrid Barajas International Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_60_70m_passengers",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2019,
+    "category": "best_airport_70_plus_passengers",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2019,
+    "category": "worlds_best_airport_security",
+    "region": null,
+    "iata_code": "ZRH",
+    "airport_name": "Zurich Airport"
+  },
+  {
+    "year": 2021,
+    "category": "worlds_best_airport",
+    "region": null,
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_asia",
+    "region": "asia",
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "MEL",
+    "airport_name": "Melbourne Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_eastern_europe",
+    "region": "eastern_europe",
+    "iata_code": "BUD",
+    "airport_name": "Budapest Ferenc Liszt International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_northern_europe",
+    "region": "northern_europe",
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_southern_europe",
+    "region": "southern_europe",
+    "iata_code": "IST",
+    "airport_name": "Istanbul Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_western_europe",
+    "region": "western_europe",
+    "iata_code": "LHR",
+    "airport_name": "London Heathrow Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_europe",
+    "region": "europe",
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_central_europe",
+    "region": "europe",
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "YVR",
+    "airport_name": "Vancouver International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "PTY",
+    "airport_name": "Panama Tocumen International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_china",
+    "region": "china",
+    "iata_code": "CAN",
+    "airport_name": "Guangzhou Baiyun International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_in_india_central_asia",
+    "region": "asia",
+    "iata_code": "DEL",
+    "airport_name": "Delhi Indira Gandhi International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "worlds_best_airport_staff",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_staff_in_asia",
+    "region": "asia",
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_staff_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_staff_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "BNE",
+    "airport_name": "Brisbane Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_staff_in_north_america",
+    "region": "north_america",
+    "iata_code": "SEA",
+    "airport_name": "Seattle-Tacoma International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_staff_in_south_america",
+    "region": "south_america",
+    "iata_code": "BOG",
+    "airport_name": "Bogotá El Dorado International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_staff_in_central_america",
+    "region": "central_america",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_staff_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_staff_in_india",
+    "region": null,
+    "iata_code": "BLR",
+    "airport_name": "Bangalore Kempegowda International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "worlds_cleanest_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2021,
+    "category": "worlds_best_airport_cleanliness",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2021,
+    "category": "worlds_best_domestic_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2021,
+    "category": "worlds_best_prm_accessible",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2021,
+    "category": "worlds_best_airport_security",
+    "region": null,
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "worlds_best_airport_immigration",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Narita International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "worlds_most_improved_airport",
+    "region": null,
+    "iata_code": "IST",
+    "airport_name": "Istanbul Airport"
+  },
+  {
+    "year": 2021,
+    "category": "worlds_best_regional_airport",
+    "region": null,
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_regional_airport_in_asia",
+    "region": "asia",
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_regional_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "ADL",
+    "airport_name": "Adelaide Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_regional_airport_in_europe",
+    "region": "europe",
+    "iata_code": "HAM",
+    "airport_name": "Hamburg Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_regional_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "CVG",
+    "airport_name": "Cincinnati/Northern Kentucky International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_regional_airport_in_india_central_asia",
+    "region": "asia",
+    "iata_code": "HDD",
+    "airport_name": "Hyderabad Rajiv Gandhi International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_regional_airport_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_regional_airport_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "ROV",
+    "airport_name": "Rostov-on-Don Platov International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_regional_airport_in_africa",
+    "region": "africa",
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_regional_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_regional_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "MED",
+    "airport_name": "Medina Prince Mohammad Bin Abdulaziz Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_regional_airport_in_central_america",
+    "region": "central_america",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_under_2m_passengers",
+    "region": null,
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_2_5m_passengers",
+    "region": null,
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_5_10m_passengers",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_10_15m_passengers",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_15_20m_passengers",
+    "region": null,
+    "iata_code": "FRA",
+    "airport_name": "Frankfurt Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_20_25m_passengers",
+    "region": null,
+    "iata_code": "LHR",
+    "airport_name": "London Heathrow Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_25_35m_passengers",
+    "region": null,
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_35_45m_passengers",
+    "region": null,
+    "iata_code": "CAN",
+    "airport_name": "Guangzhou Baiyun International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_cleanliness_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_cleanliness_in_asia",
+    "region": "asia",
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_cleanliness_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "SYD",
+    "airport_name": "Sydney Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_cleanliness_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "PTY",
+    "airport_name": "Panama Tocumen International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_cleanliness_in_europe",
+    "region": "europe",
+    "iata_code": "ZRH",
+    "airport_name": "Zurich Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_cleanliness_in_india_central_asia",
+    "region": "asia",
+    "iata_code": "DEL",
+    "airport_name": "Delhi Indira Gandhi International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_cleanliness_in_north_america",
+    "region": "north_america",
+    "iata_code": "YTZ",
+    "airport_name": "Toronto Pearson International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_cleanliness_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "ROV",
+    "airport_name": "Rostov-on-Don Platov International Airport"
+  },
+  {
+    "year": 2021,
+    "category": "best_airport_cleanliness_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "worlds_best_airport",
+    "region": null,
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_asia",
+    "region": "asia",
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "BNE",
+    "airport_name": "Brisbane Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_eastern_europe",
+    "region": "eastern_europe",
+    "iata_code": "BUD",
+    "airport_name": "Budapest Ferenc Liszt International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_northern_europe",
+    "region": "northern_europe",
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_southern_europe",
+    "region": "southern_europe",
+    "iata_code": "IST",
+    "airport_name": "Istanbul Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_western_europe",
+    "region": "western_europe",
+    "iata_code": "CDG",
+    "airport_name": "Paris Charles de Gaulle Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_europe",
+    "region": "europe",
+    "iata_code": "CDG",
+    "airport_name": "Paris Charles de Gaulle Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "SEA",
+    "airport_name": "Seattle-Tacoma International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "BOG",
+    "airport_name": "Bogotá El Dorado International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "PTY",
+    "airport_name": "Panama Tocumen International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_china",
+    "region": "china",
+    "iata_code": "CAN",
+    "airport_name": "Guangzhou Baiyun International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "DEL",
+    "airport_name": "Delhi Indira Gandhi International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "worlds_best_airport_staff",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_staff_in_asia",
+    "region": "asia",
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_staff_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_staff_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "BNE",
+    "airport_name": "Brisbane Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_staff_in_europe",
+    "region": "europe",
+    "iata_code": "FCO",
+    "airport_name": "Rome Fiumicino Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_staff_in_north_america",
+    "region": "north_america",
+    "iata_code": "CVG",
+    "airport_name": "Cincinnati/Northern Kentucky International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_staff_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_staff_in_central_america",
+    "region": "central_america",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_staff_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "MCT",
+    "airport_name": "Muscat International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_staff_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_staff_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "HDD",
+    "airport_name": "Hyderabad Rajiv Gandhi International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "worlds_cleanest_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2022,
+    "category": "cleanest_airport_in_asia",
+    "region": "asia",
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2022,
+    "category": "cleanest_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "cleanest_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "BNE",
+    "airport_name": "Brisbane Airport"
+  },
+  {
+    "year": 2022,
+    "category": "cleanest_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "cleanest_airport_in_europe",
+    "region": "europe",
+    "iata_code": "ZRH",
+    "airport_name": "Zurich Airport"
+  },
+  {
+    "year": 2022,
+    "category": "cleanest_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "DEL",
+    "airport_name": "Delhi Indira Gandhi International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "cleanest_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "SEA",
+    "airport_name": "Seattle-Tacoma International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "cleanest_airport_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "cleanest_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "cleanest_airport_in_china",
+    "region": "china",
+    "iata_code": "CAN",
+    "airport_name": "Guangzhou Baiyun International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "worlds_best_domestic_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2022,
+    "category": "worlds_best_prm_accessible",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2022,
+    "category": "worlds_best_airport_shopping",
+    "region": null,
+    "iata_code": "IST",
+    "airport_name": "Istanbul Airport"
+  },
+  {
+    "year": 2022,
+    "category": "worlds_most_family_friendly",
+    "region": null,
+    "iata_code": "IST",
+    "airport_name": "Istanbul Airport"
+  },
+  {
+    "year": 2022,
+    "category": "worlds_most_improved_airport",
+    "region": null,
+    "iata_code": "XXN",
+    "airport_name": "Riyadh King Khalid International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "worlds_best_airport_baggage_delivery",
+    "region": null,
+    "iata_code": "KIX",
+    "airport_name": "Kansai International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "worlds_best_regional_airport",
+    "region": null,
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2022,
+    "category": "worlds_best_new_airport",
+    "region": null,
+    "iata_code": "BAH",
+    "airport_name": "Bahrain International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_regional_airport_in_asia",
+    "region": "asia",
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_regional_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "ADL",
+    "airport_name": "Adelaide Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_regional_airport_in_europe",
+    "region": "europe",
+    "iata_code": "DUS",
+    "airport_name": "Düsseldorf Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_regional_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "CXO",
+    "airport_name": "Houston Hobby Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_regional_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "BLR",
+    "airport_name": "Bangalore Kempegowda International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_regional_airport_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_regional_airport_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "NQZ",
+    "airport_name": "Nur-Sultan Nursultan Nazarbayev International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_regional_airport_in_africa",
+    "region": "africa",
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_regional_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_regional_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DMM",
+    "airport_name": "Dammam King Fahd International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_regional_airport_in_central_america",
+    "region": "central_america",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_security",
+    "region": null,
+    "iata_code": "ZRH",
+    "airport_name": "Zurich Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_immigration",
+    "region": null,
+    "iata_code": "CPH",
+    "airport_name": "Copenhagen Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_2_5m_passengers",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_5_10m_passengers",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Narita International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_10_15m_passengers",
+    "region": null,
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_15_20m_passengers",
+    "region": null,
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_20_30m_passengers",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_30_40m_passengers",
+    "region": null,
+    "iata_code": "IST",
+    "airport_name": "Istanbul Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_40_plus_passengers",
+    "region": null,
+    "iata_code": "CAN",
+    "airport_name": "Guangzhou Baiyun International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_website_digital",
+    "region": null,
+    "iata_code": "AMS",
+    "airport_name": "Amsterdam Schiphol Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_in_central_europe",
+    "region": "europe",
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2022,
+    "category": "cleanest_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_staff_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "best_airport_under_2m_passengers",
+    "region": null,
+    "iata_code": "HKG",
+    "airport_name": "Hong Kong International Airport"
+  },
+  {
+    "year": 2022,
+    "category": "worlds_best_airport_dining",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_best_airport",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_asia",
+    "region": "asia",
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "MEL",
+    "airport_name": "Melbourne Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_eastern_europe",
+    "region": "eastern_europe",
+    "iata_code": "BUD",
+    "airport_name": "Budapest Ferenc Liszt International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_northern_europe",
+    "region": "northern_europe",
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_southern_europe",
+    "region": "southern_europe",
+    "iata_code": "IST",
+    "airport_name": "Istanbul Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_western_europe",
+    "region": "western_europe",
+    "iata_code": "CDG",
+    "airport_name": "Paris Charles de Gaulle Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_europe",
+    "region": "europe",
+    "iata_code": "CDG",
+    "airport_name": "Paris Charles de Gaulle Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "SEA",
+    "airport_name": "Seattle-Tacoma International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "BOG",
+    "airport_name": "Bogotá El Dorado International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "PTY",
+    "airport_name": "Panama Tocumen International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_china",
+    "region": "china",
+    "iata_code": "CAN",
+    "airport_name": "Guangzhou Baiyun International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "DEL",
+    "airport_name": "Delhi Indira Gandhi International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_best_airport_staff",
+    "region": null,
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_staff_in_asia",
+    "region": "asia",
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_staff_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_staff_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "MEL",
+    "airport_name": "Melbourne Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_staff_in_europe",
+    "region": "europe",
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_staff_in_north_america",
+    "region": "north_america",
+    "iata_code": "YUL",
+    "airport_name": "Montréal-Trudeau International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_staff_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_staff_in_central_america",
+    "region": "central_america",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_staff_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "BAH",
+    "airport_name": "Bahrain International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_staff_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_staff_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "HDD",
+    "airport_name": "Hyderabad Rajiv Gandhi International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_staff_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_cleanest_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2023,
+    "category": "cleanest_airport_in_asia",
+    "region": "asia",
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2023,
+    "category": "cleanest_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "cleanest_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "OOL",
+    "airport_name": "Gold Coast Airport"
+  },
+  {
+    "year": 2023,
+    "category": "cleanest_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "cleanest_airport_in_europe",
+    "region": "europe",
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport"
+  },
+  {
+    "year": 2023,
+    "category": "cleanest_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "DEL",
+    "airport_name": "Delhi Indira Gandhi International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "cleanest_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "YVR",
+    "airport_name": "Vancouver International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "cleanest_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "cleanest_airport_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_best_domestic_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_best_prm_accessible",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_best_airport_dining",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_best_airport_leisure",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_best_airport_shopping",
+    "region": null,
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_most_family_friendly",
+    "region": null,
+    "iata_code": "IST",
+    "airport_name": "Istanbul Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_most_improved_airport",
+    "region": null,
+    "iata_code": "SZX",
+    "airport_name": "Shenzhen Bao'an International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_best_airport_baggage_delivery",
+    "region": null,
+    "iata_code": "BAH",
+    "airport_name": "Bahrain International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_best_airport_security",
+    "region": null,
+    "iata_code": "ZRH",
+    "airport_name": "Zurich Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_best_airport_immigration",
+    "region": null,
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_best_regional_airport",
+    "region": null,
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2023,
+    "category": "worlds_best_art_in_airport",
+    "region": null,
+    "iata_code": "CXO",
+    "airport_name": "Houston Airport System"
+  },
+  {
+    "year": 2023,
+    "category": "best_regional_airport_in_asia",
+    "region": "asia",
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_regional_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "OOL",
+    "airport_name": "Gold Coast Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_regional_airport_in_europe",
+    "region": "europe",
+    "iata_code": "DUS",
+    "airport_name": "Düsseldorf Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_regional_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "CXO",
+    "airport_name": "Houston Hobby Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_regional_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "HDD",
+    "airport_name": "Hyderabad Rajiv Gandhi International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_regional_airport_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_regional_airport_in_russia_cis",
+    "region": "russia_cis",
+    "iata_code": "NQZ",
+    "airport_name": "Nur-Sultan Nursultan Nazarbayev International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_regional_airport_in_africa",
+    "region": "africa",
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_regional_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_regional_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DMM",
+    "airport_name": "Dammam King Fahd International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_regional_airport_in_central_america",
+    "region": "central_america",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2023,
+    "category": "best_airport_in_central_europe",
+    "region": "europe",
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_best_airport",
+    "region": null,
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_asia",
+    "region": "asia",
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "MEL",
+    "airport_name": "Melbourne Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_eastern_europe",
+    "region": "eastern_europe",
+    "iata_code": "BUD",
+    "airport_name": "Budapest Ferenc Liszt International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_northern_europe",
+    "region": "northern_europe",
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_southern_europe",
+    "region": "southern_europe",
+    "iata_code": "IST",
+    "airport_name": "Istanbul Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_western_europe",
+    "region": "western_europe",
+    "iata_code": "CDG",
+    "airport_name": "Paris Charles de Gaulle Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_europe",
+    "region": "europe",
+    "iata_code": "CDG",
+    "airport_name": "Paris Charles de Gaulle Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "YVR",
+    "airport_name": "Vancouver International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "BOG",
+    "airport_name": "Bogotá El Dorado International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "PTY",
+    "airport_name": "Panama Tocumen International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_china",
+    "region": "china",
+    "iata_code": "CAN",
+    "airport_name": "Guangzhou Baiyun International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "DEL",
+    "airport_name": "Delhi Indira Gandhi International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_best_airport_staff",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Narita International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_staff_in_asia",
+    "region": "asia",
+    "iata_code": "HND",
+    "airport_name": "Tokyo Narita International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_staff_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_staff_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "PER",
+    "airport_name": "Perth Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_staff_in_europe",
+    "region": "europe",
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_staff_in_north_america",
+    "region": "north_america",
+    "iata_code": "DFW",
+    "airport_name": "Dallas/Fort Worth International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_staff_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "HDD",
+    "airport_name": "Hyderabad Rajiv Gandhi International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_staff_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "BAH",
+    "airport_name": "Bahrain International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_staff_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_cleanest_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2024,
+    "category": "cleanest_airport_in_asia",
+    "region": "asia",
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2024,
+    "category": "cleanest_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "cleanest_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "BNE",
+    "airport_name": "Brisbane Airport"
+  },
+  {
+    "year": 2024,
+    "category": "cleanest_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "cleanest_airport_in_europe",
+    "region": "europe",
+    "iata_code": "ZRH",
+    "airport_name": "Zurich Airport"
+  },
+  {
+    "year": 2024,
+    "category": "cleanest_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "BLR",
+    "airport_name": "Bangalore Kempegowda International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "cleanest_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "YVR",
+    "airport_name": "Vancouver International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "cleanest_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "cleanest_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "cleanest_airport_in_china",
+    "region": "china",
+    "iata_code": "SHA",
+    "airport_name": "Shanghai Hongqiao International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_best_domestic_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_best_prm_accessible",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_best_airport_shopping",
+    "region": null,
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_best_airport_immigration",
+    "region": null,
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_best_airport_baggage_delivery",
+    "region": null,
+    "iata_code": "KIX",
+    "airport_name": "Kansai International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_most_family_friendly",
+    "region": null,
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_most_improved_airport",
+    "region": null,
+    "iata_code": "CTS",
+    "airport_name": "New Chitose Airport"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_best_art_in_airport",
+    "region": null,
+    "iata_code": "CXO",
+    "airport_name": "Houston Airport System"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_best_regional_airport",
+    "region": null,
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_regional_airport_in_asia",
+    "region": "asia",
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_regional_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "ADL",
+    "airport_name": "Adelaide Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_regional_airport_in_europe",
+    "region": "europe",
+    "iata_code": "DUS",
+    "airport_name": "Düsseldorf Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_regional_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "CXO",
+    "airport_name": "Houston Hobby Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_regional_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "BLR",
+    "airport_name": "Bangalore Kempegowda International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_regional_airport_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_regional_airport_in_central_asia_cis",
+    "region": "asia",
+    "iata_code": "NQZ",
+    "airport_name": "Nur-Sultan Nursultan Nazarbayev International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_regional_airport_in_africa",
+    "region": "africa",
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_regional_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_regional_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "MED",
+    "airport_name": "Medina Prince Mohammad Bin Abdulaziz Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_regional_airport_in_central_america",
+    "region": "central_america",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_security",
+    "region": null,
+    "iata_code": "FCO",
+    "airport_name": "Rome Fiumicino Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_under_5m_passengers",
+    "region": null,
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_5_10m_passengers",
+    "region": null,
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_10_20m_passengers",
+    "region": null,
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_20_30m_passengers",
+    "region": null,
+    "iata_code": "ZRH",
+    "airport_name": "Zurich Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_30_40m_passengers",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Narita International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_40_50m_passengers",
+    "region": null,
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_50_60m_passengers",
+    "region": null,
+    "iata_code": "FCO",
+    "airport_name": "Rome Fiumicino Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_60_70m_passengers",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_70_plus_passengers",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_central_asia_cis",
+    "region": "asia",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_staff_in_central_asia_cis",
+    "region": "asia",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "cleanest_airport_in_central_asia_cis",
+    "region": "asia",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_staff_in_south_america",
+    "region": "south_america",
+    "iata_code": "BOG",
+    "airport_name": "Bogotá El Dorado International Airport"
+  },
+  {
+    "year": 2024,
+    "category": "best_airport_in_central_europe",
+    "region": "europe",
+    "iata_code": "MUC",
+    "airport_name": "Munich Airport"
+  },
+  {
+    "year": 2024,
+    "category": "worlds_best_airport_dining",
+    "region": null,
+    "iata_code": "IST",
+    "airport_name": "Istanbul Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_best_airport",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_asia",
+    "region": "asia",
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "MEL",
+    "airport_name": "Melbourne Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_eastern_europe",
+    "region": "eastern_europe",
+    "iata_code": "BUD",
+    "airport_name": "Budapest Ferenc Liszt International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_northern_europe",
+    "region": "northern_europe",
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_southern_europe",
+    "region": "southern_europe",
+    "iata_code": "FCO",
+    "airport_name": "Rome Fiumicino Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_western_europe",
+    "region": "western_europe",
+    "iata_code": "CDG",
+    "airport_name": "Paris Charles de Gaulle Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_europe",
+    "region": "europe",
+    "iata_code": "CDG",
+    "airport_name": "Paris Charles de Gaulle Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "YVR",
+    "airport_name": "Vancouver International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_central_asia_cis",
+    "region": "asia",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "BOG",
+    "airport_name": "Bogotá El Dorado International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_china",
+    "region": "china",
+    "iata_code": "CAN",
+    "airport_name": "Guangzhou Baiyun International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "DEL",
+    "airport_name": "Delhi Indira Gandhi International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_best_airport_staff",
+    "region": null,
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_staff_in_asia",
+    "region": "asia",
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_staff_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_staff_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "BNE",
+    "airport_name": "Brisbane Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_staff_in_europe",
+    "region": "europe",
+    "iata_code": "VIE",
+    "airport_name": "Vienna International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_staff_in_north_america",
+    "region": "north_america",
+    "iata_code": "YUL",
+    "airport_name": "Montréal-Trudeau International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_staff_in_south_america",
+    "region": "south_america",
+    "iata_code": "SCQ",
+    "airport_name": "Santiago Arturo Merino Benítez Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_staff_in_central_america",
+    "region": "central_america",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_staff_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "XXN",
+    "airport_name": "Riyadh King Khalid International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_staff_in_central_asia_cis",
+    "region": "asia",
+    "iata_code": "NQZ",
+    "airport_name": "Nur-Sultan Nursultan Nazarbayev International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_staff_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "HDD",
+    "airport_name": "Hyderabad Rajiv Gandhi International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_staff_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_cleanest_major_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2025,
+    "category": "cleanest_airport_in_asia",
+    "region": "asia",
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2025,
+    "category": "cleanest_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "cleanest_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "ADL",
+    "airport_name": "Adelaide Airport"
+  },
+  {
+    "year": 2025,
+    "category": "cleanest_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "cleanest_airport_in_europe",
+    "region": "europe",
+    "iata_code": "ZRH",
+    "airport_name": "Zurich Airport"
+  },
+  {
+    "year": 2025,
+    "category": "cleanest_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "GOX",
+    "airport_name": "Goa Manohar International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "cleanest_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "YUL",
+    "airport_name": "Montréal-Trudeau International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "cleanest_airport_in_central_asia_cis",
+    "region": "asia",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "cleanest_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "cleanest_airport_in_china",
+    "region": "china",
+    "iata_code": "SHA",
+    "airport_name": "Shanghai Hongqiao International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "cleanest_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "BAH",
+    "airport_name": "Bahrain International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "cleanest_airport_under_25m_passengers",
+    "region": null,
+    "iata_code": "BAH",
+    "airport_name": "Bahrain International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_best_domestic_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_best_prm_accessible",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_best_airport_dining",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_best_airport_washrooms",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_best_airport_shopping",
+    "region": null,
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_most_improved_airport",
+    "region": null,
+    "iata_code": "BER",
+    "airport_name": "Berlin Brandenburg Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_best_airport_baggage_delivery",
+    "region": null,
+    "iata_code": "TPE",
+    "airport_name": "Taiwan Taoyuan International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_best_art_in_airport",
+    "region": null,
+    "iata_code": "CXO",
+    "airport_name": "Houston Airport System"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_best_airport_security",
+    "region": null,
+    "iata_code": "CPH",
+    "airport_name": "Copenhagen Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_best_airport_immigration",
+    "region": null,
+    "iata_code": "HKG",
+    "airport_name": "Hong Kong International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_best_regional_airport",
+    "region": null,
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_regional_airport_in_asia",
+    "region": "asia",
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_regional_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "ADL",
+    "airport_name": "Adelaide Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_regional_airport_in_europe",
+    "region": "europe",
+    "iata_code": "DUS",
+    "airport_name": "Düsseldorf Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_regional_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "NYS",
+    "airport_name": "New York LaGuardia Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_regional_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "BLR",
+    "airport_name": "Bangalore Kempegowda International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_regional_airport_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_regional_airport_in_central_asia_cis",
+    "region": "asia",
+    "iata_code": "ALA",
+    "airport_name": "Almaty International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_regional_airport_in_africa",
+    "region": "africa",
+    "iata_code": "DUR",
+    "airport_name": "Durban King Shaka International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_regional_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_regional_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "MED",
+    "airport_name": "Medina Prince Mohammad Bin Abdulaziz Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_regional_airport_in_central_america",
+    "region": "central_america",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_under_5m_passengers",
+    "region": null,
+    "iata_code": "GOX",
+    "airport_name": "Goa Manohar International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_5_10m_passengers",
+    "region": null,
+    "iata_code": "BAH",
+    "airport_name": "Bahrain International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_10_20m_passengers",
+    "region": null,
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_20_30m_passengers",
+    "region": null,
+    "iata_code": "ZRH",
+    "airport_name": "Zurich Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_30_40m_passengers",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Narita International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_40_50m_passengers",
+    "region": null,
+    "iata_code": "FCO",
+    "airport_name": "Rome Fiumicino Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_50_60m_passengers",
+    "region": null,
+    "iata_code": "DOH",
+    "airport_name": "Doha Hamad International Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_60_70m_passengers",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2025,
+    "category": "best_airport_70_plus_passengers",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2025,
+    "category": "worlds_most_family_friendly",
+    "region": null,
+    "iata_code": "IST",
+    "airport_name": "Istanbul Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_best_airport",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_asia",
+    "region": "asia",
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "MEL",
+    "airport_name": "Melbourne Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_eastern_europe",
+    "region": "eastern_europe",
+    "iata_code": "BUD",
+    "airport_name": "Budapest Ferenc Liszt International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_northern_europe",
+    "region": "northern_europe",
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_southern_europe",
+    "region": "southern_europe",
+    "iata_code": "FCO",
+    "airport_name": "Rome Fiumicino Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_western_europe",
+    "region": "western_europe",
+    "iata_code": "CDG",
+    "airport_name": "Paris Charles de Gaulle Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_europe",
+    "region": "europe",
+    "iata_code": "CDG",
+    "airport_name": "Paris Charles de Gaulle Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "BAH",
+    "airport_name": "Bahrain International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "YVR",
+    "airport_name": "Vancouver International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_central_asia_cis",
+    "region": "asia",
+    "iata_code": "GYD",
+    "airport_name": "Baku Heydar Aliyev International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "BOG",
+    "airport_name": "Bogotá El Dorado International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "PUJ",
+    "airport_name": "Punta Cana International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_china",
+    "region": "china",
+    "iata_code": "CAN",
+    "airport_name": "Guangzhou Baiyun International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "DEL",
+    "airport_name": "Delhi Indira Gandhi International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_best_airport_staff",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Narita International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_staff_in_asia",
+    "region": "asia",
+    "iata_code": "HND",
+    "airport_name": "Tokyo Narita International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_staff_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_staff_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "ADL",
+    "airport_name": "Adelaide Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_staff_in_north_america",
+    "region": "north_america",
+    "iata_code": "YTZ",
+    "airport_name": "Toronto Pearson International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_staff_in_south_america",
+    "region": "south_america",
+    "iata_code": "SCQ",
+    "airport_name": "Santiago Arturo Merino Benítez Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_staff_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "CUR",
+    "airport_name": "Curaçao International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_staff_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "BAH",
+    "airport_name": "Bahrain International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_staff_in_central_asia_cis",
+    "region": "asia",
+    "iata_code": "ALA",
+    "airport_name": "Almaty International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_staff_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "HDD",
+    "airport_name": "Hyderabad Rajiv Gandhi International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_staff_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_cleanest_major_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2026,
+    "category": "cleanest_airport_in_asia",
+    "region": "asia",
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2026,
+    "category": "cleanest_airport_in_africa",
+    "region": "africa",
+    "iata_code": "CPT",
+    "airport_name": "Cape Town International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "cleanest_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "BNE",
+    "airport_name": "Brisbane Airport"
+  },
+  {
+    "year": 2026,
+    "category": "cleanest_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "PUJ",
+    "airport_name": "Punta Cana International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "cleanest_airport_in_europe",
+    "region": "europe",
+    "iata_code": "FCO",
+    "airport_name": "Rome Fiumicino Airport"
+  },
+  {
+    "year": 2026,
+    "category": "cleanest_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "GOX",
+    "airport_name": "Goa Manohar International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "cleanest_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "CXO",
+    "airport_name": "Houston Hobby Airport"
+  },
+  {
+    "year": 2026,
+    "category": "cleanest_airport_in_central_asia_cis",
+    "region": "asia",
+    "iata_code": "ALA",
+    "airport_name": "Almaty International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "cleanest_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "cleanest_airport_in_china",
+    "region": "china",
+    "iata_code": "SHA",
+    "airport_name": "Shanghai Hongqiao International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "cleanest_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "BAH",
+    "airport_name": "Bahrain International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_best_domestic_airport",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_best_prm_accessible",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_best_airport_dining",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_best_airport_immigration",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_best_airport_shopping",
+    "region": null,
+    "iata_code": "LHR",
+    "airport_name": "London Heathrow Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_best_airport_washrooms",
+    "region": null,
+    "iata_code": "HKG",
+    "airport_name": "Hong Kong International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_best_airport_security",
+    "region": null,
+    "iata_code": "HKG",
+    "airport_name": "Hong Kong International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_most_improved_airport",
+    "region": null,
+    "iata_code": "XXN",
+    "airport_name": "Riyadh King Khalid International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_most_family_friendly",
+    "region": null,
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_best_airport_baggage_delivery",
+    "region": null,
+    "iata_code": "TPE",
+    "airport_name": "Taiwan Taoyuan International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_best_art_in_airport",
+    "region": null,
+    "iata_code": "CXO",
+    "airport_name": "Houston Airport System"
+  },
+  {
+    "year": 2026,
+    "category": "worlds_best_regional_airport",
+    "region": null,
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_regional_airport_in_asia",
+    "region": "asia",
+    "iata_code": "NGO",
+    "airport_name": "Centrair Nagoya Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_regional_airport_in_australia_pacific",
+    "region": "australia_pacific",
+    "iata_code": "ADL",
+    "airport_name": "Adelaide Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_regional_airport_in_europe",
+    "region": "europe",
+    "iata_code": "OPL",
+    "airport_name": "Paris Orly Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_regional_airport_in_north_america",
+    "region": "north_america",
+    "iata_code": "CVG",
+    "airport_name": "Cincinnati/Northern Kentucky International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_regional_airport_in_india_south_asia",
+    "region": "asia",
+    "iata_code": "BLR",
+    "airport_name": "Bangalore Kempegowda International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_regional_airport_in_china",
+    "region": "china",
+    "iata_code": "HAK",
+    "airport_name": "Haikou Meilan International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_regional_airport_in_central_asia_cis",
+    "region": "asia",
+    "iata_code": "NQZ",
+    "airport_name": "Nur-Sultan Nursultan Nazarbayev International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_regional_airport_in_africa",
+    "region": "africa",
+    "iata_code": "RAK",
+    "airport_name": "Marrakech Menara Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_regional_airport_in_south_america",
+    "region": "south_america",
+    "iata_code": "UIO",
+    "airport_name": "Quito Mariscal Sucre International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_regional_airport_in_middle_east",
+    "region": "middle_east",
+    "iata_code": "MED",
+    "airport_name": "Medina Prince Mohammad Bin Abdulaziz Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_regional_airport_in_central_america_caribbean",
+    "region": "central_america_caribbean",
+    "iata_code": "SJO",
+    "airport_name": "San José Juan Santamaría International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_under_5m_passengers",
+    "region": null,
+    "iata_code": "GOX",
+    "airport_name": "Goa Manohar International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_5_10m_passengers",
+    "region": null,
+    "iata_code": "BAH",
+    "airport_name": "Bahrain International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_10_20m_passengers",
+    "region": null,
+    "iata_code": "HEL",
+    "airport_name": "Helsinki-Vantaa Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_20_30m_passengers",
+    "region": null,
+    "iata_code": "YVR",
+    "airport_name": "Vancouver International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_30_40m_passengers",
+    "region": null,
+    "iata_code": "XXN",
+    "airport_name": "Riyadh King Khalid International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_40_50m_passengers",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Narita International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_50_60m_passengers",
+    "region": null,
+    "iata_code": "FCO",
+    "airport_name": "Rome Fiumicino Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_60_70m_passengers",
+    "region": null,
+    "iata_code": "SIN",
+    "airport_name": "Singapore Changi Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_70_plus_passengers",
+    "region": null,
+    "iata_code": "ICN",
+    "airport_name": "Seoul Incheon International Airport"
+  },
+  {
+    "year": 2026,
+    "category": "best_airport_80_plus_passengers",
+    "region": null,
+    "iata_code": "HND",
+    "airport_name": "Tokyo Haneda Airport"
+  }
+]

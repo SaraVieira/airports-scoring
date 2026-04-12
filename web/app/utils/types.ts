@@ -12,5 +12,4 @@ export type TimelineEvent = {
   detail?: string;
   color: string;
 };
-export type AciAwards = Record<string, Record<string, string>>;
 export type SkytraxHistory = Record<string, number>;
