@@ -1,0 +1,35 @@
+python3 << 'EOF'
+from seleniumbase import SB
+import time
+
+with SB(browser="chrome", headless=True, uc=True) as sb:
+    sb.open("https://maps.app.goo.gl/SBXuEheNzAtRHypa9")
+    time.sleep(5)
+    try:
+        sb.click('button[aria-label*="Alle akzeptieren"]', timeout=3)
+        time.sleep(2)
+    except:
+        pass
+    try:
+        sb.click('button[aria-label*="Rezensionen"]', timeout=5)
+        time.sleep(3)
+    except:
+        try:
+            sb.click('button[aria-label*="Reviews"]', timeout=3)
+            time.sleep(3)
+        except:
+            pass
+    cards = sb.find_elements('div[data-review-id]')
+    print(f"Found {len(cards)} review cards with data-review-id")
+    try:
+        pane = sb.find_element("div.m6QErb.DxyBCb.kA9KIf.dS8AEf")
+        children = pane.find_elements("css selector", "*")
+        print(f"Pane has {len(children)} child elements")
+        for c in children[:10]:
+            tag = c.tag_name
+            cls = c.get_attribute("class") or ""
+            rid = c.get_attribute("data-review-id") or ""
+            print(f'  <{tag} class="{cls[:50]}" review-id="{rid}">')
+    except Exception as e:
+        print(f"No pane found: {e}")
+EOF

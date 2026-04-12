@@ -1366,9 +1366,22 @@ class GoogleReviewsScraper:
                 )
                 stop_threshold = 0
 
-            # Add a longer wait after setting sort to allow results to load
+            # Wait for review cards to actually render after sorting.
+            # Chrome 147+ can be slow to re-render the review list after a sort change.
             log.info("Waiting for reviews to render...")
-            time.sleep(1.5)
+            cards_appeared = False
+            for attempt in range(10):
+                time.sleep(1.5)
+                try:
+                    cards_check = driver.find_elements(By.CSS_SELECTOR, CARD_SEL)
+                    if cards_check:
+                        log.info(f"Review cards appeared after {(attempt + 1) * 1.5:.1f}s ({len(cards_check)} cards)")
+                        cards_appeared = True
+                        break
+                except Exception:
+                    pass
+            if not cards_appeared:
+                log.warning("Review cards did not appear after 15s — proceeding anyway")
 
             # Use try-except to handle cases where the pane is not found
             # Try multiple selectors for the reviews pane
