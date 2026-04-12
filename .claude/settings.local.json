@@ -124,7 +124,9 @@
       "Bash(git checkout:*)",
       "Bash(cargo clippy:*)",
       "Bash(psql:*)",
-      "Bash(.venv/bin/python3 python/priority_pass_scraper.py --airport BCN)"
+      "Bash(.venv/bin/python3 python/priority_pass_scraper.py --airport BCN)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "WebFetch(domain:de.wikipedia.org)"
     ]
   }
 }

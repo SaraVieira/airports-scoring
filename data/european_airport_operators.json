@@ -517,7 +517,8 @@
       "SJY",
       "KOK",
       "VAA",
-      "ENF"
+      "ENF",
+      "SVL"
     ]
   },
   {
@@ -1293,8 +1294,7 @@
       "SMA",
       "FLW",
       "FNC",
-      "PXO",
-      "TER"
+      "PXO"
     ]
   },
   {
@@ -1903,5 +1903,125 @@
     "public_share_pct": 100.00,
     "notes": "Slovak Republic (Ministry of Transport) 97.61%; City of Poprad 1.67%; Town of Vysoké Tatry 0.72%. Joint-stock company formed 2005-01-01. One of the highest-elevation commercial airports in Central Europe (718m). Serves the High Tatras ski region.",
     "airports": ["TAT"]
+  },
+  {
+    "name": "SATA Gestão de Aeródromos, S.A.",
+    "short_name": "SATA Gestão de Aeródromos",
+    "country_code": "PT",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "Subsidiary of SATA Air Açores, owned by the Regional Government of the Azores. Operates the four smaller Azorean airports not in ANA's concession — Pico, Graciosa, São Jorge, and Corvo. The six larger Azorean airports under ANA/VINCI are PDL, HOR, SMA, and FLW (Flores is in the ANA concession despite being small).",
+    "airports": ["PIX", "GRW", "SJZ", "CVU"]
+  },
+  {
+    "name": "Aerogare Civil das Lajes",
+    "short_name": "ACL",
+    "country_code": "PT",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "Civil terminal at Lajes Airport on Terceira Island, directly operated by the Regional Government of the Azores (Governo dos Açores) — not a standalone company. Shares the airfield with Base Aérea nº 4 (Portuguese Air Force), which owns and operates the runway. US Air Force maintained a detachment at Lajes Field historically, now drawn down. The civil aerogare and the military base are separate operations. Lajes is NOT part of the ANA/VINCI concession. SATA Handling provides ground services. Capacity ~750,000 pax/year.",
+    "airports": ["TER"]
+  },
+  {
+    "name": "City of Mikkeli",
+    "short_name": "Mikkeli Municipality",
+    "country_code": "FI",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "Municipal airport owned and operated by the City of Mikkeli. No scheduled commercial flights — used for general aviation, gliding, and parachute jumping. Regional capital of South Savo.",
+    "airports": ["MIK"]
+  },
+  {
+    "name": "Municipality of Sodankylä",
+    "short_name": "Sodankylä Municipality",
+    "country_code": "FI",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "Municipal airfield in Lapland, operated by Sodankylän kunta. No scheduled commercial flights. Technical services provided by Sodankylä Airport Technical Service Oy.",
+    "airports": ["SOT"]
+  },
+  {
+    "name": "Hyvinkään Ilmailukerho ry",
+    "short_name": "Hyvinkää Aviation Club",
+    "country_code": "FI",
+    "org_type": "both",
+    "ownership_model": "private",
+    "public_share_pct": 0.00,
+    "notes": "Aviation club (registered association) operating Hyvinkää Airfield. One of Finland's most active general aviation and gliding airfields. No commercial scheduled flights. Located in Uusimaa region, ~50 km north of Helsinki.",
+    "airports": ["HYV"]
+  },
+  {
+    "name": "Flughafen Erfurt GmbH",
+    "short_name": "Erfurt Airport",
+    "country_code": "DE",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "Free State of Thuringia 95%, City of Erfurt 5%. Branded as Flughafen Erfurt-Weimar. Limited scheduled service; primarily charter and general aviation.",
+    "airports": ["ERF"]
+  },
+  {
+    "name": "Flughafen Friedrichshafen GmbH",
+    "short_name": "Friedrichshafen Airport",
+    "country_code": "DE",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "Majority owned by the City of Friedrichshafen and Bodenseekreis (county). Branded as Bodensee-Airport. Located on Lake Constance; serves ~500K pax/year.",
+    "airports": ["FDH"]
+  },
+  {
+    "name": "Flughafen Münster/Osnabrück GmbH",
+    "short_name": "FMO Airport",
+    "country_code": "DE",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "Founded 1966 by the cities of Münster, Osnabrück, and Greven plus the districts of Münster and Tecklenburg. All shareholders are public entities.",
+    "airports": ["FMO"]
+  },
+  {
+    "name": "Flughafen Sylt GmbH",
+    "short_name": "Sylt Airport",
+    "country_code": "DE",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "Five municipal shareholders including the municipalities of Kampen, Hörnum, and List auf Sylt. Took over civilian operations from the Bundeswehr in 1972. Located on the North Sea island of Sylt, Schleswig-Holstein.",
+    "airports": ["GWT"]
+  },
+  {
+    "name": "Flughafen Heringsdorf GmbH",
+    "short_name": "Heringsdorf Airport",
+    "country_code": "DE",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "Regional airport on the island of Usedom, Mecklenburg-Vorpommern. Seasonal service primarily to destinations in Germany, Austria, and Switzerland.",
+    "airports": ["HDF"]
+  },
+  {
+    "name": "Tees Valley Combined Authority",
+    "short_name": "Teesside Airport",
+    "country_code": "GB",
+    "org_type": "both",
+    "ownership_model": "public",
+    "public_share_pct": 100.00,
+    "notes": "Tees Valley Combined Authority 75%, Teesside Airport Foundation 25%. Brought back into public ownership in Jan 2019 for £40m after 16 years under Peel Airports. Day-to-day operations managed by Stobart Aviation. Rebranded from Durham Tees Valley to Teesside International in Jul 2019.",
+    "airports": ["MME"]
+  },
+  {
+    "name": "Flughafen Rostock-Laage-Güstrow GmbH",
+    "short_name": "Rostock-Laage Airport",
+    "country_code": "DE",
+    "org_type": "both",
+    "ownership_model": "private",
+    "public_share_pct": 0.00,
+    "notes": "100% Zeitfracht Group since Jan 2022 (privatized). Previously owned by Rostocker Versorgungs- und Verkehrsholding 54.1%, Landkreis Rostock 35.6%, City of Laage 10.3%. Shares airfield with Fliegerhorst Laage (Luftwaffe Eurofighter base) — unique military-civilian arrangement in Germany. Largest commercial airport in Mecklenburg-Vorpommern.",
+    "airports": ["RLG"]
   }
 ]

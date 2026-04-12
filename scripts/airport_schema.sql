@@ -310,7 +310,7 @@ CREATE TABLE sentiment_snapshots (
         CHECK (snapshot_quarter BETWEEN 1 AND 4),
 
     -- Core metrics
-    avg_rating          NUMERIC(3,2),          -- normalised to 0-5 scale
+    avg_rating          NUMERIC(4,2),          -- normalised to 1-10 scale
     review_count        INTEGER,
     positive_pct        NUMERIC(5,2),          -- % reviews positive
     negative_pct        NUMERIC(5,2),
