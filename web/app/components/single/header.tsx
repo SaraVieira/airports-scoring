@@ -35,8 +35,8 @@ export const Header = ({
           <span className="font-mono text-[11px] text-zinc-600 tracking-wider uppercase">
             Operated by{" "}
             <Link
-              to="/operators/$id"
-              params={{ id: String(airport.operator.id) }}
+              to="/operators/$slug"
+              params={{ slug: airport.operator.slug || String(airport.operator.id) }}
               className="text-zinc-400 hover:text-zinc-200 transition-colors underline underline-offset-2 decoration-zinc-700"
             >
               {airport.operator.name}

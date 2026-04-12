@@ -108,9 +108,9 @@ export const api = {
     apiFetch<import("./types").components["schemas"]["OperatorListItem"][]>(
       `/api/operators`,
     ),
-  getOperator: (id: number) =>
+  getOperator: (slug: string) =>
     apiFetch<import("./types").components["schemas"]["OperatorDetail"]>(
-      `/api/operators/${id}`,
+      `/api/operators/${slug}`,
     ),
   getCountryAirports: (code: string) =>
     apiFetch<import("./types").components["schemas"]["AirportListItem"][]>(

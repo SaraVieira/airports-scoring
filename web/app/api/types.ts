@@ -891,6 +891,7 @@ export interface components {
             /** Format: double */
             publicSharePct?: number | null;
             shortName?: string | null;
+            slug?: string | null;
         };
         OperatorListItem: {
             /** Format: int64 */
@@ -908,6 +909,7 @@ export interface components {
             /** Format: double */
             publicSharePct?: number | null;
             shortName?: string | null;
+            slug?: string | null;
             /** Format: int64 */
             totalPax?: number | null;
         };
@@ -919,6 +921,7 @@ export interface components {
             orgType?: string | null;
             ownershipModel?: string | null;
             shortName?: string | null;
+            slug?: string | null;
         };
         PaxYearlyResponse: {
             /** Format: int32 */

@@ -38,10 +38,16 @@ jq -c '.[]' "$JSON_FILE" | while IFS= read -r org; do
   PUBLIC_PCT=$(echo "$org" | jq -r '.public_share_pct')
   NOTES=$(echo "$org" | jq -r '.notes')
 
-  # Insert organisation
+  # Insert organisation with generated slug
   ORG_ID=$(psql "$DB" -tA -c "
-    INSERT INTO organisations (name, short_name, country_code, org_type, ownership_model, public_share_pct, notes)
-    VALUES (\$\$${NAME}\$\$, \$\$${SHORT}\$\$, '${COUNTRY}', '${ORG_TYPE}', '${OWNERSHIP}', ${PUBLIC_PCT}, \$\$${NOTES}\$\$)
+    INSERT INTO organisations (name, short_name, country_code, org_type, ownership_model, public_share_pct, notes, slug)
+    VALUES (
+      \$\$${NAME}\$\$, \$\$${SHORT}\$\$, '${COUNTRY}', '${ORG_TYPE}', '${OWNERSHIP}', ${PUBLIC_PCT}, \$\$${NOTES}\$\$,
+      LOWER(TRIM(BOTH '-' FROM REGEXP_REPLACE(
+        REGEXP_REPLACE(unaccent(\$\$${NAME}\$\$), '-+', '-', 'g'),
+        '[^a-zA-Z0-9]+', '-', 'g'
+      )))
+    )
     RETURNING id;
   " 2>/dev/null | head -1)
 

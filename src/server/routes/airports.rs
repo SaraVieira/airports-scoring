@@ -69,6 +69,7 @@ pub struct AirportDetailResponse {
 #[serde(rename_all = "camelCase")]
 pub struct OrganisationResponse {
     pub id: i32,
+    pub slug: Option<String>,
     pub name: String,
     pub short_name: Option<String>,
     pub country_code: Option<String>,
@@ -278,6 +279,7 @@ pub struct SourceBreakdownResponse {
 #[derive(FromRow)]
 struct OrgRow {
     id: i32,
+    slug: Option<String>,
     name: String,
     short_name: Option<String>,
     country_code: Option<String>,
@@ -460,7 +462,7 @@ fn dec_to_f64(d: Option<rust_decimal::Decimal>) -> Option<f64> {
 async fn fetch_org(pool: &PgPool, org_id: Option<i32>) -> Option<OrganisationResponse> {
     let id = org_id?;
     sqlx::query_as::<_, OrgRow>(
-        "SELECT id, name, short_name, country_code, org_type, ownership_model
+        "SELECT id, slug, name, short_name, country_code, org_type, ownership_model
          FROM organisations WHERE id = $1",
     )
     .bind(id)
@@ -470,6 +472,7 @@ async fn fetch_org(pool: &PgPool, org_id: Option<i32>) -> Option<OrganisationRes
     .flatten()
     .map(|r| OrganisationResponse {
         id: r.id,
+        slug: r.slug,
         name: r.name,
         short_name: r.short_name,
         country_code: r.country_code,
@@ -935,7 +938,10 @@ pub async fn get_airport(
     let ground_transport = fetch_ground_transport(pool, aid).await;
     let lounges = fetch_lounges(pool, aid).await;
     let hub_status = fetch_hub_status(pool, aid).await;
-    let awards = fetch_awards(pool, airport.iata_code.as_deref().unwrap_or("")).await;
+    let awards = match airport.iata_code.as_deref() {
+        Some(code) => fetch_awards(pool, code).await,
+        None => vec![],
+    };
     let recent_reviews = fetch_recent_reviews(pool, aid).await;
     let ranking = fetch_ranking(pool, aid).await;
     let google_agg = fetch_google_agg(pool, aid).await;
@@ -1255,7 +1261,8 @@ pub async fn airports_by_country(
     let results = sqlx::query_as::<_, AirportListItem>(
         "SELECT a.iata_code, a.name, a.city, a.country_code,
                 s.score_total::float8 as score_total,
-                s.score_sentiment_velocity::float8 as score_sentiment_velocity
+                s.score_sentiment_velocity::float8 as score_sentiment_velocity,
+                (SELECT COUNT(*) FROM airport_awards aw WHERE aw.iata_code = a.iata_code) as award_count
          FROM airports a
          LEFT JOIN airport_scores s ON s.airport_id = a.id AND s.is_latest = TRUE
          WHERE a.country_code = $1 AND a.in_seed_set = TRUE
@@ -1347,12 +1354,9 @@ pub async fn get_best_reviewed(
          INNER JOIN airports a ON a.id = ss.airport_id
          WHERE ss.avg_rating IS NOT NULL
            AND a.in_seed_set = true
-           AND (ss.snapshot_year, ss.snapshot_quarter) = (
-             SELECT MAX(ss2.snapshot_year), MAX(ss2.snapshot_quarter)
-             FROM sentiment_snapshots ss2 WHERE ss2.airport_id = ss.airport_id
-           )
+           AND ss.snapshot_year >= EXTRACT(YEAR FROM NOW())::int - 2
          GROUP BY a.iata_code, a.name, a.city, a.country_code
-         HAVING SUM(ss.review_count) >= 10
+         HAVING SUM(ss.review_count) >= 100
          ORDER BY avg_rating DESC
          LIMIT 10",
     )
@@ -1454,6 +1458,7 @@ pub async fn get_map_airports(
 #[serde(rename_all = "camelCase")]
 pub struct OperatorListItem {
     pub id: i32,
+    pub slug: Option<String>,
     pub name: String,
     pub short_name: Option<String>,
     pub country_code: Option<String>,
@@ -1470,6 +1475,7 @@ pub struct OperatorListItem {
 #[serde(rename_all = "camelCase")]
 pub struct OperatorDetail {
     pub id: i32,
+    pub slug: Option<String>,
     pub name: String,
     pub short_name: Option<String>,
     pub country_code: Option<String>,
@@ -1495,6 +1501,7 @@ pub struct OperatorAirportItem {
 #[derive(FromRow)]
 struct OperatorOrgRow {
     id: i32,
+    slug: Option<String>,
     name: String,
     short_name: Option<String>,
     country_code: Option<String>,
@@ -1517,7 +1524,7 @@ pub async fn list_operators(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<OperatorListItem>>, StatusCode> {
     let results = sqlx::query_as::<_, OperatorListItem>(
-        "SELECT o.id, o.name, o.short_name, o.country_code, o.org_type,
+        "SELECT o.id, o.slug, o.name, o.short_name, o.country_code, o.org_type,
                 o.ownership_model, o.public_share_pct::float8 as public_share_pct,
                 COUNT(DISTINCT a.id)::int8 as airport_count,
                 AVG(s.score_total)::float8 as avg_score,
@@ -1537,7 +1544,7 @@ pub async fn list_operators(
          FROM organisations o
          INNER JOIN airports a ON a.operator_id = o.id AND a.in_seed_set = true
          LEFT JOIN airport_scores s ON s.airport_id = a.id AND s.is_latest = true
-         GROUP BY o.id, o.name, o.short_name, o.country_code, o.org_type, o.ownership_model, o.public_share_pct
+         GROUP BY o.id, o.slug, o.name, o.short_name, o.country_code, o.org_type, o.ownership_model, o.public_share_pct
          HAVING COUNT(DISTINCT a.id) > 0
          ORDER BY avg_score DESC NULLS LAST",
     )
@@ -1561,18 +1568,30 @@ pub async fn list_operators(
 )]
 pub async fn get_operator(
     State(state): State<AppState>,
-    Path(id): Path<i32>,
+    Path(id_or_slug): Path<String>,
 ) -> Result<Json<OperatorDetail>, StatusCode> {
     let pool = &state.pool;
 
-    let org = sqlx::query_as::<_, OperatorOrgRow>(
-        "SELECT id, name, short_name, country_code, org_type, ownership_model,
-                public_share_pct::float8 as public_share_pct, notes
-         FROM organisations WHERE id = $1",
-    )
-    .bind(id)
-    .fetch_optional(pool)
-    .await
+    // Support both numeric ID (legacy) and slug lookup.
+    let org = if let Ok(id) = id_or_slug.parse::<i32>() {
+        sqlx::query_as::<_, OperatorOrgRow>(
+            "SELECT id, slug, name, short_name, country_code, org_type, ownership_model,
+                    public_share_pct::float8 as public_share_pct, notes
+             FROM organisations WHERE id = $1",
+        )
+        .bind(id)
+        .fetch_optional(pool)
+        .await
+    } else {
+        sqlx::query_as::<_, OperatorOrgRow>(
+            "SELECT id, slug, name, short_name, country_code, org_type, ownership_model,
+                    public_share_pct::float8 as public_share_pct, notes
+             FROM organisations WHERE slug = $1",
+        )
+        .bind(&id_or_slug)
+        .fetch_optional(pool)
+        .await
+    }
     .map_err(|e| { tracing::error!("get_operator org error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?
     .ok_or(StatusCode::NOT_FOUND)?;
 
@@ -1590,13 +1609,14 @@ pub async fn get_operator(
          WHERE a.operator_id = $1 AND a.in_seed_set = true
          ORDER BY s.score_total DESC NULLS LAST",
     )
-    .bind(id)
+    .bind(org.id)
     .fetch_all(pool)
     .await
     .map_err(|e| { tracing::error!("get_operator airports error: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     Ok(Json(OperatorDetail {
         id: org.id,
+        slug: org.slug,
         name: org.name,
         short_name: org.short_name,
         country_code: org.country_code,

@@ -6,13 +6,13 @@ import { fmtM } from "~/utils/format";
 import { OwnershipBadge } from "~/components/ownership-badge";
 
 const getOperator = createServerFn({ method: "GET" })
-  .inputValidator((id: string) => id)
-  .handler(async ({ data: id }) => {
-    return api.getOperator(Number(id));
+  .inputValidator((slug: string) => slug)
+  .handler(async ({ data: slug }) => {
+    return api.getOperator(slug);
   });
 
-export const Route = createFileRoute("/operators/$id")({
-  loader: ({ params }) => getOperator({ data: params.id }),
+export const Route = createFileRoute("/operators/$slug")({
+  loader: ({ params }) => getOperator({ data: params.slug }),
   head: ({ loaderData: op }) => {
     const title = op
       ? `${op.shortName || op.name} — Airport Operator — airports.report`
@@ -26,10 +26,10 @@ export const Route = createFileRoute("/operators/$id")({
         { name: "description", content: description },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
-        { property: "og:url", content: `https://airports.report/operators/${op?.id}` },
+        { property: "og:url", content: `https://airports.report/operators/${op?.slug}` },
       ],
       links: [
-        { rel: "canonical", href: `https://airports.report/operators/${op?.id}` },
+        { rel: "canonical", href: `https://airports.report/operators/${op?.slug}` },
       ],
     };
   },

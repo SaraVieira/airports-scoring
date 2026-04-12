@@ -72,9 +72,9 @@ function OperatorsPage() {
             )}
             {operators.map((op) => (
               <Link
-                key={op.id}
-                to="/operators/$id"
-                params={{ id: String(op.id) }}
+                key={op.slug || op.id}
+                to="/operators/$slug"
+                params={{ slug: op.slug || String(op.id) }}
                 className="group flex items-center gap-2 py-3 border-b border-white/3 hover:bg-white/3 transition-colors"
               >
                 <div className="flex-1 min-w-0">
