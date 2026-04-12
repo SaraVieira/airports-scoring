@@ -17,3 +17,6 @@ CREATE TABLE IF NOT EXISTS airport_awards (
 
 CREATE INDEX IF NOT EXISTS airport_awards_iata_idx ON airport_awards (iata_code);
 CREATE INDEX IF NOT EXISTS airport_awards_source_year_idx ON airport_awards (source, year);
+
+-- Drop the old Wikipedia-scraped ACI awards column (replaced by airport_awards table).
+ALTER TABLE wikipedia_snapshots DROP COLUMN IF EXISTS aci_awards;

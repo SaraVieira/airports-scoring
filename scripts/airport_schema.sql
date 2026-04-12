@@ -654,7 +654,6 @@ CREATE TABLE wikipedia_snapshots (
     ownership_notes     TEXT,
     milestone_notes     TEXT,
     skytrax_history     JSONB,          -- e.g. {"2019":3,"2023":4}
-    aci_awards          JSONB,
     wikipedia_url       TEXT,
     article_revision_id BIGINT,
     created_at          TIMESTAMPTZ DEFAULT NOW()
