@@ -1447,6 +1447,36 @@ class GoogleReviewsScraper:
 
                     # Check for valid cards
                     if len(cards) == 0:
+                        # Pane returned 0 cards. Try a fresh global lookup — if the
+                        # cards exist in the DOM but not under the stored pane
+                        # reference, the pane is stale or wrong. Re-fetch it.
+                        try:
+                            global_cards = driver.find_elements(By.CSS_SELECTOR, CARD_SEL)
+                        except Exception:
+                            global_cards = []
+                        if global_cards:
+                            log.warning(
+                                "Pane returned 0 cards but global lookup found %d — "
+                                "re-fetching pane (stale reference)",
+                                len(global_cards),
+                            )
+                            for pane_try in [PANE_SEL, 'div[role="main"] div.m6QErb', 'div[role="main"]']:
+                                fresh_panes = driver.find_elements(By.CSS_SELECTOR, pane_try)
+                                chosen = next(
+                                    (fp for fp in fresh_panes if fp.find_elements(By.CSS_SELECTOR, CARD_SEL)),
+                                    None,
+                                )
+                                if chosen is not None:
+                                    pane = chosen
+                                    log.info(f"Re-fetched pane using {pane_try}")
+                                    try:
+                                        driver.execute_script("window.scrollablePane = arguments[0];", pane)
+                                    except Exception:
+                                        pass
+                                    break
+                            cards = pane.find_elements(By.CSS_SELECTOR, CARD_SEL)
+
+                    if len(cards) == 0:
                         consecutive_no_cards += 1
                         log.info(f"No review cards found in this iteration (consecutive: {consecutive_no_cards})")
 
